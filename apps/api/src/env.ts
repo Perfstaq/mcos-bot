@@ -15,6 +15,15 @@ loadDotenv();
  * secret is a startup failure with a named field, not a 500 three hours later
  * when the first webhook lands.
  */
+/**
+ * An unset variable and a variable set to "" mean the same thing here: absent.
+ * Without this, `FOO=` in a .env file satisfies `.optional()` as an empty
+ * string — so a blank OAuth client id reads as "configured" and the provider
+ * registers with empty credentials.
+ */
+const optional = <T extends z.ZodTypeAny>(inner: T) =>
+  z.preprocess((v) => (v === "" ? undefined : v), inner.optional());
+
 const schema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(8080),
@@ -30,7 +39,7 @@ const schema = z.object({
   RECALL_REGION: z.enum(["us-east-1", "us-west-2", "eu-central-1", "ap-northeast-1"]),
   RECALLAI_API_KEY: z.string().min(1),
   RECALL_WEBHOOK_SECRET: z.string().min(1),
-  RECALL_SVIX_WEBHOOK_SECRET: z.string().optional(),
+  RECALL_SVIX_WEBHOOK_SECRET: optional(z.string()),
   RECALL_BOT_NAME: z.string().default("Perfstaq Notetaker"),
   RECALL_JOIN_MESSAGE: z.string().default(""),
   RECALL_CAPTURE_VIDEO: z
@@ -49,6 +58,28 @@ const schema = z.object({
   // default; sol is the lever to pull if recall on messy transcripts is poor.
   OPENAI_MODEL: z.string().default("gpt-5.6-terra"),
   OPENAI_REASONING_EFFORT: z.enum(["minimal", "low", "medium", "high"]).default("low"),
+
+  // --- Authentication ------------------------------------------------------
+  // Better Auth requires >=32 chars. Rotating it invalidates every session and
+  // every pending verification token, which is the point.
+  BETTER_AUTH_SECRET: z.string().min(32, "must be at least 32 characters"),
+  // Where the auth handler is reachable. Defaults to APP_BASE_URL below.
+  BETTER_AUTH_URL: optional(z.string().url()),
+  // The SPA origin users are returned to after an OAuth round-trip.
+  WEB_ORIGIN: z.string().url().default("http://localhost:5173"),
+
+  // Social providers are optional: unset means the button is not rendered and
+  // the provider is not registered, rather than a half-configured 500.
+  GOOGLE_CLIENT_ID: optional(z.string()),
+  GOOGLE_CLIENT_SECRET: optional(z.string()),
+  MICROSOFT_CLIENT_ID: optional(z.string()),
+  MICROSOFT_CLIENT_SECRET: optional(z.string()),
+  MICROSOFT_TENANT_ID: z.string().default("common"),
+
+  // --- Ops -----------------------------------------------------------------
+  RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),
+  RATE_LIMIT_WINDOW: z.string().default("1 minute"),
+  TRUST_PROXY: z.string().default("true").transform((v) => v === "true"),
 
   DEFAULT_TENANT_SLUG: z.string().default("freshworks-demo"),
   DEFAULT_REVIEWER_EMAIL: z.string().default("demo@freshworks.example"),
@@ -73,6 +104,13 @@ export const env = load();
 
 export const recallBaseUrl = `https://${env.RECALL_REGION}.recall.ai/api/v1`;
 
-export const allowedOrigins = env.ALLOWED_ORIGINS.split(",")
-  .map((s) => s.trim())
-  .filter(Boolean);
+export const allowedOrigins = [
+  ...env.ALLOWED_ORIGINS.split(",").map((s) => s.trim()),
+  env.WEB_ORIGIN,
+].filter((v, i, all) => Boolean(v) && all.indexOf(v) === i);
+
+export const authBaseUrl = env.BETTER_AUTH_URL ?? env.APP_BASE_URL;
+
+/** A provider is only wired up when both halves of its credential are present. */
+export const googleConfigured = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
+export const microsoftConfigured = Boolean(env.MICROSOFT_CLIENT_ID && env.MICROSOFT_CLIENT_SECRET);
