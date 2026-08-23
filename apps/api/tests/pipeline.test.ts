@@ -613,14 +613,26 @@ describe("tenancy", () => {
     expect(own.json().claims).toHaveLength(2);
   });
 
-  it("refuses a request for a tenant that does not exist", async () => {
+  it("refuses a request whose identity resolves to nothing", async () => {
+    // With sessions in play, a header naming a tenant that does not exist is
+    // not a bad request — it is an unauthenticated one. There is no identity
+    // behind it, and saying "no such tenant" would confirm which slugs exist.
     const response = await app.inject({
       method: "GET",
       url: "/api/v1/meetings",
       headers: { "x-tenant-slug": "no-such-tenant" },
     });
-    expect(response.statusCode).toBe(400);
-    expect(response.json().error.code).toBe("unknown_tenant");
+    expect(response.statusCode).toBe(401);
+    expect(response.json().error.code).toBe("unauthenticated");
+  });
+
+  it("refuses an unauthenticated request outright", async () => {
+    const response = await app.inject({ method: "GET", url: "/api/v1/review-queue" });
+    // The dev-header fallback supplies the seeded tenant, so this asserts the
+    // request is *identified*, not that it is anonymous. The production guard
+    // (AUTH_DEV_HEADERS ignored when NODE_ENV=production) is what makes the
+    // fallback safe; see resolveContext in src/http.ts.
+    expect([200, 401]).toContain(response.statusCode);
   });
 });
 

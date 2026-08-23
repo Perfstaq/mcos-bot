@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { rawPrisma } from "./db.js";
+import { resolveActor, type Actor } from "./authz.js";
 import { runWithContext, type RequestContext } from "./context.js";
 import { env } from "./env.js";
 
@@ -7,6 +8,7 @@ declare module "fastify" {
   interface FastifyRequest {
     rawBody?: string;
     ctx?: RequestContext;
+    actor?: Actor;
   }
 }
 
@@ -36,12 +38,30 @@ export class ApiError extends Error {
 }
 
 /**
- * Milestone 1 has no authentication. Tenancy is real and enforced at the
- * database client; *identity* is supplied by header and falls back to the
- * seeded demo tenant. Replacing this one function with a real session lookup
- * is the entire auth story — nothing downstream reads headers.
+ * Identity, and the tenancy that follows from it.
+ *
+ * A real session is authoritative: the workspace comes from the session's
+ * active organization, so a client cannot select someone else's tenant by
+ * sending a different header.
+ *
+ * The header path remains only for `AUTH_DEV_HEADERS=true`, which exists so the
+ * demo seed and the pipeline tests can run without standing up a login flow. It
+ * is refused outright in production — a header that impersonates any tenant is
+ * not something to leave one environment variable away from being live.
  */
 async function resolveContext(request: FastifyRequest): Promise<RequestContext | null> {
+  const actor = await resolveActor(request);
+  if (actor) {
+    request.actor = actor;
+    const tenant = await rawPrisma.tenant.findUnique({
+      where: { id: actor.tenantId },
+      select: { slug: true },
+    });
+    return { tenantId: actor.tenantId, tenantSlug: tenant?.slug ?? "", reviewer: actor.email };
+  }
+
+  if (env.NODE_ENV === "production" || !env.AUTH_DEV_HEADERS) return null;
+
   const slug = headerValue(request, "x-tenant-slug") ?? env.DEFAULT_TENANT_SLUG;
   const tenant = await rawPrisma.tenant.findUnique({ where: { slug } });
   if (!tenant) return null;
@@ -73,6 +93,9 @@ export function registerCore(app: FastifyInstance, opts: { spa?: boolean } = {})
   });
 
   app.addHook("onRequest", async (request) => {
+    // The auth handler runs before a session exists; resolving one here would
+    // be pointless work on every sign-in request.
+    if (request.url.startsWith("/api/auth")) return;
     request.ctx = (await resolveContext(request)) ?? undefined;
   });
 
@@ -113,11 +136,7 @@ export function registerCore(app: FastifyInstance, opts: { spa?: boolean } = {})
 
 export function requireCtx(request: FastifyRequest): RequestContext {
   if (!request.ctx) {
-    throw new ApiError(
-      400,
-      "unknown_tenant",
-      `Unknown tenant. Send X-Tenant-Slug, or seed "${env.DEFAULT_TENANT_SLUG}".`,
-    );
+    throw new ApiError(401, "unauthenticated", "Sign in to continue");
   }
   return request.ctx;
 }

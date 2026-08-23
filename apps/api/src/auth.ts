@@ -91,6 +91,20 @@ export const auth = betterAuth({
       membershipLimit: 200,
       creatorRole: "owner",
       invitationExpiresIn: 60 * 60 * 48,
+      organizationHooks: {
+        // The domain's tenant is created with the workspace, not lazily on
+        // first use. Eager provisioning means no downstream code path ever has
+        // to handle a workspace whose tenant does not exist yet — the 1:1 is
+        // true from the moment the organization row is written.
+        afterCreateOrganization: async ({ organization }) => {
+          const { provisionTenantForOrganization } = await import("./authz.js");
+          await provisionTenantForOrganization({
+            organizationId: organization.id,
+            slug: organization.slug,
+            name: organization.name,
+          });
+        },
+      },
     }),
     admin({ defaultRole: "user", adminRoles: ["admin"] }),
   ],

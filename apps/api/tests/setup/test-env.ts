@@ -53,6 +53,11 @@ export function applyTestEnv(): void {
   process.env.OPENAI_API_KEY = "test-openai-key";
   process.env.OPENAI_MODEL = "gpt-5.6-terra";
   process.env.OPENAI_REASONING_EFFORT = "low";
+  // The pipeline suite is about webhooks, artifacts and the review gate, not
+  // about logging in. Header identity keeps those tests testing one thing.
+  process.env.AUTH_DEV_HEADERS = "true";
+  process.env.BETTER_AUTH_SECRET = "test-secret-at-least-thirty-two-characters-long";
+  process.env.WEB_ORIGIN = "http://localhost:5173";
   process.env.DEFAULT_TENANT_SLUG = "freshworks-demo";
   process.env.DEFAULT_REVIEWER_EMAIL = "reviewer@test.example";
 }

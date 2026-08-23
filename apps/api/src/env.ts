@@ -81,6 +81,13 @@ const schema = z.object({
   RATE_LIMIT_WINDOW: z.string().default("1 minute"),
   TRUST_PROXY: z.string().default("true").transform((v) => v === "true"),
 
+  /// Accept X-Tenant-Slug / X-Reviewer-Email instead of a session. For the
+  /// demo seed and the pipeline tests only — refused in production regardless.
+  AUTH_DEV_HEADERS: z
+    .string()
+    .default("false")
+    .transform((v) => v === "true"),
+
   DEFAULT_TENANT_SLUG: z.string().default("freshworks-demo"),
   DEFAULT_REVIEWER_EMAIL: z.string().default("demo@freshworks.example"),
 });
