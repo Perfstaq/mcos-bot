@@ -1,0 +1,469 @@
+// MCOS — Milestone 1 schema.
+//
+// Two invariants the shape of this file is designed to enforce:
+//   1. Every table carries tenant_id. The Prisma client extension in src/db.ts
+//      injects it into every query, so a cross-tenant read is not expressible.
+//   2. Provenance is structural. A candidate_claim requires an evidence_source
+//      and at least one claim_segment. A claim without evidence linkage is
+//      invalid and cannot be written.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Tenancy
+// ---------------------------------------------------------------------------
+
+model Tenant {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  meetings         Meeting[]
+  evidenceSources  EvidenceSource[]
+  transcripts      Transcript[]
+  segments         TranscriptSegment[]
+  artifacts        Artifact[]
+  extractionRuns   ExtractionRun[]
+  claims           CandidateClaim[]
+  reviewDecisions  ReviewDecision[]
+  briefVersions    BriefVersion[]
+  briefClaims      BriefClaim[]
+  transitions      StateTransition[]
+  webhookEvents    WebhookEvent[]
+
+  @@map("tenants")
+}
+
+// ---------------------------------------------------------------------------
+// Meetings + state machine
+// ---------------------------------------------------------------------------
+
+enum MeetingStatus {
+  draft
+  bot_scheduled
+  bot_joined
+  recording
+  call_ended
+  media_processing
+  transcript_ready
+  extracting
+  in_review
+  merged
+  failed
+
+  @@map("meeting_status")
+}
+
+model Meeting {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  title      String?
+  meetingUrl String    @map("meeting_url")
+  joinAt     DateTime? @map("join_at")
+
+  status        MeetingStatus @default(draft)
+  failureReason String?       @map("failure_reason")
+  failedStage   String?       @map("failed_stage")
+
+  // Recall handles. Unique so a webhook can find its meeting without a scan.
+  recallBotId        String? @unique @map("recall_bot_id")
+  recallRecordingId  String? @unique @map("recall_recording_id")
+  recallTranscriptId String? @unique @map("recall_transcript_id")
+
+  platform  String?
+  startedAt DateTime? @map("started_at")
+  endedAt   DateTime? @map("ended_at")
+
+  // Deletion path: purge sets deletedAt and redacts evidence on merged claims.
+  deletedAt DateTime? @map("deleted_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  transitions     StateTransition[]
+  evidenceSources EvidenceSource[]
+  transcript      Transcript?
+  artifacts       Artifact[]
+  claims          CandidateClaim[]
+  extractionRuns  ExtractionRun[]
+  briefClaims     BriefClaim[]
+
+  @@index([tenantId, status])
+  @@index([tenantId, createdAt])
+  @@map("meetings")
+}
+
+model StateTransition {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  meetingId  String         @map("meeting_id")
+  fromStatus MeetingStatus? @map("from_status")
+  toStatus   MeetingStatus  @map("to_status")
+  reason     String?
+  occurredAt DateTime       @default(now()) @map("occurred_at")
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  @@index([meetingId, occurredAt])
+  @@map("state_transitions")
+}
+
+// ---------------------------------------------------------------------------
+// Evidence — pluggable. Only meeting_transcript is implemented in Milestone 1.
+// ---------------------------------------------------------------------------
+
+enum EvidenceKind {
+  meeting_transcript
+  performance_metric
+  document
+
+  @@map("evidence_kind")
+}
+
+model EvidenceSource {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  kind       EvidenceKind
+  meetingId  String?      @map("meeting_id")
+  externalId String?      @map("external_id")
+  capturedAt DateTime     @map("captured_at")
+  metadata   Json         @default("{}")
+  createdAt  DateTime     @default(now()) @map("created_at")
+
+  tenant     Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  meeting    Meeting?         @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  transcript Transcript?
+  claims     CandidateClaim[]
+
+  @@unique([tenantId, kind, externalId])
+  @@index([tenantId, kind])
+  @@map("evidence_sources")
+}
+
+model Transcript {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  meetingId        String @unique @map("meeting_id")
+  evidenceSourceId String @unique @map("evidence_source_id")
+
+  provider           String
+  languageCode       String? @map("language_code")
+  recallTranscriptId String? @map("recall_transcript_id")
+  segmentCount       Int     @map("segment_count")
+  wordCount          Int     @map("word_count")
+  durationMs         Int     @map("duration_ms")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant         Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  meeting        Meeting             @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  evidenceSource EvidenceSource      @relation(fields: [evidenceSourceId], references: [id], onDelete: Cascade)
+  segments       TranscriptSegment[]
+
+  @@map("transcripts")
+}
+
+model TranscriptSegment {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  transcriptId String @map("transcript_id")
+  idx          Int
+  speaker      String
+  speakerId    Int?   @map("speaker_id")
+  startMs      Int    @map("start_ms")
+  endMs        Int    @map("end_ms")
+  text         String
+
+  tenant     Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  transcript Transcript     @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
+  claimLinks ClaimSegment[]
+
+  @@unique([transcriptId, idx])
+  @@index([transcriptId, startMs])
+  @@map("transcript_segments")
+}
+
+// ---------------------------------------------------------------------------
+// Artifacts — immutable once written. R2 is the system of record for media.
+// ---------------------------------------------------------------------------
+
+enum ArtifactKind {
+  recording_audio
+  recording_video
+  transcript_json
+
+  @@map("artifact_kind")
+}
+
+model Artifact {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  meetingId   String       @map("meeting_id")
+  kind        ArtifactKind
+  r2Key       String       @unique @map("r2_key")
+  contentType String       @map("content_type")
+  bytes       BigInt
+  checksum    String?
+  sourceUrl   String?      @map("source_url")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  purgedAt  DateTime? @map("purged_at")
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  @@unique([meetingId, kind])
+  @@map("artifacts")
+}
+
+// ---------------------------------------------------------------------------
+// Extraction — proposes, never writes memory.
+// ---------------------------------------------------------------------------
+
+enum ExtractionStatus {
+  running
+  succeeded
+  failed
+
+  @@map("extraction_status")
+}
+
+model ExtractionRun {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  meetingId     String           @map("meeting_id")
+  model         String
+  promptVersion String           @map("prompt_version")
+  status        ExtractionStatus @default(running)
+
+  chunkCount     Int @default(0) @map("chunk_count")
+  proposedCount  Int @default(0) @map("proposed_count")
+  droppedCount   Int @default(0) @map("dropped_count")
+  duplicateCount Int @default(0) @map("duplicate_count")
+  persistedCount Int @default(0) @map("persisted_count")
+
+  inputTokens  Int @default(0) @map("input_tokens")
+  outputTokens Int @default(0) @map("output_tokens")
+
+  startedAt  DateTime  @default(now()) @map("started_at")
+  finishedAt DateTime? @map("finished_at")
+  error      String?
+
+  tenant  Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  meeting Meeting          @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  claims  CandidateClaim[]
+
+  @@index([meetingId, startedAt])
+  @@map("extraction_runs")
+}
+
+enum ClaimType {
+  positioning_statement
+  icp_fact
+  pain_point
+  objection
+  messaging_decision
+  competitor_mention
+  proof_point
+
+  @@map("claim_type")
+}
+
+enum ClaimStatus {
+  proposed
+  approved
+  rejected
+  edited
+
+  @@map("claim_status")
+}
+
+model CandidateClaim {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  meetingId        String @map("meeting_id")
+  evidenceSourceId String @map("evidence_source_id")
+  extractionRunId  String @map("extraction_run_id")
+
+  type       ClaimType
+  text       String
+  editedText String?   @map("edited_text")
+  confidence Float
+  status     ClaimStatus @default(proposed)
+
+  // Provenance, denormalised for the review card so it renders in one query.
+  verbatimQuote String @map("verbatim_quote")
+  speaker       String
+  timestampMs   Int    @map("timestamp_ms")
+
+  dedupeKey String @map("dedupe_key")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  decidedAt DateTime? @map("decided_at")
+  mergedAt  DateTime? @map("merged_at")
+
+  tenant         Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  meeting        Meeting          @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  evidenceSource EvidenceSource   @relation(fields: [evidenceSourceId], references: [id], onDelete: Cascade)
+  extractionRun  ExtractionRun    @relation(fields: [extractionRunId], references: [id], onDelete: Cascade)
+  segments       ClaimSegment[]
+  decisions      ReviewDecision[]
+  briefClaims    BriefClaim[]
+
+  @@unique([tenantId, dedupeKey])
+  @@index([tenantId, status, type])
+  @@index([meetingId, status])
+  @@map("candidate_claims")
+}
+
+// The provenance FK. A claim with no rows here never made it past validation.
+model ClaimSegment {
+  claimId   String @map("claim_id")
+  segmentId String @map("segment_id")
+
+  claim   CandidateClaim    @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  segment TranscriptSegment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+
+  @@id([claimId, segmentId])
+  @@index([segmentId])
+  @@map("claim_segments")
+}
+
+// ---------------------------------------------------------------------------
+// The review gate. Append-only. Non-negotiable.
+// ---------------------------------------------------------------------------
+
+enum ReviewAction {
+  approve
+  reject
+  edit_approve
+
+  @@map("review_action")
+}
+
+model ReviewDecision {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  claimId      String       @map("claim_id")
+  action       ReviewAction
+  reviewer     String
+  previousText String?      @map("previous_text")
+  editedText   String?      @map("edited_text")
+  note         String?
+  createdAt    DateTime     @default(now()) @map("created_at")
+
+  tenant Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  claim  CandidateClaim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+  @@index([claimId, createdAt])
+  @@map("review_decisions")
+}
+
+// ---------------------------------------------------------------------------
+// Living Positioning Brief — append-only. Version N = version N-1 + delta.
+// ---------------------------------------------------------------------------
+
+model BriefVersion {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  version   Int
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String   @map("created_by")
+  note      String?
+
+  addedCount   Int @default(0) @map("added_count")
+  removedCount Int @default(0) @map("removed_count")
+  editedCount  Int @default(0) @map("edited_count")
+  totalCount   Int @default(0) @map("total_count")
+
+  tenant Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  claims BriefClaim[]
+
+  @@unique([tenantId, version])
+  @@map("brief_versions")
+}
+
+// Text is frozen at merge time — a later edit to a candidate claim cannot
+// retroactively rewrite what an earlier version of the brief said.
+model BriefClaim {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  briefVersionId String @map("brief_version_id")
+  claimId        String @map("claim_id")
+  meetingId      String @map("meeting_id")
+
+  type          ClaimType
+  text          String
+  verbatimQuote String    @map("verbatim_quote")
+  speaker       String
+  timestampMs   Int       @map("timestamp_ms")
+  confidence    Float
+
+  // Set when the source meeting is deleted. The claim survives; the evidence
+  // is redacted.
+  evidenceRedacted Boolean @default(false) @map("evidence_redacted")
+
+  // Which version first introduced this claim — lets the diff distinguish
+  // "carried forward" from "added in this version" without a self-join.
+  introducedInVersion Int @map("introduced_in_version")
+
+  tenant       Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  briefVersion BriefVersion   @relation(fields: [briefVersionId], references: [id], onDelete: Cascade)
+  claim        CandidateClaim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  meeting      Meeting        @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  @@unique([briefVersionId, claimId])
+  @@index([tenantId, type])
+  @@map("brief_claims")
+}
+
+// ---------------------------------------------------------------------------
+// Webhook log — raw payload retained for replay and debugging.
+// ---------------------------------------------------------------------------
+
+model WebhookEvent {
+  id       String  @id @default(uuid())
+  tenantId String? @map("tenant_id")
+
+  eventType String @map("event_type")
+  // (event type, bot/recording id, updated_at) — Recall may deliver a webhook
+  // more than once and out of order.
+  dedupeKey String @unique @map("dedupe_key")
+
+  botId        String? @map("bot_id")
+  recordingId  String? @map("recording_id")
+  transcriptId String? @map("transcript_id")
+
+  payload     Json
+  receivedAt  DateTime  @default(now()) @map("received_at")
+  processedAt DateTime? @map("processed_at")
+  error       String?
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@index([eventType, receivedAt])
+  @@index([botId])
+  @@map("webhook_events")
+}

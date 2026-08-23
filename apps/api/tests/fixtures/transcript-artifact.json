@@ -1,0 +1,12 @@
+{
+  "id": "t0000000-0000-4000-8000-000000000tr1",
+  "recording": { "id": "r0000000-0000-4000-8000-00000000rec1" },
+  "created_at": "2026-08-20T10:32:00.000Z",
+  "status": { "code": "done", "sub_code": null, "updated_at": "2026-08-20T10:36:44.913Z" },
+  "data": {
+    "download_url": "https://recall-media.test/transcript/tr1.json?sig=def456",
+    "provider_data_download_url": null
+  },
+  "diarization": { "use_separate_streams_when_available": true },
+  "provider": { "recallai_async": { "language_code": "auto" } }
+}

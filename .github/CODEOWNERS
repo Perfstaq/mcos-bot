@@ -1,0 +1,23 @@
+# Code owners. Every entry must resolve to a real user or team with write
+# access, or GitHub silently ignores the whole file.
+#
+# TODO: replace with @Perfstaq/engineering once that team exists — a single
+# named human is a bus factor, not a review policy.
+
+# Default owner for everything.
+*                                     @sathvik-23
+
+# The architectural invariants. Changes here need an actual review, not a
+# rubber stamp — see CONTRIBUTING.md.
+/apps/api/src/db.ts                   @sathvik-23
+/apps/api/src/domain/brief.ts         @sathvik-23
+/apps/api/src/routes/review.ts        @sathvik-23
+/apps/api/src/routes/webhooks.ts      @sathvik-23
+/apps/api/src/integrations/recall.ts  @sathvik-23
+/apps/api/prisma/                     @sathvik-23
+
+# Supply chain and release surface.
+/.github/                             @sathvik-23
+/Dockerfile                           @sathvik-23
+/LICENSE                              @sathvik-23
+/NOTICE                               @sathvik-23

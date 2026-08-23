@@ -1,0 +1,30 @@
+MCOS — Marketing Context Operating System
+Copyright 2026 Perfstaq
+
+This product includes software developed at Perfstaq (https://perfstaq.com).
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
+
+--------------------------------------------------------------------------------
+TRADEMARKS
+
+The Apache License 2.0 does not grant permission to use the trade names,
+trademarks, service marks, or product names of the Licensor (Section 6).
+
+The "Perfstaq" name, the Perfstaq wordmark, and the three-reel mark — including
+every asset under `perfstaq-logos/` — are trademarks of Perfstaq and are NOT
+licensed under Apache-2.0. They are included in this repository so the reference
+application renders as intended.
+
+You may fork, modify and redistribute this software. If you do, replace the
+Perfstaq brand assets with your own. Do not use them in a way that suggests your
+fork is produced, endorsed, or supported by Perfstaq.
+
+--------------------------------------------------------------------------------
+THIRD-PARTY ASSETS
+
+Geist and Geist Mono (perfstaq-logos/perfstaq-logo/font/, apps/web/public/fonts/)
+are licensed under the SIL Open Font License 1.1 by Vercel. See
+apps/web/public/fonts/GEIST-LICENSE.txt.

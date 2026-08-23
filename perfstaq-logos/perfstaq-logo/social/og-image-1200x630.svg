@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+<rect width="1200" height="630" fill="#111114"/><rect x="446.0" y="180" width="88" height="165" rx="25" fill="#8C8C92"/><rect x="556.0" y="180" width="88" height="165" rx="25" fill="#FF7A1A"/><rect x="666.0" y="180" width="88" height="165" rx="25" fill="#8C8C92"/>
+<text x="600" y="440" text-anchor="middle" fill="#F2F2F0"
+  font-family="Geist, ui-sans-serif, Arial" font-size="84" font-weight="600"
+  letter-spacing="-2.4">Perfstaq</text>
+<text x="600" y="486" text-anchor="middle" fill="#F2F2F0" opacity=".5"
+  font-family="ui-monospace, monospace" font-size="20" letter-spacing="4">THE CONTENT MACHINE</text>
+</svg>

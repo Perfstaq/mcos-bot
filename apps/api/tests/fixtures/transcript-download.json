@@ -1,0 +1,2803 @@
+[
+  {
+    "participant": {
+      "id": 1,
+      "name": "Priya Raman",
+      "is_host": true,
+      "platform": "desktop",
+      "extra_data": null,
+      "email": null
+    },
+    "language_code": "en",
+    "words": [
+      {
+        "text": "Right",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 4.0
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 4.38
+        }
+      },
+      {
+        "text": "so",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 4.38
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 4.58
+        }
+      },
+      {
+        "text": "the",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 4.58
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 4.84
+        }
+      },
+      {
+        "text": "reason",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 4.84
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 5.28
+        }
+      },
+      {
+        "text": "I",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 5.28
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 5.42
+        }
+      },
+      {
+        "text": "pulled",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 5.42
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 5.86
+        }
+      },
+      {
+        "text": "this",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 5.86
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 6.18
+        }
+      },
+      {
+        "text": "session",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 6.18
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 6.68
+        }
+      },
+      {
+        "text": "together",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 6.68
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 7.24
+        }
+      },
+      {
+        "text": "is",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 7.24
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 7.44
+        }
+      },
+      {
+        "text": "that",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 7.44
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 7.76
+        }
+      },
+      {
+        "text": "we",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 7.76
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 7.96
+        }
+      },
+      {
+        "text": "keep",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 7.96
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 8.28
+        }
+      },
+      {
+        "text": "losing",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 8.28
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 8.72
+        }
+      },
+      {
+        "text": "mid",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 8.72
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 8.98
+        }
+      },
+      {
+        "text": "market",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 8.98
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 9.42
+        }
+      },
+      {
+        "text": "deals",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 9.42
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 9.8
+        }
+      },
+      {
+        "text": "at",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 9.8
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 10.0
+        }
+      },
+      {
+        "text": "the",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 10.0
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 10.26
+        }
+      },
+      {
+        "text": "same",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 10.26
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 10.58
+        }
+      },
+      {
+        "text": "point",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 10.58
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 10.96
+        }
+      }
+    ]
+  },
+  {
+    "participant": {
+      "id": 2,
+      "name": "Daniel Okafor",
+      "is_host": false,
+      "platform": "desktop",
+      "extra_data": null,
+      "email": null
+    },
+    "language_code": "en",
+    "words": [
+      {
+        "text": "Agreed",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 13.5
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 13.94
+        }
+      },
+      {
+        "text": "I",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 13.94
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 14.08
+        }
+      },
+      {
+        "text": "have",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 14.08
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 14.4
+        }
+      },
+      {
+        "text": "sat",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 14.4
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 14.66
+        }
+      },
+      {
+        "text": "in",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 14.66
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 14.86
+        }
+      },
+      {
+        "text": "four",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 14.86
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 15.18
+        }
+      },
+      {
+        "text": "of",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 15.18
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 15.38
+        }
+      },
+      {
+        "text": "these",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 15.38
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 15.76
+        }
+      },
+      {
+        "text": "now",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 15.76
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 16.02
+        }
+      },
+      {
+        "text": "it",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 16.02
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 16.22
+        }
+      },
+      {
+        "text": "is",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 16.22
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 16.42
+        }
+      },
+      {
+        "text": "always",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 16.42
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 16.86
+        }
+      },
+      {
+        "text": "the",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 16.86
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 17.12
+        }
+      },
+      {
+        "text": "same",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 17.12
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 17.44
+        }
+      },
+      {
+        "text": "moment",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 17.44
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 17.88
+        }
+      },
+      {
+        "text": "somewhere",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 17.88
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 18.5
+        }
+      },
+      {
+        "text": "around",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 18.5
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 18.94
+        }
+      },
+      {
+        "text": "the",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 18.94
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 19.2
+        }
+      },
+      {
+        "text": "second",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 19.2
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 19.64
+        }
+      },
+      {
+        "text": "call",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 19.64
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 19.96
+        }
+      }
+    ]
+  },
+  {
+    "participant": {
+      "id": 3,
+      "name": "Marta Silva",
+      "is_host": false,
+      "platform": "desktop",
+      "extra_data": null,
+      "email": null
+    },
+    "language_code": "en",
+    "words": [
+      {
+        "text": "The",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 34.2
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 34.46
+        }
+      },
+      {
+        "text": "buyers",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 34.46
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 34.9
+        }
+      },
+      {
+        "text": "we",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 34.9
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 35.1
+        }
+      },
+      {
+        "text": "win",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 35.1
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 35.36
+        }
+      },
+      {
+        "text": "are",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 35.36
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 35.62
+        }
+      },
+      {
+        "text": "almost",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 35.62
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 36.06
+        }
+      },
+      {
+        "text": "always",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 36.06
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 36.5
+        }
+      },
+      {
+        "text": "a",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 36.5
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 36.64
+        }
+      },
+      {
+        "text": "head",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 36.64
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 36.96
+        }
+      },
+      {
+        "text": "of",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 36.96
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 37.16
+        }
+      },
+      {
+        "text": "support",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 37.16
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 37.66
+        }
+      },
+      {
+        "text": "at",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 37.66
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 37.86
+        }
+      },
+      {
+        "text": "a",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 37.86
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 38.0
+        }
+      },
+      {
+        "text": "company",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 38.0
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 38.5
+        }
+      },
+      {
+        "text": "between",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 38.5
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 39.0
+        }
+      },
+      {
+        "text": "two",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 39.0
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 39.26
+        }
+      },
+      {
+        "text": "hundred",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 39.26
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 39.76
+        }
+      },
+      {
+        "text": "and",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 39.76
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 40.02
+        }
+      },
+      {
+        "text": "eight",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 40.02
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 40.4
+        }
+      },
+      {
+        "text": "hundred",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 40.4
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 40.9
+        }
+      },
+      {
+        "text": "employees",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 40.9
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 41.52
+        }
+      },
+      {
+        "text": "who",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 41.52
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 41.78
+        }
+      },
+      {
+        "text": "has",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 41.78
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 42.04
+        }
+      },
+      {
+        "text": "just",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 42.04
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 42.36
+        }
+      },
+      {
+        "text": "been",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 42.36
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 42.68
+        }
+      },
+      {
+        "text": "told",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 42.68
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 43.0
+        }
+      },
+      {
+        "text": "to",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 43.0
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 43.2
+        }
+      },
+      {
+        "text": "cut",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 43.2
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 43.46
+        }
+      },
+      {
+        "text": "ticket",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 43.46
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 43.9
+        }
+      },
+      {
+        "text": "volume",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 43.9
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 44.34
+        }
+      },
+      {
+        "text": "without",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 44.34
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 44.84
+        }
+      },
+      {
+        "text": "adding",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 44.84
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 45.28
+        }
+      },
+      {
+        "text": "headcount",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 45.28
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 45.9
+        }
+      }
+    ]
+  },
+  {
+    "participant": {
+      "id": 1,
+      "name": "Priya Raman",
+      "is_host": true,
+      "platform": "desktop",
+      "extra_data": null,
+      "email": null
+    },
+    "language_code": "en",
+    "words": [
+      {
+        "text": "So",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 58.0
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 58.2
+        }
+      },
+      {
+        "text": "the",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 58.2
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 58.46
+        }
+      },
+      {
+        "text": "pain",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 58.46
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 58.78
+        }
+      },
+      {
+        "text": "is",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 58.78
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 58.98
+        }
+      },
+      {
+        "text": "that",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 58.98
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 59.3
+        }
+      },
+      {
+        "text": "support",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 59.3
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 59.8
+        }
+      },
+      {
+        "text": "teams",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 59.8
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 60.18
+        }
+      },
+      {
+        "text": "are",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 60.18
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 60.44
+        }
+      },
+      {
+        "text": "being",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 60.44
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 60.82
+        }
+      },
+      {
+        "text": "asked",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 60.82
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 61.2
+        }
+      },
+      {
+        "text": "to",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 61.2
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 61.4
+        }
+      },
+      {
+        "text": "absorb",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 61.4
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 61.84
+        }
+      },
+      {
+        "text": "more",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 61.84
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 62.16
+        }
+      },
+      {
+        "text": "volume",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 62.16
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 62.6
+        }
+      },
+      {
+        "text": "with",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 62.6
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 62.92
+        }
+      },
+      {
+        "text": "a",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 62.92
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 63.06
+        }
+      },
+      {
+        "text": "flat",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 63.06
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 63.38
+        }
+      },
+      {
+        "text": "headcount",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 63.38
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 64.0
+        }
+      },
+      {
+        "text": "and",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 64.0
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 64.26
+        }
+      },
+      {
+        "text": "their",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 64.26
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 64.64
+        }
+      },
+      {
+        "text": "existing",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 64.64
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 65.2
+        }
+      },
+      {
+        "text": "tooling",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 65.2
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 65.7
+        }
+      },
+      {
+        "text": "makes",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 65.7
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 66.08
+        }
+      },
+      {
+        "text": "every",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 66.08
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 66.46
+        }
+      },
+      {
+        "text": "extra",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 66.46
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 66.84
+        }
+      },
+      {
+        "text": "ticket",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 66.84
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 67.28
+        }
+      },
+      {
+        "text": "cost",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 67.28
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 67.6
+        }
+      },
+      {
+        "text": "the",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 67.6
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 67.86
+        }
+      },
+      {
+        "text": "same",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 67.86
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 68.18
+        }
+      },
+      {
+        "text": "as",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 68.18
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 68.38
+        }
+      },
+      {
+        "text": "the",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 68.38
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 68.64
+        }
+      },
+      {
+        "text": "last",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 68.64
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 68.96
+        }
+      },
+      {
+        "text": "one",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 68.96
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 69.22
+        }
+      }
+    ]
+  },
+  {
+    "participant": {
+      "id": 3,
+      "name": "Marta Silva",
+      "is_host": false,
+      "platform": "desktop",
+      "extra_data": null,
+      "email": null
+    },
+    "language_code": "en",
+    "words": [
+      {
+        "text": "Yes",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 71.4
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 71.66
+        }
+      },
+      {
+        "text": "and",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 71.66
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 71.92
+        }
+      },
+      {
+        "text": "they",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 71.92
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 72.24
+        }
+      },
+      {
+        "text": "have",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 72.24
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 72.56
+        }
+      },
+      {
+        "text": "usually",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 72.56
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 73.06
+        }
+      },
+      {
+        "text": "already",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 73.06
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 73.56
+        }
+      },
+      {
+        "text": "bought",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 73.56
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 74.0
+        }
+      },
+      {
+        "text": "a",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 74.0
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 74.14
+        }
+      },
+      {
+        "text": "chatbot",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 74.14
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 74.64
+        }
+      },
+      {
+        "text": "that",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 74.64
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 74.96
+        }
+      },
+      {
+        "text": "did",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 74.96
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 75.22
+        }
+      },
+      {
+        "text": "not",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 75.22
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 75.48
+        }
+      },
+      {
+        "text": "work",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 75.48
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 75.8
+        }
+      },
+      {
+        "text": "we",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 75.8
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 76.0
+        }
+      },
+      {
+        "text": "tried",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 76.0
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 76.38
+        }
+      },
+      {
+        "text": "automation",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 76.38
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 77.06
+        }
+      },
+      {
+        "text": "it",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 77.06
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 77.26
+        }
+      },
+      {
+        "text": "deflected",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 77.26
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 77.88
+        }
+      },
+      {
+        "text": "nothing",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 77.88
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 78.38
+        }
+      },
+      {
+        "text": "and",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 78.38
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 78.64
+        }
+      },
+      {
+        "text": "it",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 78.64
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 78.84
+        }
+      },
+      {
+        "text": "made",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 78.84
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 79.16
+        }
+      },
+      {
+        "text": "customers",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 79.16
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 79.78
+        }
+      },
+      {
+        "text": "angry",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 79.78
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 80.16
+        }
+      }
+    ]
+  },
+  {
+    "participant": {
+      "id": 2,
+      "name": "Daniel Okafor",
+      "is_host": false,
+      "platform": "desktop",
+      "extra_data": null,
+      "email": null
+    },
+    "language_code": "en",
+    "words": [
+      {
+        "text": "Zendesk",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 85.0
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 85.5
+        }
+      },
+      {
+        "text": "is",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 85.5
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 85.7
+        }
+      },
+      {
+        "text": "in",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 85.7
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 85.9
+        }
+      },
+      {
+        "text": "almost",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 85.9
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 86.34
+        }
+      },
+      {
+        "text": "every",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 86.34
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 86.72
+        }
+      },
+      {
+        "text": "one",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 86.72
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 86.98
+        }
+      },
+      {
+        "text": "of",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 86.98
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 87.18
+        }
+      },
+      {
+        "text": "these",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 87.18
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 87.56
+        }
+      },
+      {
+        "text": "accounts",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 87.56
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 88.12
+        }
+      },
+      {
+        "text": "they",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 88.12
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 88.44
+        }
+      },
+      {
+        "text": "are",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 88.44
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 88.7
+        }
+      },
+      {
+        "text": "not",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 88.7
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 88.96
+        }
+      },
+      {
+        "text": "unhappy",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 88.96
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 89.46
+        }
+      },
+      {
+        "text": "with",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 89.46
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 89.78
+        }
+      },
+      {
+        "text": "Zendesk",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 89.78
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 90.28
+        }
+      },
+      {
+        "text": "as",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 90.28
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 90.48
+        }
+      },
+      {
+        "text": "a",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 90.48
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 90.62
+        }
+      },
+      {
+        "text": "ticketing",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 90.62
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 91.24
+        }
+      },
+      {
+        "text": "system",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 91.24
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 91.68
+        }
+      },
+      {
+        "text": "they",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 91.68
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 92.0
+        }
+      },
+      {
+        "text": "are",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 92.0
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 92.26
+        }
+      },
+      {
+        "text": "unhappy",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 92.26
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 92.76
+        }
+      },
+      {
+        "text": "that",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 92.76
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 93.08
+        }
+      },
+      {
+        "text": "it",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 93.08
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 93.28
+        }
+      },
+      {
+        "text": "does",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 93.28
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 93.6
+        }
+      },
+      {
+        "text": "not",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 93.6
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 93.86
+        }
+      },
+      {
+        "text": "get",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 93.86
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 94.12
+        }
+      },
+      {
+        "text": "cheaper",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 94.12
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 94.62
+        }
+      },
+      {
+        "text": "as",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 94.62
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 94.82
+        }
+      },
+      {
+        "text": "they",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 94.82
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 95.14
+        }
+      },
+      {
+        "text": "grow",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 95.14
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 95.46
+        }
+      }
+    ]
+  },
+  {
+    "participant": {
+      "id": 1,
+      "name": "Priya Raman",
+      "is_host": true,
+      "platform": "desktop",
+      "extra_data": null,
+      "email": null
+    },
+    "language_code": "en",
+    "words": [
+      {
+        "text": "Then",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 97.6
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 97.92
+        }
+      },
+      {
+        "text": "let",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 97.92
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 98.18
+        }
+      },
+      {
+        "text": "us",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 98.18
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 98.38
+        }
+      },
+      {
+        "text": "stop",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 98.38
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 98.7
+        }
+      },
+      {
+        "text": "positioning",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 98.7
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 99.44
+        }
+      },
+      {
+        "text": "against",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 99.44
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 99.94
+        }
+      },
+      {
+        "text": "Zendesk",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 99.94
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 100.44
+        }
+      },
+      {
+        "text": "on",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 100.44
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 100.64
+        }
+      },
+      {
+        "text": "features",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 100.64
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 101.2
+        }
+      },
+      {
+        "text": "we",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 101.2
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 101.4
+        }
+      },
+      {
+        "text": "should",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 101.4
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 101.84
+        }
+      },
+      {
+        "text": "position",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 101.84
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 102.4
+        }
+      },
+      {
+        "text": "as",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 102.4
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 102.6
+        }
+      },
+      {
+        "text": "the",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 102.6
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 102.86
+        }
+      },
+      {
+        "text": "layer",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 102.86
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 103.24
+        }
+      },
+      {
+        "text": "that",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 103.24
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 103.56
+        }
+      },
+      {
+        "text": "makes",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 103.56
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 103.94
+        }
+      },
+      {
+        "text": "support",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 103.94
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 104.44
+        }
+      },
+      {
+        "text": "cost",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 104.44
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 104.76
+        }
+      },
+      {
+        "text": "curve",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 104.76
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 105.14
+        }
+      },
+      {
+        "text": "flat",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 105.14
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 105.46
+        }
+      },
+      {
+        "text": "not",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 105.46
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 105.72
+        }
+      },
+      {
+        "text": "as",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 105.72
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 105.92
+        }
+      },
+      {
+        "text": "a",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 105.92
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 106.06
+        }
+      },
+      {
+        "text": "better",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 106.06
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 106.5
+        }
+      },
+      {
+        "text": "help",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 106.5
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 106.82
+        }
+      },
+      {
+        "text": "desk",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 106.82
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 107.14
+        }
+      }
+    ]
+  },
+  {
+    "participant": {
+      "id": 3,
+      "name": "Marta Silva",
+      "is_host": false,
+      "platform": "desktop",
+      "extra_data": null,
+      "email": null
+    },
+    "language_code": "en",
+    "words": [
+      {
+        "text": "I",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 110.2
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 110.34
+        }
+      },
+      {
+        "text": "like",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 110.34
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 110.66
+        }
+      },
+      {
+        "text": "that",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 110.66
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 110.98
+        }
+      },
+      {
+        "text": "and",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 110.98
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 111.24
+        }
+      },
+      {
+        "text": "we",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 111.24
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 111.44
+        }
+      },
+      {
+        "text": "have",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 111.44
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 111.76
+        }
+      },
+      {
+        "text": "the",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 111.76
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 112.02
+        }
+      },
+      {
+        "text": "proof",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 112.02
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 112.4
+        }
+      },
+      {
+        "text": "the",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 112.4
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 112.66
+        }
+      },
+      {
+        "text": "Ridgeline",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 112.66
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 113.28
+        }
+      },
+      {
+        "text": "account",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 113.28
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 113.78
+        }
+      },
+      {
+        "text": "went",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 113.78
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 114.1
+        }
+      },
+      {
+        "text": "from",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 114.1
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 114.42
+        }
+      },
+      {
+        "text": "eleven",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 114.42
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 114.86
+        }
+      },
+      {
+        "text": "thousand",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 114.86
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 115.42
+        }
+      },
+      {
+        "text": "tickets",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 115.42
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 115.92
+        }
+      },
+      {
+        "text": "a",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 115.92
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 116.06
+        }
+      },
+      {
+        "text": "month",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 116.06
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 116.44
+        }
+      },
+      {
+        "text": "to",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 116.44
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 116.64
+        }
+      },
+      {
+        "text": "the",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 116.64
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 116.9
+        }
+      },
+      {
+        "text": "same",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 116.9
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 117.22
+        }
+      },
+      {
+        "text": "volume",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 117.22
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 117.66
+        }
+      },
+      {
+        "text": "with",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 117.66
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 117.98
+        }
+      },
+      {
+        "text": "three",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 117.98
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 118.36
+        }
+      },
+      {
+        "text": "fewer",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 118.36
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 118.74
+        }
+      },
+      {
+        "text": "agents",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 118.74
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 119.18
+        }
+      },
+      {
+        "text": "inside",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 119.18
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 119.62
+        }
+      },
+      {
+        "text": "a",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 119.62
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 119.76
+        }
+      },
+      {
+        "text": "quarter",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 119.76
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 120.26
+        }
+      }
+    ]
+  },
+  {
+    "participant": {
+      "id": 1,
+      "name": "Priya Raman",
+      "is_host": true,
+      "platform": "desktop",
+      "extra_data": null,
+      "email": null
+    },
+    "language_code": "en",
+    "words": [
+      {
+        "text": "Good",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 134.5
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 134.82
+        }
+      },
+      {
+        "text": "decision",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 134.82
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 135.38
+        }
+      },
+      {
+        "text": "then",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 135.38
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 135.7
+        }
+      },
+      {
+        "text": "we",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 135.7
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 135.9
+        }
+      },
+      {
+        "text": "stop",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 135.9
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 136.22
+        }
+      },
+      {
+        "text": "leading",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 136.22
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 136.72
+        }
+      },
+      {
+        "text": "with",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 136.72
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 137.04
+        }
+      },
+      {
+        "text": "the",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 137.04
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 137.3
+        }
+      },
+      {
+        "text": "suite",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 137.3
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 137.68
+        }
+      },
+      {
+        "text": "story",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 137.68
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 138.06
+        }
+      },
+      {
+        "text": "in",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 138.06
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 138.26
+        }
+      },
+      {
+        "text": "mid",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 138.26
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 138.52
+        }
+      },
+      {
+        "text": "market",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 138.52
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 138.96
+        }
+      },
+      {
+        "text": "and",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 138.96
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 139.22
+        }
+      },
+      {
+        "text": "we",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 139.22
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 139.42
+        }
+      },
+      {
+        "text": "lead",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 139.42
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 139.74
+        }
+      },
+      {
+        "text": "with",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 139.74
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 140.06
+        }
+      },
+      {
+        "text": "the",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 140.06
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 140.32
+        }
+      },
+      {
+        "text": "flat",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 140.32
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 140.64
+        }
+      },
+      {
+        "text": "cost",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 140.64
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 140.96
+        }
+      },
+      {
+        "text": "curve",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 140.96
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 141.34
+        }
+      },
+      {
+        "text": "backed",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 141.34
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 141.78
+        }
+      },
+      {
+        "text": "by",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 141.78
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 141.98
+        }
+      },
+      {
+        "text": "Ridgeline",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 141.98
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 142.6
+        }
+      },
+      {
+        "text": "and",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 142.6
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 142.86
+        }
+      },
+      {
+        "text": "Hartwell",
+        "start_timestamp": {
+          "absolute": null,
+          "relative": 142.86
+        },
+        "end_timestamp": {
+          "absolute": null,
+          "relative": 143.42
+        }
+      }
+    ]
+  }
+]

@@ -1,0 +1,85 @@
+{
+  "bot.joining_call": {
+    "event": "bot.joining_call",
+    "data": {
+      "data": { "code": "joining_call", "sub_code": null, "updated_at": "2026-08-20T09:59:41.482Z" },
+      "bot": { "id": "b0000000-0000-4000-8000-00000000bot1", "metadata": {} }
+    }
+  },
+  "bot.in_waiting_room": {
+    "event": "bot.in_waiting_room",
+    "data": {
+      "data": { "code": "in_waiting_room", "sub_code": null, "updated_at": "2026-08-20T09:59:52.108Z" },
+      "bot": { "id": "b0000000-0000-4000-8000-00000000bot1", "metadata": {} }
+    }
+  },
+  "bot.in_call_not_recording": {
+    "event": "bot.in_call_not_recording",
+    "data": {
+      "data": { "code": "in_call_not_recording", "sub_code": null, "updated_at": "2026-08-20T10:00:04.771Z" },
+      "bot": { "id": "b0000000-0000-4000-8000-00000000bot1", "metadata": {} }
+    }
+  },
+  "bot.in_call_recording": {
+    "event": "bot.in_call_recording",
+    "data": {
+      "data": { "code": "in_call_recording", "sub_code": null, "updated_at": "2026-08-20T10:00:09.316Z" },
+      "bot": { "id": "b0000000-0000-4000-8000-00000000bot1", "metadata": {} }
+    }
+  },
+  "bot.call_ended": {
+    "event": "bot.call_ended",
+    "data": {
+      "data": { "code": "call_ended", "sub_code": null, "updated_at": "2026-08-20T10:29:31.004Z" },
+      "bot": { "id": "b0000000-0000-4000-8000-00000000bot1", "metadata": {} }
+    }
+  },
+  "bot.done": {
+    "event": "bot.done",
+    "data": {
+      "data": { "code": "done", "sub_code": null, "updated_at": "2026-08-20T10:30:02.550Z" },
+      "bot": { "id": "b0000000-0000-4000-8000-00000000bot1", "metadata": {} }
+    }
+  },
+  "bot.fatal": {
+    "event": "bot.fatal",
+    "data": {
+      "data": { "code": "fatal", "sub_code": "meeting_not_found", "updated_at": "2026-08-20T10:00:19.882Z" },
+      "bot": { "id": "b0000000-0000-4000-8000-00000000bot1", "metadata": {} }
+    }
+  },
+  "recording.done": {
+    "event": "recording.done",
+    "data": {
+      "data": { "code": "done", "sub_code": null, "updated_at": "2026-08-20T10:31:18.229Z" },
+      "recording": { "id": "r0000000-0000-4000-8000-00000000rec1", "metadata": {} },
+      "bot": { "id": "b0000000-0000-4000-8000-00000000bot1", "metadata": {} }
+    }
+  },
+  "recording.failed": {
+    "event": "recording.failed",
+    "data": {
+      "data": { "code": "failed", "sub_code": "upload_failed", "updated_at": "2026-08-20T10:31:18.229Z" },
+      "recording": { "id": "r0000000-0000-4000-8000-00000000rec1", "metadata": {} },
+      "bot": { "id": "b0000000-0000-4000-8000-00000000bot1", "metadata": {} }
+    }
+  },
+  "transcript.done": {
+    "event": "transcript.done",
+    "data": {
+      "data": { "code": "done", "sub_code": null, "updated_at": "2026-08-20T10:36:44.913Z" },
+      "transcript": { "id": "t0000000-0000-4000-8000-000000000tr1", "metadata": {} },
+      "recording": { "id": "r0000000-0000-4000-8000-00000000rec1", "metadata": {} },
+      "bot": { "id": "b0000000-0000-4000-8000-00000000bot1", "metadata": {} }
+    }
+  },
+  "transcript.failed": {
+    "event": "transcript.failed",
+    "data": {
+      "data": { "code": "failed", "sub_code": "provider_error", "updated_at": "2026-08-20T10:36:44.913Z" },
+      "transcript": { "id": "t0000000-0000-4000-8000-000000000tr1", "metadata": {} },
+      "recording": { "id": "r0000000-0000-4000-8000-00000000rec1", "metadata": {} },
+      "bot": { "id": "b0000000-0000-4000-8000-00000000bot1", "metadata": {} }
+    }
+  }
+}

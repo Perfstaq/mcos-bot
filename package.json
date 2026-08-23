@@ -1,0 +1,29 @@
+{
+  "name": "mcos",
+  "private": true,
+  "version": "0.1.0",
+  "description": "MCOS \u2014 Marketing Context Operating System. Milestone 1: ingestion \u2192 review gate \u2192 versioned brief.",
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:api": "npm run dev -w @mcos/api",
+    "dev:worker": "npm run dev:worker -w @mcos/api",
+    "dev:web": "npm run dev -w @mcos/web",
+    "build": "npm run build -w @mcos/api && npm run build -w @mcos/web",
+    "test": "npm run test -w @mcos/api",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:migrate": "npm run db:migrate -w @mcos/api",
+    "db:seed": "npm run db:seed -w @mcos/api --",
+    "db:studio": "npm run db:studio -w @mcos/api",
+    "setup": "npm install && npm run db:up && npm run db:migrate && npm run db:seed:demo",
+    "db:seed:demo": "npm run db:seed -w @mcos/api -- --demo"
+  }
+}

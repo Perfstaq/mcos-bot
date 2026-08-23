@@ -1,0 +1,43 @@
+name: Feature request
+description: Propose a change to what the product does
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before writing: this project has deliberate non-goals, and some of them
+        look like obvious features. Check the **Later** section of
+        [IMPLEMENTATION.md](../blob/main/IMPLEMENTATION.md) first — a proposal
+        that reverses a stated non-goal is welcome, but should say so and argue
+        the case rather than treat it as an oversight.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What is hard or impossible today? Describe the situation, not the solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would build
+    validations:
+      required: true
+
+  - type: textarea
+    id: invariants
+    attributes:
+      label: Effect on the architectural invariants
+      description: |
+        Does this touch the review gate as the sole write path, structural
+        provenance, append-only history, webhook verification, or row-level
+        tenancy? See CONTRIBUTING.md. "No effect" is a fine answer.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered

@@ -1,0 +1,70 @@
+name: Bug report
+description: Something behaves differently from how it is documented
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Security issues do not belong here.** Report them privately —
+        see [SECURITY.md](../blob/main/SECURITY.md).
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Seed with `npm run db:seed:demo`
+        2. Open /review
+        3. Press `a`
+        4. ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part
+      options:
+        - Webhook ingestion / Recall integration
+        - Artifact pipeline / R2
+        - Extraction / OpenAI
+        - Review gate / review queue
+        - Brief versioning / diff
+        - Auth / tenancy
+        - Frontend
+        - Build, deploy or CI
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Logs, stack traces, failing test output. Redact any credential before pasting.
+      render: shell
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues
+          required: true
+        - label: I have removed every credential from anything I pasted above
+          required: true

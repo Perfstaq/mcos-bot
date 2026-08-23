@@ -1,0 +1,23 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+*.log
+.DS_Store
+coverage/
+apps/web/dist/
+apps/api/dist/
+.vite/
+
+# root .env is symlinked into apps/api for the Prisma CLI
+apps/api/.env
+*.tsbuildinfo
+
+# Redundant with perfstaq-logos/perfstaq-logo/ — 683KB of duplicate bytes.
+perfstaq-logos/*.zip
+
+# Editor / OS noise
+.idea/
+.vscode/*
+!.vscode/extensions.json
