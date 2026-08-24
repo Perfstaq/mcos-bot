@@ -535,6 +535,7 @@ model User {
   assignedActionItems  ActionItem[]          @relation("ActionAssignee")
   editedNotes          MeetingNote[]         @relation("NoteEditor")
   meetingCollaborators MeetingCollaborator[]
+  preference           UserPreference?
 
   @@unique([email])
   @@map("user")
@@ -802,6 +803,47 @@ model AgendaItem {
   @@map("agenda_items")
 }
 
+/// How a meeting gets recorded by default, before per-event overrides.
+enum AutoRecordMode {
+  none
+  /// Every calendar event with a joinable link.
+  all
+  /// Only events with at least one attendee outside the workspace.
+  external
+  /// Only events this user organises.
+  owned
+
+  @@map("auto_record_mode")
+}
+
+/// Personal defaults. Distinct from CalendarConnection.autoRecordRules, which
+/// is per-calendar: this is the preference a new connection inherits, and what
+/// the settings menu edits. A per-connection rule always wins.
+model UserPreference {
+  id     String @id @default(uuid())
+  userId String @unique @map("user_id")
+
+  autoRecordMode  AutoRecordMode @default(none) @map("auto_record_mode")
+  timezone        String?
+  /// Reserved for a desktop-capture option later; only "bot" exists today.
+  recordingMethod String         @default("bot") @map("recording_method")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+/// Whether a human wrote this item or a model proposed it.
+enum ActionItemOrigin {
+  manual
+  ai_suggested
+
+  @@map("action_item_origin")
+}
+
 enum ActionItemStatus {
   open
   in_progress
@@ -821,6 +863,17 @@ model ActionItem {
   status      ActionItemStatus @default(open)
   dueAt       DateTime?        @map("due_at")
 
+  /// A suggested item is a proposal, not a commitment. It stays out of the
+  /// working lists until someone accepts it — the same shape as the claim
+  /// review gate, for the same reason: a model may not add work to a person's
+  /// plate on its own.
+  origin      ActionItemOrigin @default(manual)
+  dismissedAt DateTime?        @map("dismissed_at")
+  acceptedAt  DateTime?        @map("accepted_at")
+
+  /// Free-text bucket, e.g. "Top priority". Null means the inbox.
+  groupName String? @map("group_name")
+
   assigneeUserId  String? @map("assignee_user_id")
   createdByUserId String? @map("created_by_user_id")
 
@@ -839,6 +892,7 @@ model ActionItem {
 
   @@index([tenantId, status, dueAt])
   @@index([assigneeUserId, status])
+  @@index([tenantId, origin, dismissedAt])
   @@map("action_items")
 }
 

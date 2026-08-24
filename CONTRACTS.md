@@ -70,6 +70,20 @@ export async function <name>Routes(app: FastifyInstance): Promise<void> {
 }
 ```
 
+## Round 2 — new models (already migrated, do not edit the schema)
+
+- `UserPreference` — `userId` (unique), `autoRecordMode` (`none|all|external|owned`),
+  `timezone`, `recordingMethod`. Personal default a new calendar connection
+  inherits; a per-connection rule always wins.
+- `ActionItem` gained `origin` (`manual|ai_suggested`), `dismissedAt`,
+  `acceptedAt`, `groupName`.
+
+**A suggested action item is a proposal, not a commitment.** It stays out of the
+working lists until someone accepts it — the same shape as the claim review
+gate, and for the same reason: a model may not add work to a person's plate on
+its own. `origin: ai_suggested` with `acceptedAt: null` and `dismissedAt: null`
+is the pending state.
+
 ## Verification
 
 Before reporting done:
