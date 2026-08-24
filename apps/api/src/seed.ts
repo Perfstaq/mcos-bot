@@ -1,5 +1,6 @@
 import { ClaimType, EvidenceKind, MeetingStatus } from "@prisma/client";
 import { rawPrisma, disconnect } from "./db.js";
+import { auth } from "./auth.js";
 import { runWithContext } from "./context.js";
 import { prisma } from "./db.js";
 import { dedupeKey } from "./domain/claims.js";
@@ -118,15 +119,58 @@ const DEMO_CLAIMS: Array<{
   },
 ];
 
+const DEMO_PASSWORD = process.env.SEED_PASSWORD ?? "perfstaq-demo-password";
+
+/**
+ * Create the demo account through Better Auth rather than by inserting rows.
+ *
+ * Writing a user and a member row directly would produce an account that cannot
+ * sign in — the password would be unhashed, the `issuer` unset, and the
+ * organization's tenant never provisioned, because all three happen inside the
+ * auth layer. Going through the public API means the seeded workspace is
+ * identical to one a real signup produces.
+ */
+async function seedWorkspace(): Promise<{ tenantId: string; email: string }> {
+  const email = env.DEFAULT_REVIEWER_EMAIL;
+
+  const existing = await rawPrisma.user.findUnique({ where: { email }, select: { id: true } });
+  if (!existing) {
+    await auth.api.signUpEmail({
+      body: { email, password: DEMO_PASSWORD, name: "Demo Reviewer" },
+    });
+    console.log(`user ${email} created (password: ${DEMO_PASSWORD})`);
+  }
+
+  const user = await rawPrisma.user.findUniqueOrThrow({ where: { email }, select: { id: true } });
+
+  const org = await rawPrisma.organization.findUnique({
+    where: { slug: env.DEFAULT_TENANT_SLUG },
+    include: { tenant: { select: { id: true } } },
+  });
+
+  if (org?.tenant) return { tenantId: org.tenant.id, email };
+
+  // createOrganization runs afterCreateOrganization, which provisions the
+  // tenant. Calling it with the user's headers is what makes them the owner.
+  const created = await auth.api.createOrganization({
+    body: { name: "Freshworks (demo)", slug: env.DEFAULT_TENANT_SLUG, userId: user.id },
+  });
+  if (!created) throw new Error("Better Auth declined to create the demo organization");
+
+  const tenant = await rawPrisma.tenant.findUniqueOrThrow({
+    where: { organizationId: created.id },
+    select: { id: true, slug: true },
+  });
+  console.log(`workspace ${tenant.slug} -> tenant ${tenant.id}`);
+  return { tenantId: tenant.id, email };
+}
+
 async function main(): Promise<void> {
   const withDemo = process.argv.includes("--demo") || process.env.SEED_DEMO === "1";
 
-  const tenant = await rawPrisma.tenant.upsert({
-    where: { slug: env.DEFAULT_TENANT_SLUG },
-    create: { slug: env.DEFAULT_TENANT_SLUG, name: "Freshworks (demo)" },
-    update: {},
-  });
-  console.log(`tenant ${tenant.slug} (${tenant.id})`);
+  const { tenantId, email } = await seedWorkspace();
+  const tenant = await rawPrisma.tenant.findUniqueOrThrow({ where: { id: tenantId } });
+  console.log(`sign in as ${email} / ${DEMO_PASSWORD}`);
 
   if (!withDemo) {
     console.log("Seeded tenant only. Re-run with --demo for a populated meeting.");
