@@ -119,7 +119,18 @@ const DEMO_CLAIMS: Array<{
   },
 ];
 
-const DEMO_PASSWORD = process.env.SEED_PASSWORD ?? "perfstaq-demo-password";
+/**
+ * The default is documented in the README, so it is not a secret. SEED_PASSWORD
+ * may well be, which is why neither is ever printed: the seed's output lands in
+ * terminal history, CI logs and log aggregators, and a script that decides
+ * case-by-case whether a credential is "safe enough to echo" gets it wrong
+ * eventually. It reports which source was used and nothing more.
+ */
+const DEFAULT_DEMO_PASSWORD = "perfstaq-demo-password";
+const DEMO_PASSWORD = process.env.SEED_PASSWORD ?? DEFAULT_DEMO_PASSWORD;
+const PASSWORD_SOURCE = process.env.SEED_PASSWORD
+  ? "the value of SEED_PASSWORD"
+  : "the default documented in the README";
 
 /**
  * Create the demo account through Better Auth rather than by inserting rows.
@@ -138,7 +149,7 @@ async function seedWorkspace(): Promise<{ tenantId: string; email: string }> {
     await auth.api.signUpEmail({
       body: { email, password: DEMO_PASSWORD, name: "Demo Reviewer" },
     });
-    console.log(`user ${email} created (password: ${DEMO_PASSWORD})`);
+    console.log(`user ${email} created`);
   }
 
   const user = await rawPrisma.user.findUniqueOrThrow({ where: { email }, select: { id: true } });
@@ -170,7 +181,7 @@ async function main(): Promise<void> {
 
   const { tenantId, email } = await seedWorkspace();
   const tenant = await rawPrisma.tenant.findUniqueOrThrow({ where: { id: tenantId } });
-  console.log(`sign in as ${email} / ${DEMO_PASSWORD}`);
+  console.log(`sign in as ${email} — password is ${PASSWORD_SOURCE}`);
 
   if (!withDemo) {
     console.log("Seeded tenant only. Re-run with --demo for a populated meeting.");

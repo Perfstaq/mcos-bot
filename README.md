@@ -45,8 +45,20 @@ cp .env.example .env      # fill in the secrets — see the table below
 npm install
 npm run db:up             # postgres on 5433, redis on 6380
 npm run db:migrate
-npm run db:seed:demo      # tenant "freshworks-demo" + a populated demo meeting
+npm run db:seed:demo      # workspace, a signable-in account, and a demo meeting
 ```
+
+The seed creates a real account you can sign in with:
+
+| | |
+|---|---|
+| Email | `demo@freshworks.example` |
+| Password | `perfstaq-demo-password` |
+
+Set `SEED_PASSWORD` to use your own. The seed never prints either value — its
+output goes to terminal history and CI logs, and a script that decides
+case-by-case whether a credential is "safe enough to echo" gets it wrong
+eventually.
 
 Then, in three terminals:
 
