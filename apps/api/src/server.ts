@@ -69,9 +69,6 @@ export async function buildServer() {
   await app.register(rateLimit, {
     max: env.RATE_LIMIT_MAX,
     timeWindow: env.RATE_LIMIT_WINDOW,
-    // Recall retries non-2xx, so rate limiting the webhook endpoint would turn
-    // one burst into an escalating retry storm. It is signature-gated already.
-    allowList: (request) => request.url.startsWith("/api/v1/webhooks/"),
     keyGenerator: (request) => request.actor?.userId ?? request.ip,
   });
 
