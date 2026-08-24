@@ -135,6 +135,23 @@ export function CalendarSettings() {
 
   const dirty = selected ? rulesKey(draft) !== rulesKey(selected.auto_record_rules) : false;
 
+  // Which providers this deployment actually holds OAuth credentials for.
+  // Offering a Connect button for one it does not is how you get "Provider not
+  // found" — an accurate message that tells the user nothing they can act on.
+  const [available, setAvailable] = useState<CalendarProvider[] | null>(null);
+  useEffect(() => {
+    void (async () => {
+      try {
+        const r = await api.get<{ providers: CalendarProvider[] }>("/auth/providers");
+        setAvailable(r.providers);
+      } catch {
+        // The endpoint is unauthenticated and should not fail. If it does,
+        // fall back to offering both rather than hiding a working button.
+        setAvailable(["google", "microsoft"]);
+      }
+    })();
+  }, []);
+
   const connect = async (provider: CalendarProvider) => {
     setBusy(`connect:${provider}`);
     setError(null);
@@ -152,7 +169,15 @@ export function CalendarSettings() {
     if (linkError) {
       // A provider the deployment holds no credentials for fails here rather
       // than after a redirect, and the code it fails with is the only clue.
-      setError(`${PROVIDER_LABEL[provider]} could not be connected. ${authErrorMessage(linkError)}`);
+      const notConfigured = /provider not found/i.test(authErrorMessage(linkError) ?? "");
+      setError(
+        notConfigured
+          ? `${PROVIDER_LABEL[provider]} is not configured on this deployment. ` +
+            `An OAuth client has to exist before anyone can connect one: set ` +
+            `${provider === "google" ? "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET" : "MICROSOFT_CLIENT_ID and MICROSOFT_CLIENT_SECRET"} ` +
+            `and restart the API. See docs/CALENDAR-SETUP.md.`
+          : `${PROVIDER_LABEL[provider]} could not be connected. ${authErrorMessage(linkError)}`,
+      );
     }
   };
 
@@ -228,20 +253,24 @@ export function CalendarSettings() {
         <h1>Calendar</h1>
         <span className="sub">Which calls the bot is allowed to join, and on whose grant</span>
         <div className="grow" />
-        <button
-          className="btn sm"
-          disabled={busy === "connect:google"}
-          onClick={() => void connect("google")}
-        >
-          <IconPlus /> Google
-        </button>
-        <button
-          className="btn sm"
-          disabled={busy === "connect:microsoft"}
-          onClick={() => void connect("microsoft")}
-        >
-          <IconPlus /> Microsoft
-        </button>
+        {(["google", "microsoft"] as const).map((provider) => {
+          const configured = available === null || available.includes(provider);
+          return (
+            <button
+              key={provider}
+              className="btn sm"
+              disabled={busy === `connect:${provider}` || !configured}
+              title={
+                configured
+                  ? undefined
+                  : `This deployment has no ${PROVIDER_LABEL[provider]} OAuth client configured.`
+              }
+              onClick={() => void connect(provider)}
+            >
+              <IconPlus /> {provider === "google" ? "Google" : "Microsoft"}
+            </button>
+          );
+        })}
       </header>
 
       <div className="panes">
