@@ -136,19 +136,23 @@ resource "aws_iam_role_policy" "task" {
  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_openid_connect_provider
  */
 resource "aws_iam_openid_connect_provider" "github" {
-  count = var.create_github_oidc_provider ? 1 : 0
+  count = var.enable_github_deploy_role && var.create_github_oidc_provider ? 1 : 0
 
   url            = "https://token.actions.githubusercontent.com"
   client_id_list = ["sts.amazonaws.com"]
 }
 
 data "aws_iam_openid_connect_provider" "github" {
-  count = var.create_github_oidc_provider ? 0 : 1
+  count = var.enable_github_deploy_role && !var.create_github_oidc_provider ? 1 : 0
   url   = "https://token.actions.githubusercontent.com"
 }
 
 locals {
-  github_oidc_arn = var.create_github_oidc_provider ? aws_iam_openid_connect_provider.github[0].arn : data.aws_iam_openid_connect_provider.github[0].arn
+  github_oidc_arn = !var.enable_github_deploy_role ? "" : (
+    var.create_github_oidc_provider
+    ? aws_iam_openid_connect_provider.github[0].arn
+    : data.aws_iam_openid_connect_provider.github[0].arn
+  )
 
   # GitHub's sub claim. The environment form is the half of the production
   # approval gate that AWS can enforce: GitHub will not mint a token carrying
@@ -188,6 +192,8 @@ data "aws_iam_policy_document" "github_assume" {
 }
 
 resource "aws_iam_role" "deploy" {
+  count = var.enable_github_deploy_role ? 1 : 0
+
   name                 = "${local.name}-github-deploy"
   description          = "Assumed by GitHub Actions via OIDC to build, migrate and deploy"
   assume_role_policy   = data.aws_iam_policy_document.github_assume.json
@@ -315,7 +321,9 @@ data "aws_iam_policy_document" "deploy" {
 }
 
 resource "aws_iam_role_policy" "deploy" {
+  count = var.enable_github_deploy_role ? 1 : 0
+
   name   = "deploy"
-  role   = aws_iam_role.deploy.id
+  role   = aws_iam_role.deploy[0].id
   policy = data.aws_iam_policy_document.deploy.json
 }

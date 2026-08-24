@@ -71,8 +71,13 @@ resource "aws_elasticache_replication_group" "this" {
   node_type      = var.redis_node_type
   port           = 6379
 
-  num_cache_clusters         = var.redis_num_cache_clusters
-  automatic_failover_enabled = var.redis_automatic_failover
+  num_cache_clusters = var.redis_num_cache_clusters
+  # Both flags are gated on the node count, not just multi_az_enabled. AWS
+  # rejects automatic failover on a single-node group, so asking for one node
+  # and leaving failover at its default made the plan fail with an error about
+  # a variable the operator never set. Failover is a property of having a
+  # replica; it cannot be requested independently of one.
+  automatic_failover_enabled = var.redis_automatic_failover && var.redis_num_cache_clusters > 1
   multi_az_enabled           = var.redis_automatic_failover && var.redis_num_cache_clusters > 1
 
   subnet_group_name    = aws_elasticache_subnet_group.this.name

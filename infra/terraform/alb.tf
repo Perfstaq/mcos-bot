@@ -1,3 +1,11 @@
+locals {
+  # The address the world actually reaches this stack on. With a domain and a
+  # certificate that is https://<domain>; without them it is the ALB's own
+  # hostname over plain HTTP. Derived once so the container environment, the
+  # webhook URL and the outputs cannot disagree.
+  public_url = local.tls_enabled ? "https://${var.domain_name}" : "http://${aws_lb.this.dns_name}"
+}
+
 /**
  * Public edge. TLS terminates here and nowhere else; the API listens on plain
  * HTTP inside the VPC.
@@ -124,6 +132,8 @@ resource "aws_lb_target_group" "api" {
 }
 
 resource "aws_lb_listener" "https" {
+  count = local.tls_enabled ? 1 : 0
+
   load_balancer_arn = aws_lb.this.arn
   port              = 443
   protocol          = "HTTPS"
@@ -136,7 +146,10 @@ resource "aws_lb_listener" "https" {
   }
 }
 
+# Redirect to HTTPS only when there is somewhere to redirect to.
 resource "aws_lb_listener" "http_redirect" {
+  count = local.tls_enabled ? 1 : 0
+
   load_balancer_arn = aws_lb.this.arn
   port              = 80
   protocol          = "HTTP"
@@ -149,5 +162,21 @@ resource "aws_lb_listener" "http_redirect" {
       protocol    = "HTTPS"
       status_code = "HTTP_301"
     }
+  }
+}
+
+# Without a certificate, port 80 serves the app rather than redirecting into a
+# listener that does not exist. This is the deliberate no-domain posture: the
+# stack is reachable on the ALB's own hostname the moment it comes up.
+resource "aws_lb_listener" "http_direct" {
+  count = local.tls_enabled ? 0 : 1
+
+  load_balancer_arn = aws_lb.this.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.api.arn
   }
 }

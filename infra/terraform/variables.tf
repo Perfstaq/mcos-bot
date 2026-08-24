@@ -20,9 +20,19 @@ variable "environment" {
 }
 
 variable "aws_region" {
-  description = "AWS region. ap-south-1 (Mumbai) is enabled by default and has the widest instance coverage of the India regions."
+  description = <<-EOT
+    AWS region.
+
+    ap-southeast-2 (Sydney) is the default because it is the only region this
+    account's organization SCP permits resource creation in. ap-south-1 (Mumbai)
+    is the intended home — India residency, enabled by default, widest instance
+    coverage of the India regions — and becomes a one-line change here once the
+    management account adds it to the SCP's allowed-region condition.
+
+    See docs/AWS-ACCESS.md for the policy statement and how to verify it landed.
+  EOT
   type        = string
-  default     = "ap-south-1"
+  default     = "ap-southeast-2"
 }
 
 variable "repository" {
@@ -79,18 +89,35 @@ variable "ingress_cidrs" {
  * ---------------------------------------------------------------------- */
 
 variable "acm_certificate_arn" {
-  description = "ARN of an ISSUED ACM certificate in var.aws_region covering var.domain_name. Validation is a DNS change outside Terraform's control, so the certificate is an input, not a resource here."
+  description = "ARN of an ISSUED ACM certificate in var.aws_region covering var.domain_name. Validation is a DNS change outside Terraform's control, so the certificate is an input, not a resource here. Empty means the ALB serves plain HTTP on its own hostname."
   type        = string
+  default     = ""
 
   validation {
-    condition     = can(regex("^arn:aws[a-z-]*:acm:", var.acm_certificate_arn))
-    error_message = "acm_certificate_arn must be an ACM certificate ARN."
+    condition     = var.acm_certificate_arn == "" || can(regex("^arn:aws[a-z-]*:acm:", var.acm_certificate_arn))
+    error_message = "acm_certificate_arn must be an ACM certificate ARN, or empty for HTTP-only."
   }
 }
 
 variable "domain_name" {
-  description = "Public hostname for the API and SPA, e.g. app.example.com. Becomes APP_BASE_URL and WEB_ORIGIN, and therefore the Recall webhook URL."
+  description = <<-EOT
+    Public hostname for the API and SPA. Becomes APP_BASE_URL and WEB_ORIGIN,
+    and therefore the Recall webhook URL.
+
+    Empty means "no domain yet": the ALB serves plain HTTP on its own AWS
+    hostname and the app is reachable immediately. That is a real deployment,
+    not a broken one, but it is not a finished one — session cookies cannot be
+    marked Secure over HTTP. Treat it as a staging posture and set a domain plus
+    a certificate before real traffic.
+  EOT
   type        = string
+  default     = ""
+}
+
+locals {
+  # One place decides the scheme, so the listener, the container environment and
+  # the webhook URL cannot disagree about it.
+  tls_enabled = var.acm_certificate_arn != "" && var.domain_name != ""
 }
 
 variable "ssl_policy" {
@@ -415,6 +442,20 @@ variable "alarm_sns_topic_arn" {
 /* -------------------------------------------------------------------------
  * CI/CD
  * ---------------------------------------------------------------------- */
+
+variable "enable_github_deploy_role" {
+  description = <<-EOT
+    Create the GitHub OIDC provider and the deploy role the pipeline assumes.
+
+    False skips the whole CI/CD identity. Nothing the running application needs
+    depends on it — deployment becomes a manual `aws ecs update-service` until
+    it is switched on. Some organizations deny iam:CreateOpenIDConnectProvider
+    by SCP, which is a decision made above this account and cannot be worked
+    around from inside it.
+  EOT
+  type        = bool
+  default     = true
+}
 
 variable "create_github_oidc_provider" {
   description = "Create the GitHub OIDC provider. An account can hold exactly one per issuer URL, so this must be false in the second environment if both share an AWS account."

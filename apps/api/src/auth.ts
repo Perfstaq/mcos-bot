@@ -77,9 +77,18 @@ export const auth = betterAuth({
   advanced: {
     // Cross-site cookies are required when the SPA is served from a different
     // origin than the API, which is the case in local development.
+    // `secure` follows the transport, not the build mode. Forcing it on in
+    // production is the obvious rule and the wrong one: a production stack
+    // reachable over plain HTTP — a load balancer with no certificate yet —
+    // would set cookies the browser silently refuses, and sign-in would appear
+    // to succeed and then not stick, with nothing in any log to explain it.
+    //
+    // Running production over HTTP is a real posture, not a mistake to be
+    // defended against by breaking it. It is announced loudly at boot instead;
+    // see the warning in server.ts.
     defaultCookieAttributes: {
       sameSite: env.NODE_ENV === "production" ? "lax" : "none",
-      secure: env.NODE_ENV === "production" || authBaseUrl.startsWith("https"),
+      secure: authBaseUrl.startsWith("https"),
       httpOnly: true,
     },
   },

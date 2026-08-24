@@ -159,9 +159,9 @@ locals {
     { name = "PORT", value = tostring(var.container_port) },
     { name = "HOST", value = "0.0.0.0" },
     { name = "LOG_LEVEL", value = var.log_level },
-    { name = "APP_BASE_URL", value = "https://${var.domain_name}" },
-    { name = "WEB_ORIGIN", value = "https://${var.domain_name}" },
-    { name = "ALLOWED_ORIGINS", value = "https://${var.domain_name}" },
+    { name = "APP_BASE_URL", value = "${local.public_url}" },
+    { name = "WEB_ORIGIN", value = "${local.public_url}" },
+    { name = "ALLOWED_ORIGINS", value = "${local.public_url}" },
     { name = "AWS_REGION", value = var.aws_region },
     { name = "RECALL_REGION", value = var.recall_region },
     { name = "RECALL_BOT_NAME", value = var.recall_bot_name },
@@ -546,7 +546,7 @@ resource "aws_ssm_parameter" "deploy_manifest" {
     # For the workflow's post-deploy smoke check. Public and non-secret, but it
     # still belongs here rather than in the workflow: staging and production
     # differ, and a hostname hardcoded in CI is a hostname that goes stale.
-    public_url = "https://${var.domain_name}"
+    public_url = "${local.public_url}"
   })
 
   tags = { Name = "${local.name}-deploy-manifest" }

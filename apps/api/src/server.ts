@@ -169,6 +169,15 @@ if (isEntrypoint) {
   process.on("SIGTERM", () => void close("SIGTERM"));
   process.on("SIGINT", () => void close("SIGINT"));
 
+  if (env.NODE_ENV === "production" && !authBaseUrl.startsWith("https")) {
+    app.log.warn(
+      { authBaseUrl },
+      "running in production over plain HTTP: session cookies are NOT marked Secure " +
+        "and anything on the network path can read them. Set a domain and a TLS " +
+        "certificate before real traffic.",
+    );
+  }
+
   await app.listen({ port: env.PORT, host: env.HOST });
   app.log.info(
     {

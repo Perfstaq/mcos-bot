@@ -16,5 +16,8 @@ env/
 crash.log
 
 # Plan files can contain variable values, including anything sensitive that
-# was passed on the command line.
+# was passed on the command line. Both spellings: `-out=tfplan` with no
+# extension is the common habit and the *.tfplan glob does not catch it.
 *.tfplan
+tfplan
+tfplan.*

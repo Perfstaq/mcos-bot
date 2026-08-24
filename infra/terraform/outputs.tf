@@ -20,7 +20,7 @@ output "alb_zone_id" {
 
 output "webhook_url" {
   description = "Register this in the Recall dashboard. It must be reachable and stable — a change here means re-registering, and unregistered webhooks are silent."
-  value       = "https://${var.domain_name}/api/v1/webhooks/recall"
+  value       = "${local.public_url}/api/v1/webhooks/recall"
 }
 
 output "ecr_repository_url" {
@@ -51,7 +51,7 @@ output "deploy_manifest_parameter" {
 
 output "github_deploy_role_arn" {
   description = "Set as the AWS_DEPLOY_ROLE_ARN secret in GitHub. It contains the account id, which is why it is a secret rather than a committed value."
-  value       = aws_iam_role.deploy.arn
+  value       = var.enable_github_deploy_role ? aws_iam_role.deploy[0].arn : ""
 }
 
 output "database_endpoint" {
