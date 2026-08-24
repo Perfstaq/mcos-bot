@@ -87,7 +87,21 @@ export const auth = betterAuth({
     // defended against by breaking it. It is announced loudly at boot instead;
     // see the warning in server.ts.
     defaultCookieAttributes: {
-      sameSite: env.NODE_ENV === "production" ? "lax" : "none",
+      // Lax, not None — in both environments. The browser is always talking to
+      // the same origin it loaded the app from: in development Vite proxies
+      // /api through to the API port, and in production the API serves the
+      // built SPA itself. Nothing here is cross-site.
+      //
+      // `None` was actively harmful. Browsers reject a SameSite=None cookie
+      // that is not also Secure, and `secure` follows the transport — so over
+      // plain HTTP the pair was invalid and the session cookie was silently
+      // discarded. Sign-in returned 200, no cookie was stored, and the user
+      // was bounced back to the login page with nothing logged anywhere.
+      // curl does not enforce the rule, so the API looked healthy throughout.
+      //
+      // A deployment that genuinely serves the SPA from a different origin
+      // would need None, and would therefore need HTTPS first.
+      sameSite: "lax",
       secure: authBaseUrl.startsWith("https"),
       httpOnly: true,
     },
