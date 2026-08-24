@@ -55,6 +55,10 @@ export function NotesEditor({ meetingId, user }: { meetingId: string; user: Note
   const opened = useRef(false);
 
   useEffect(() => {
+    // Guards the deferred peer update below: StrictMode tears this effect down
+    // and rebuilds it, and a microtask queued by the first pass must not write
+    // state belonging to a session that has already been destroyed.
+    let cancelled = false;
     const doc = new Y.Doc();
 
     // Deliberately no `field`/`fragment` override anywhere in this file: the
@@ -115,11 +119,21 @@ export function NotesEditor({ meetingId, user }: { meetingId: string; user: Note
           color: safeColor(identity?.["color"]),
         });
       }
-      setPeers(seen);
+      // Deferred out of the synchronous awareness callback on purpose.
+      // CollaborationCaret writes this client's own awareness state while the
+      // editor is being constructed — which happens during the child's render —
+      // and awareness fires "change" synchronously. Setting parent state from
+      // there is a setState-during-render of a different component, which React
+      // reports as an error. A microtask puts it after the commit.
+      queueMicrotask(() => {
+        if (cancelled) return;
+        setPeers(seen);
+      });
     };
     provider.awareness.on("change", readPeers);
 
     return () => {
+      cancelled = true;
       provider.awareness.off("change", readPeers);
       // destroy() disconnects first, which broadcasts the removal of this
       // client's awareness state — otherwise the caret sits in everyone else's
