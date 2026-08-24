@@ -128,7 +128,7 @@ resource "aws_db_instance" "this" {
   publicly_accessible    = false
 
   backup_retention_period = var.db_backup_retention_days
-  # UTC. 20:30 UTC is 02:00 IST — after the working day in Hyderabad and before
+  # UTC. 20:30 UTC is 02:00 IST — after the working day in India and before
   # the maintenance window, which must not overlap it.
   backup_window            = "20:30-21:30"
   maintenance_window       = "Mon:22:00-Mon:23:00"

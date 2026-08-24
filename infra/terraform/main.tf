@@ -1,11 +1,11 @@
 /**
- * MCOS — production infrastructure, AWS Hyderabad (ap-south-2).
+ * MCOS — production infrastructure, AWS Mumbai (ap-south-1).
  *
  * One image, two ECS Fargate services:
  *   node apps/api/dist/server.js   → the API, behind the ALB, also serves the SPA
  *   node apps/api/dist/worker.js   → the BullMQ workers, no inbound traffic
  *
- * Read infra/terraform/README.md before the first apply. ap-south-2 is an
+ * Read infra/terraform/README.md before the first apply. ap-south-1 is an
  * opt-in region and its instance-type coverage is thinner than Mumbai; every
  * instance class in this stack is a variable for exactly that reason.
  *
@@ -35,7 +35,7 @@ terraform {
    *   terraform init \
    *     -backend-config=bucket=<state-bucket> \
    *     -backend-config=dynamodb_table=<lock-table> \
-   *     -backend-config=region=ap-south-2
+   *     -backend-config=region=ap-south-1
    *
    * workspace_key_prefix keeps staging and production state under separate
    * prefixes in the same bucket, so a misdirected apply cannot overwrite the

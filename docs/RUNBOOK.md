@@ -105,15 +105,15 @@ first; it turns a search into a lookup.
 
 Everything before step 4 is a prerequisite, not a step. Read
 [`infra/terraform/README.md`](../infra/terraform/README.md) first — especially
-the `ap-south-2` section.
+the `ap-south-1` section.
 
 **1. Prerequisites.**
 
-- `ap-south-2` enabled in the account (Account → AWS Regions). Wait for IAM to
+- `ap-south-1` enabled in the account (Account → AWS Regions). Wait for IAM to
   propagate — minutes, not seconds.
 - S3 state bucket + DynamoDB lock table created (commands in the Terraform
   README).
-- ACM certificate **ISSUED**, in `ap-south-2`, covering your domain.
+- ACM certificate **ISSUED**, in `ap-south-1`, covering your domain.
 - R2 bucket created with `--location apac` (the hint is immutable).
 - Recall.ai workspace, API key and workspace webhook secret, in a region Recall
   actually operates in — there is no India region.
@@ -580,4 +580,4 @@ safe to do without waking anyone; anything not in this document probably
 warrants a second person.
 
 Third parties with their own status pages, in the order they are likely to be
-the cause: Recall.ai, OpenAI, Cloudflare (R2), AWS `ap-south-2`.
+the cause: Recall.ai, OpenAI, Cloudflare (R2), AWS `ap-south-1`.

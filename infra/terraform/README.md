@@ -1,4 +1,4 @@
-# MCOS infrastructure — AWS Hyderabad (`ap-south-2`)
+# MCOS infrastructure — AWS Mumbai (`ap-south-1`)
 
 Terraform for the production and staging stacks: VPC, ECS Fargate (API +
 worker), ALB with ACM TLS, RDS Postgres 16, ElastiCache Redis, Secrets Manager,
@@ -10,24 +10,32 @@ in [`docs/OBSERVABILITY.md`](../../docs/OBSERVABILITY.md).
 
 ---
 
-## ⚠️ Read this before the first apply: `ap-south-2` is an opt-in region
+## ⚠️ Read this before the first apply
 
-Hyderabad is not enabled by default and does not behave like Mumbai
-(`ap-south-1`). Four things will bite, in roughly this order:
+**1. An organization SCP decides which regions this account may build in.**
+This is the constraint that actually bites, and it outranks everything below —
+an SCP is a hard ceiling that no role in the member account can override, so a
+role named `AccountFullAccessRole` will still be refused.
 
-**1. The region must be enabled before anything works.**
-Account → AWS Regions → enable Asia Pacific (Hyderabad). A fresh account cannot
-see the region at all until this is done, and IAM propagation afterwards takes
-minutes, not seconds — a `terraform apply` started too soon fails with
-authorization errors that look like a broken role.
+Verify before planning anything, from the account you intend to deploy from:
 
-**2. Instance-type coverage is thinner than Mumbai, and varies by AZ *within*
-the region.** This is the single most likely cause of a failed first apply. A
-class that exists in `ap-south-1` may not exist in `ap-south-2`, and one that
-exists in `ap-south-2a` may not exist in `ap-south-2b` — which matters because
-the RDS subnet group spans both.
+```bash
+# Creates nothing. "DryRunOperation" means allowed; an explicit-deny message
+# naming a service_control_policy means the region is fenced off.
+aws ec2 create-vpc --cidr-block 10.99.0.0/16 --dry-run \
+  --region ap-south-1 --profile <profile>
+```
 
-Every instance class in this stack is therefore a **variable**, not a literal:
+If that is denied, the SCP in the management account needs `ap-south-1` added to
+its allowed-region condition. Nothing in this directory can work around it.
+
+**2. `ap-south-1` (Mumbai) is enabled by default.** Unlike the opt-in regions —
+`ap-south-1` (Mumbai) among them — it needs no Account → AWS Regions step,
+and its instance-type coverage is the widest of the India regions. That removes
+a whole class of first-apply failures.
+
+Instance classes are still variables rather than literals, because a class being
+*orderable* still varies by AZ within a region:
 
 | Variable | Default | Change it if… |
 |---|---|---|
@@ -37,54 +45,30 @@ Every instance class in this stack is therefore a **variable**, not a literal:
 | `worker_cpu` / `worker_memory` | `1024` / `2048` | same |
 | `task_cpu_architecture` | `X86_64` | you switch the build to Graviton |
 
-An unavailable class is a one-line `.tfvars` change and a re-plan. Nothing else
-in this configuration has to move. **Check before you apply:**
+**Check before you apply:**
 
 ```bash
-# Which Postgres 16 classes exist here, and in which AZs
 aws rds describe-orderable-db-instance-options \
-  --engine postgres --engine-version 16 --region ap-south-2 \
-  --query 'OrderableDBInstanceOptions[].{class:DBInstanceClass,az:AvailabilityZones[].Name,multiAZ:MultiAZCapable}' \
+  --engine postgres --engine-version 16 --region ap-south-1 \
+  --query 'OrderableDBInstanceOptions[].{class:DBInstanceClass,az:AvailabilityZones[].Name}' \
   --output table
-
-# Which Fargate CPU/memory pairings are legal (this is region-independent, but
-# the pairing rules trip people up more often than availability does)
-#   256  : 512, 1024, 2048
-#   512  : 1024 .. 4096 in 1024 steps
-#   1024 : 2048 .. 8192 in 1024 steps
-#   2048 : 4096 .. 16384 in 1024 steps
-#   4096 : 8192 .. 30720 in 1024 steps
 ```
 
-ElastiCache has no equivalent "orderable options" API. Attempt the plan, or
-check the node type in the console's create wizard for `ap-south-2`.
+Fargate CPU/memory pairings are region-independent but trip people up more often
+than availability does:
 
-**3. Recall.ai has no India region.** `var.recall_region` is one of
-`us-east-1`, `us-west-2`, `eu-central-1`, `ap-northeast-1` — meeting media is
-processed outside India regardless of where this stack runs. **If data
-residency is the reason Hyderabad was chosen, compute placement alone does not
-deliver it, and that needs to be raised explicitly rather than assumed.**
-
-**4. Cloudflare R2 has no Hyderabad location.** Create the artifact bucket with
-a location hint of `apac`; the hint is set once at creation and is immutable.
-
-```bash
-npx wrangler r2 bucket create mcos-artifacts --location apac
+```
+  256  : 512, 1024, 2048
+  512  : 1024 .. 4096 in 1024 steps
+  1024 : 2048 .. 8192 in 1024 steps
+  2048 : 4096 .. 16384 in 1024 steps
+  4096 : 8192 .. 30720 in 1024 steps
 ```
 
-R2's `jurisdiction` flag — the one that actually enforces locality — supports
-only `eu` and `fedramp`. A location hint is a placement preference, not a
-residency guarantee.
-
-**One more `ap-south-2` specific:** if you enable ALB access logs
-(`alb_access_logs_bucket`), the S3 bucket policy must grant the
-`logdelivery.elasticloadbalancing.amazonaws.com` **service principal**. The
-legacy per-region ELB account-id policy does not cover Hyderabad — AWS's own
-list of ELB account ids stops at the regions that existed before August 2022,
-and states that regions not in the list do not support the legacy policy.
-([AWS: enable access logs for your ALB](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/enable-access-logging.html))
-
----
+**3. `terraform plan` needs `ec2:DescribeAvailabilityZones`.** `network.tf` reads
+AZs from a data source rather than hardcoding names, so a policy that denies that
+one call fails the plan before anything is created — with an error that reads
+like a Terraform bug rather than a permissions one.
 
 ## Layout
 
@@ -99,7 +83,7 @@ and states that regions not in the list do not support the legacy policy.
 | `secrets.tf` | KMS key and every Secrets Manager entry |
 | `iam.tf` | Task execution role, task role, GitHub OIDC deploy role |
 | `alarms.tf` | CloudWatch alarms, each with its threshold justified |
-| `variables.tf` | Every knob, with the ap-south-2 caveats attached |
+| `variables.tf` | Every knob, with the ap-south-1 caveats attached |
 | `outputs.tf` | ARNs, names and endpoints — never values |
 
 There are no modules. One environment is one workspace over one flat
@@ -114,7 +98,7 @@ Terraform cannot bootstrap its own backend. Create them once, by hand, in the
 account that will hold the stacks:
 
 ```bash
-REGION=ap-south-2
+REGION=ap-south-1
 BUCKET=<your-state-bucket>           # must be globally unique
 TABLE=mcos-terraform-locks
 
@@ -173,7 +157,7 @@ credentials live in Secrets Manager.
 Required with no default: `environment`, `repository`, `domain_name`,
 `acm_certificate_arn`.
 
-The ACM certificate must already be **ISSUED**, in `ap-south-2`, and cover
+The ACM certificate must already be **ISSUED**, in `ap-south-1`, and cover
 `domain_name`. It is an input rather than a resource because validation is a
 DNS change Terraform cannot complete on its own, and a stack that hangs for an
 hour on `aws_acm_certificate_validation` is a stack nobody can `apply` twice.
@@ -208,15 +192,15 @@ the intended behaviour, not a bug in this stack.
 Terraform has been formatted (`terraform fmt`) and validated
 (`terraform validate`) against AWS provider 5.100. **It has never been planned
 or applied against a real AWS account** — validation checks syntax and schema,
-not whether Hyderabad will actually sell you a `db.m6g.large`. Before the first
+not whether Mumbai will actually sell you a `db.m6g.large`. Before the first
 apply, confirm:
 
-1. `ap-south-2` is enabled in the account, and IAM has propagated.
-2. `db_instance_class` is orderable for Postgres 16 in `ap-south-2`, in the AZs
+1. `ap-south-1` is enabled in the account, and IAM has propagated.
+2. `db_instance_class` is orderable for Postgres 16 in `ap-south-1`, in the AZs
    the subnet group will span (see the CLI command above).
-3. `redis_node_type` is available in `ap-south-2`.
+3. `redis_node_type` is available in `ap-south-1`.
 4. The Fargate CPU/memory pairings in the tfvars are legal (table above).
-5. The ACM certificate is ISSUED, in `ap-south-2`, and covers `domain_name`.
+5. The ACM certificate is ISSUED, in `ap-south-1`, and covers `domain_name`.
 6. Service quotas for the region: Fargate vCPU (default 6 vCPU on a new
    account — this stack requests 4 at baseline and up to 12 at full scale-out),
    VPCs, Elastic IPs (one per NAT Gateway), and NAT Gateways per AZ.
@@ -243,7 +227,7 @@ from the SSM deploy manifest Terraform writes:
 | Where | Name | Value |
 |---|---|---|
 | Repository **secret** | `AWS_DEPLOY_ROLE_ARN` | `terraform output github_deploy_role_arn` |
-| Repository **variable** | `AWS_REGION` | `ap-south-2` |
+| Repository **variable** | `AWS_REGION` | `ap-south-1` |
 
 The role ARN is a secret only because it contains the account id.
 

@@ -187,13 +187,12 @@ docker run --env-file .env mcos node apps/api/dist/worker.js       # workers
 ```
 
 One ECS Fargate service for the API and one for the workers, from the same image, in
-**`ap-south-2` (AWS Hyderabad)**. RDS Postgres 16, ElastiCache Redis, R2 for artifacts.
+**`ap-south-1` (AWS Mumbai)**. RDS Postgres 16, ElastiCache Redis, R2 for artifacts.
 Run `npx prisma migrate deploy` as a release task.
 
-`ap-south-2` is an **opt-in region** — enable it in Account → AWS Regions first, and
-verify Fargate / RDS / ElastiCache instance classes are available in the specific AZs you
+`ap-south-1` is enabled by default. Verify Fargate / RDS / ElastiCache instance classes are available in the specific AZs you
 plan to use. Create the R2 bucket with `--location apac`; the hint is immutable after
-creation. See [IMPLEMENTATION.md § 9](IMPLEMENTATION.md#9-deploy--aws-hyderabad-ap-south-2)
+creation. See [IMPLEMENTATION.md § 9](IMPLEMENTATION.md#9-deploy--aws-hyderabad-ap-south-1)
 for the caveats, including why Recall's lack of an India region means compute placement
 alone does not give you data residency.
 

@@ -17,27 +17,27 @@
 # Must equal the Terraform workspace name. The plan fails if it does not.
 environment = "production"
 
-aws_region = "ap-south-2"
+aws_region = "ap-south-1"
 
 # owner/repo. Used for tagging and for the GitHub OIDC trust policy — a typo
 # here means the deploy role trusts the wrong repository.
 repository = "your-org/mcos"
 
 # --- TLS and DNS -----------------------------------------------------------
-# The certificate must already be ISSUED, in ap-south-2, and cover domain_name.
+# The certificate must already be ISSUED, in ap-south-1, and cover domain_name.
 # ACM validation is a DNS change, so it is not managed here.
 domain_name         = "app.example.com"
-acm_certificate_arn = "arn:aws:acm:ap-south-2:000000000000:certificate/00000000-0000-0000-0000-000000000000"
+acm_certificate_arn = "arn:aws:acm:ap-south-1:000000000000:certificate/00000000-0000-0000-0000-000000000000"
 
 # Lock this down if the product is not meant to be publicly reachable.
 # ingress_cidrs = ["0.0.0.0/0"]
 
 # Optional. The bucket and its policy are created outside this stack; see
-# README.md for the ap-south-2 bucket policy caveat.
+# README.md for the ap-south-1 bucket policy caveat.
 # alb_access_logs_bucket = "example-alb-logs"
 
 # --- Sizing ----------------------------------------------------------------
-# THESE ARE THE VARIABLES TO CHANGE FIRST if an apply fails in ap-south-2 with
+# THESE ARE THE VARIABLES TO CHANGE FIRST if an apply fails in ap-south-1 with
 # an unavailable instance class. Nothing else has to move.
 db_instance_class = "db.m6g.large"
 redis_node_type   = "cache.t4g.medium"
@@ -81,7 +81,7 @@ log_retention_days = 30
 
 # --- Alarms ----------------------------------------------------------------
 # Without this the alarms exist and notify nobody.
-alarm_sns_topic_arn = "arn:aws:sns:ap-south-2:000000000000:mcos-production-alerts"
+alarm_sns_topic_arn = "arn:aws:sns:ap-south-1:000000000000:mcos-production-alerts"
 
 # --- CI/CD -----------------------------------------------------------------
 # Set to false in the SECOND environment if both share one AWS account: the

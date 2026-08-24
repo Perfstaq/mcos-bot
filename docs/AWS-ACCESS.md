@@ -1,97 +1,88 @@
-# Granting AWS access for the first deploy
+# AWS access for the first deploy
 
-What to create, what to hand over, and what not to. Everything here is done once.
+## Current state
 
-## Do not hand over root credentials
+Access exists. `aws login --profile mcos` assumes
+`arn:aws:sts::138067046920:assumed-role/AccountFullAccessRole`, which has ample
+IAM permission. **No IAM user needs creating** — the earlier version of this
+document asked for one, and that turned out to be unnecessary.
 
-Not for caution's sake — root cannot be scoped, cannot be rotated without
-disrupting the account, and cannot be revoked independently of everything else
-you own. Create a dedicated deployment identity instead.
+## The actual blocker: an organization SCP
 
-## 1. Enable `ap-south-2` first
+The account is a member of organization `o-k3p8upby76` (management account
+`590951086615`), and its Service Control Policy permits resource creation in
+**`ap-southeast-2` (Sydney) only**. Verified by dry-run, which creates nothing:
 
-Console → account menu → **AWS Regions** → enable **Asia Pacific (Hyderabad)**.
+| Region | `ec2:CreateVpc --dry-run` |
+|---|---|
+| `ap-southeast-2` | allowed |
+| `ap-south-1` (Mumbai) | explicit deny, service_control_policy |
+| `us-east-1` | explicit deny, service_control_policy |
+| `ap-south-2` (Hyderabad) | region `DISABLED`, and would be denied anyway |
 
-Hyderabad is opt-in. Until it is enabled the region is invisible: API calls fail
-with authorization errors that read like a broken policy, which is a genuinely
-misleading way to spend an afternoon. After enabling, IAM propagation takes a
-few minutes — wait before the first `terraform apply`.
+An SCP is a hard ceiling. A role called `AccountFullAccessRole` is still refused
+by it, and nothing in the member account can work around that — the change has
+to be made in the management account.
 
-## 2. Create the deployment identity
+Note the read/write asymmetry, because it misleads: `ec2:DescribeVpcs`, ECS,
+RDS, ElastiCache, S3, IAM, Secrets Manager and ECR all answer normally in
+Mumbai. Only mutations — and `ec2:DescribeAvailabilityZones` — are denied. The
+account looks usable until you try to build something.
 
-```bash
-aws iam create-user --user-name mcos-terraform
-aws iam create-access-key --user-name mcos-terraform   # capture the output once
+## What the org admin needs to change
+
+Add `ap-south-1` to the SCP's allowed-region condition. Typically the policy
+looks like this, and Mumbai needs to join the list:
+
+```json
+{
+  "Sid": "DenyOutsideApprovedRegions",
+  "Effect": "Deny",
+  "NotAction": [ "iam:*", "sts:*", "organizations:*", "cloudfront:*", "route53:*", "support:*" ],
+  "Resource": "*",
+  "Condition": {
+    "StringNotEquals": {
+      "aws:RequestedRegion": ["ap-southeast-2", "ap-south-1"]
+    }
+  }
+}
 ```
 
-Attach these managed policies. Terraform creates the whole stack, so the set is
-broad by necessity — this identity exists to build infrastructure, not to run it.
+`ap-south-1` is chosen over `ap-south-2` (Hyderabad) deliberately: it keeps data
+in India, is enabled by default so it needs no opt-in step, and has the widest
+instance coverage of the India regions. One change instead of two, and it drops
+a class of first-apply failures.
+
+Verify the change landed:
 
 ```bash
-for P in AmazonVPCFullAccess AmazonECS_FullAccess \
-         AmazonEC2ContainerRegistryFullAccess AmazonRDSFullAccess \
-         AmazonElastiCacheFullAccess ElasticLoadBalancingFullAccess \
-         AWSCertificateManagerFullAccess SecretsManagerReadWrite \
-         CloudWatchLogsFullAccess AmazonS3FullAccess AmazonDynamoDBFullAccess \
-         IAMFullAccess; do
-  aws iam attach-user-policy --user-name mcos-terraform \
-    --policy-arn "arn:aws:iam::aws:policy/$P"
-done
+aws ec2 create-vpc --cidr-block 10.99.0.0/16 --dry-run \
+  --region ap-south-1 --profile mcos
+# "DryRunOperation" = allowed. Creates nothing either way.
 ```
 
-### On `IAMFullAccess`
-
-This is the one worth pausing over, and it is not optional-by-default: Terraform
-must create the ECS task execution role, the task role, and the GitHub OIDC
-identity provider the deploy pipeline authenticates against. Without it the
-apply fails partway, which is worse than not starting.
-
-If you would rather scope it down, replace it with a customer-managed policy
-limited to `iam:*Role*`, `iam:*Policy*`, `iam:*OpenIDConnectProvider*` and
-`iam:PassRole`, restricted to roles named `mcos-*`. That is more setup and has
-to be widened again whenever the stack grows a new role — a reasonable trade if
-this account holds anything else that matters.
-
-### Delete it afterwards
-
-Once the stack exists and the pipeline deploys through OIDC, this user has no
-remaining purpose:
+## Then
 
 ```bash
-aws iam delete-access-key --user-name mcos-terraform --access-key-id <ID>
+./infra/bootstrap.sh          # state bucket + lock table
+cd infra/terraform && terraform init && terraform plan
 ```
 
-A long-lived key that nothing uses is a key nobody notices being stolen.
-
-## 3. Bootstrap the Terraform backend
-
-Terraform cannot create its own backend. See
-[`infra/terraform/README.md`](../infra/terraform/README.md) for the S3 bucket and
-DynamoDB lock table — do that before the first `init`.
-
-## 4. What to send
+Also needed before an apply:
 
 | | |
 |---|---|
-| `AWS_ACCESS_KEY_ID` | from step 2 |
-| `AWS_SECRET_ACCESS_KEY` | from step 2 |
-| Account ID | 12 digits |
-| Domain for the API | e.g. `api.perfstaq.com` — needed for the ACM certificate |
-| Route 53? | whether the domain's DNS is in this account, or validation records go in by hand |
+| Domain for the API | e.g. `api.perfstaq.com` — the ACM certificate must be ISSUED **in `ap-south-1`** and cover it |
+| DNS | whether the zone is in this account, or validation records go in by hand |
 
-Send them through something that is not a chat transcript, and rotate them after
-the stack is up.
+## Still outstanding elsewhere
 
-## What is still outstanding elsewhere
-
-AWS is not the only gap between this repo and a running product:
-
-- **Cloudflare R2 is not enabled on the account.** The credentials are correct;
-  the API returns `10042 Please enable R2 through the Cloudflare Dashboard`.
-  Enable it, then `npx wrangler r2 bucket create mcos-artifacts --location apac`.
-  The location hint is immutable after creation.
-- **`RECALLAI_API_KEY` is still a placeholder**, and `APP_BASE_URL` needs a
-  static ngrok URL — Recall rejects request bodies containing `localhost`.
+- **Cloudflare R2 is not enabled.** Credentials are correct; the API returns
+  `10042 Please enable R2 through the Cloudflare Dashboard`. Then
+  `npx wrangler r2 bucket create mcos-artifacts --location apac` — the location
+  hint is immutable after creation.
+- **`RECALLAI_API_KEY` is a placeholder**, and `APP_BASE_URL` needs a static
+  ngrok URL: Recall rejects request bodies containing `localhost`.
 - **Google and Microsoft OAuth clients do not exist.** Calendar sync is built and
   cannot work without them. Google's verification for calendar scopes is a
-  multi-week review: start it before it is on the critical path.
+  multi-week review — start it before it is on the critical path.

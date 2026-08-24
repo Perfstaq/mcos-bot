@@ -3,8 +3,8 @@
  * everything with data in it — Fargate tasks, RDS, ElastiCache — is private
  * and has no route from the internet.
  *
- * AZs come from the data source rather than a literal list. ap-south-2's zone
- * *names* (ap-south-2a...) map to different physical zone *ids* per account,
+ * AZs come from the data source rather than a literal list. ap-south-1's zone
+ * *names* (ap-south-1a...) map to different physical zone *ids* per account,
  * and hardcoding names is how you end up with a subnet in the one AZ that does
  * not offer your database class.
  */

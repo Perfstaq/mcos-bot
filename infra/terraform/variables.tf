@@ -1,9 +1,9 @@
 /**
  * Everything that differs between staging and production, and everything that
- * ap-south-2 might refuse to give us.
+ * ap-south-1 might refuse to give us.
  *
  * The instance classes below are variables and not literals on purpose. See
- * README.md § "ap-south-2 is an opt-in region": Hyderabad's instance-type
+ * README.md § "ap-south-1 is an opt-in region": Mumbai's instance-type
  * coverage is thinner than Mumbai's and varies by AZ within the region, so a
  * class that turns out to be unavailable must be a one-line tfvars change, not
  * a code change and a review cycle.
@@ -20,9 +20,9 @@ variable "environment" {
 }
 
 variable "aws_region" {
-  description = "AWS region. ap-south-2 (Hyderabad) is an OPT-IN region — enable it in Account -> AWS Regions before the first apply."
+  description = "AWS region. ap-south-1 (Mumbai) is enabled by default and has the widest instance coverage of the India regions."
   type        = string
-  default     = "ap-south-2"
+  default     = "ap-south-1"
 }
 
 variable "repository" {
@@ -52,7 +52,7 @@ variable "az_count" {
 
   validation {
     condition     = var.az_count >= 2 && var.az_count <= 3
-    error_message = "az_count must be 2 or 3. ap-south-2 has three AZs; not every instance class is offered in all of them."
+    error_message = "az_count must be 2 or 3. ap-south-1 has three AZs; not every instance class is offered in all of them."
   }
 }
 
@@ -100,7 +100,7 @@ variable "ssl_policy" {
 }
 
 variable "alb_access_logs_bucket" {
-  description = "S3 bucket for ALB access logs. Empty disables them. The bucket and its policy are created outside this stack — see README.md, the bucket policy for ap-south-2 must use the logdelivery service principal, not a regional ELB account id."
+  description = "S3 bucket for ALB access logs. Empty disables them. The bucket and its policy are created outside this stack — see README.md, the bucket policy for ap-south-1 must use the logdelivery service principal, not a regional ELB account id."
   type        = string
   default     = ""
 }
@@ -211,11 +211,11 @@ variable "enable_execute_command" {
  * Data stores
  *
  * Instance classes here are the single most likely thing to fail a first apply
- * in ap-south-2. Change the tfvars, re-plan; nothing else has to move.
+ * in ap-south-1. Change the tfvars, re-plan; nothing else has to move.
  * ---------------------------------------------------------------------- */
 
 variable "db_instance_class" {
-  description = "RDS instance class. Verify availability in ap-south-2 AND in the specific AZs of the DB subnet group before applying: aws rds describe-orderable-db-instance-options --engine postgres --engine-version 16 --region ap-south-2"
+  description = "RDS instance class. Verify availability in ap-south-1 AND in the specific AZs of the DB subnet group before applying: aws rds describe-orderable-db-instance-options --engine postgres --engine-version 16 --region ap-south-1"
   type        = string
   default     = "db.m6g.large"
 }
@@ -268,7 +268,7 @@ variable "db_performance_insights_retention" {
 }
 
 variable "redis_node_type" {
-  description = "ElastiCache node type. Same ap-south-2 caveat as db_instance_class: aws elasticache describe-reserved-cache-nodes-offerings is not a availability check — use the console or attempt a plan in a scratch account."
+  description = "ElastiCache node type. Same ap-south-1 caveat as db_instance_class: aws elasticache describe-reserved-cache-nodes-offerings is not a availability check — use the console or attempt a plan in a scratch account."
   type        = string
   default     = "cache.t4g.medium"
 }
@@ -302,7 +302,7 @@ variable "redis_snapshot_retention_days" {
  * ---------------------------------------------------------------------- */
 
 variable "recall_region" {
-  description = "Recall.ai region. NOT an AWS region and NOT ap-south-2 — Recall has no India region. One of: us-east-1, us-west-2, eu-central-1, ap-northeast-1. API keys, bots and webhook secrets are region-scoped and not portable."
+  description = "Recall.ai region. NOT an AWS region and NOT ap-south-1 — Recall has no India region. One of: us-east-1, us-west-2, eu-central-1, ap-northeast-1. API keys, bots and webhook secrets are region-scoped and not portable."
   type        = string
   default     = "ap-northeast-1"
 
@@ -313,7 +313,7 @@ variable "recall_region" {
 }
 
 variable "r2_bucket" {
-  description = "Cloudflare R2 bucket for media artifacts. R2 has no Hyderabad location; create it with --location apac, which is immutable after creation."
+  description = "Cloudflare R2 bucket for media artifacts. R2 has no Mumbai location; create it with --location apac, which is immutable after creation."
   type        = string
   default     = "mcos-artifacts"
 }
