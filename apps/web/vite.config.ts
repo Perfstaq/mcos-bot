@@ -8,7 +8,10 @@ export default defineConfig({
     // The API and the SPA are one origin in production; the proxy makes dev
     // behave the same so no code branches on environment.
     proxy: {
-      "/api": { target: "http://localhost:8787", changeOrigin: true },
+      // ws: true is not optional — the collaborative editor's Yjs socket goes
+      // through /api, and without it the editor connects to nothing and reports
+      // "not saving" while looking perfectly functional.
+      "/api": { target: "http://localhost:8787", changeOrigin: true, ws: true },
       "/healthz": { target: "http://localhost:8787", changeOrigin: true },
     },
   },

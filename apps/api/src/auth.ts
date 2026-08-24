@@ -84,6 +84,29 @@ export const auth = betterAuth({
     },
   },
 
+  databaseHooks: {
+    account: {
+      create: {
+        // A linked Google or Microsoft account with calendar scope becomes a
+        // calendar connection. Failures are logged and swallowed on purpose:
+        // this is a convenience, and a broken calendar provisioning step must
+        // never be the reason a user cannot sign in.
+        after: async (account) => {
+          try {
+            const { syncCalendarConnectionsForUser } = await import("./domain/calendar-connections.js");
+            await syncCalendarConnectionsForUser(account.userId);
+          } catch (error) {
+            const { logger } = await import("./logger.js");
+            logger.error(
+              { err: (error as Error).message, userId: account.userId },
+              "could not provision calendar connection after account link",
+            );
+          }
+        },
+      },
+    },
+  },
+
   plugins: [
     organization({
       allowUserToCreateOrganization: true,
@@ -96,13 +119,23 @@ export const auth = betterAuth({
         // first use. Eager provisioning means no downstream code path ever has
         // to handle a workspace whose tenant does not exist yet — the 1:1 is
         // true from the moment the organization row is written.
-        afterCreateOrganization: async ({ organization }) => {
+        afterCreateOrganization: async ({ organization, user }) => {
           const { provisionTenantForOrganization } = await import("./authz.js");
           await provisionTenantForOrganization({
             organizationId: organization.id,
             slug: organization.slug,
             name: organization.name,
           });
+          // Accounts linked before the workspace existed could not become
+          // calendar connections at link time. Backfill them now.
+          try {
+            const { syncCalendarConnectionsForUser } = await import(
+              "./domain/calendar-connections.js"
+            );
+            await syncCalendarConnectionsForUser(user.id);
+          } catch {
+            // Non-fatal; see the account hook above.
+          }
         },
       },
     }),

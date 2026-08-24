@@ -1,13 +1,28 @@
 import { NavLink } from "react-router-dom";
 import { PerfstaqLogo } from "./PerfstaqLogo.js";
-import { IconBrief, IconMeetings, IconReview } from "./Icons.js";
+import {
+  IconBrief,
+  IconCheck,
+  IconMeetings,
+  IconReview,
+  IconSearch,
+  IconSettings,
+} from "./Icons.js";
 
 /**
  * The persistent rail. It never scrolls with content and never changes between
- * screens, so the three stages of the ring — evidence in, decision, memory —
- * stay visible as a single pipeline rather than three unrelated pages.
+ * screens, so the stages of the ring — evidence in, decision, memory — stay
+ * visible as one pipeline rather than a set of unrelated pages.
  */
-export function Sidebar({ pending, tenant, reviewer }: { pending: number | null; tenant: string; reviewer: string }) {
+export function Sidebar({
+  pending,
+  reviewer,
+  userName,
+}: {
+  pending: number | null;
+  reviewer: string;
+  userName: string;
+}) {
   return (
     <aside className="rail">
       <div className="rail-brand">
@@ -36,9 +51,33 @@ export function Sidebar({ pending, tenant, reviewer }: { pending: number | null;
         </NavLink>
       </div>
 
+      <div className="rail-section" style={{ marginTop: 18 }}>
+        <div className="rail-label">Workspace</div>
+
+        <NavLink to="/my-actions" className={({ isActive }) => `rail-link${isActive ? " active" : ""}`}>
+          <IconCheck size={18} />
+          <span className="grow">My actions</span>
+        </NavLink>
+
+        <NavLink to="/search" className={({ isActive }) => `rail-link${isActive ? " active" : ""}`}>
+          <IconSearch />
+          <span className="grow">Search</span>
+        </NavLink>
+
+        <NavLink to="/calendar" className={({ isActive }) => `rail-link${isActive ? " active" : ""}`}>
+          <IconMeetings />
+          <span className="grow">Calendars</span>
+        </NavLink>
+
+        <NavLink to="/settings" className={({ isActive }) => `rail-link${isActive ? " active" : ""}`}>
+          <IconSettings />
+          <span className="grow">Settings</span>
+        </NavLink>
+      </div>
+
       <div className="rail-foot">
-        <div className="who">{reviewer}</div>
-        <div className="where mono">{tenant}</div>
+        <div className="who">{userName || reviewer}</div>
+        <div className="where mono">{reviewer}</div>
       </div>
     </aside>
   );

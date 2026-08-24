@@ -80,3 +80,14 @@ export const IconTrash = ({ size = 16 }: Props) => (
     <path d="M3.5 5.5h13M8 5.5V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1.5M5.5 5.5l.7 10a1 1 0 0 0 1 .9h5.6a1 1 0 0 0 1-.9l.7-10" />
   </svg>
 );
+
+export const IconSearch = ({ size = 18 }: Props) => (
+  <svg {...base(size)}><circle cx="9" cy="9" r="5.5" /><path d="m13 13 4 4" /></svg>
+);
+
+export const IconSettings = ({ size = 18 }: Props) => (
+  <svg {...base(size)}>
+    <circle cx="10" cy="10" r="2.6" />
+    <path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M15.3 4.7l-1.4 1.4M6.1 13.9l-1.4 1.4" />
+  </svg>
+);

@@ -126,7 +126,13 @@ export function registerCore(app: FastifyInstance, opts: { spa?: boolean } = {})
   // One not-found handler, set once: Fastify allows only one per prefix. When
   // the built SPA is being served, unknown non-API paths are client routes.
   app.setNotFoundHandler((request, reply) => {
-    const isApi = request.url.startsWith("/api") || request.url === "/healthz";
+    // /readyz belongs here too: if its route is ever not registered, the SPA
+    // fallback would answer with index.html and a 200, and a load balancer
+    // would happily route traffic to a task that is not ready.
+    const isApi =
+      request.url.startsWith("/api") ||
+      request.url === "/healthz" ||
+      request.url === "/readyz";
     if (opts.spa && !isApi) return reply.sendFile("index.html");
     return reply.status(404).send({
       error: { code: "not_found", message: `No route for ${request.method} ${request.url}` },

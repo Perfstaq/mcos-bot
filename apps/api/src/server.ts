@@ -14,6 +14,17 @@ import { meetingRoutes } from "./routes/meetings.js";
 import { webhookRoutes } from "./routes/webhooks.js";
 import { reviewRoutes } from "./routes/review.js";
 import { briefRoutes } from "./routes/brief.js";
+import { authInfoRoutes } from "./routes/auth-info.js";
+import { workspaceRoutes } from "./routes/workspace.js";
+import { sharingRoutes } from "./routes/sharing.js";
+import { calendarRoutes } from "./routes/calendar.js";
+import { notesRoutes } from "./routes/notes.js";
+import { agendaRoutes } from "./routes/agenda.js";
+import { actionItemRoutes } from "./routes/action-items.js";
+import { searchRoutes } from "./routes/search.js";
+import { playbackRoutes } from "./routes/playback.js";
+import { collabRoutes } from "./collab/yjs-server.js";
+import { registerObservability, startMetricsReporter } from "./observability.js";
 import { disconnect, rawPrisma } from "./db.js";
 import { closeQueues, newRedis } from "./queue.js";
 
@@ -44,7 +55,14 @@ export async function buildServer() {
     origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["content-type", "authorization", "x-tenant-slug", "x-reviewer-email"],
+    allowedHeaders: [
+      "content-type",
+      "authorization",
+      "x-tenant-slug",
+      "x-reviewer-email",
+      "x-request-id",
+    ],
+    exposedHeaders: ["x-request-id"],
     maxAge: 86_400,
   });
 
@@ -58,6 +76,7 @@ export async function buildServer() {
   });
 
   registerCore(app, { spa: serveSpa });
+  registerObservability(app);
 
   // Better Auth owns everything under /api/auth. Mounted before the versioned
   // API because it is not versioned — session cookies outlive an API major.
@@ -91,10 +110,29 @@ export async function buildServer() {
 
   await app.register(
     async (api) => {
+      // Ingestion and the review gate — Milestone 1.
       await api.register(meetingRoutes);
       await api.register(webhookRoutes);
       await api.register(reviewRoutes);
       await api.register(briefRoutes);
+
+      // Identity and access.
+      await api.register(authInfoRoutes);
+      await api.register(workspaceRoutes);
+      await api.register(sharingRoutes);
+
+      // Evidence ingestion, automated.
+      await api.register(calendarRoutes);
+
+      // The meeting workspace.
+      await api.register(notesRoutes);
+      await api.register(agendaRoutes);
+      await api.register(actionItemRoutes);
+      await api.register(collabRoutes);
+
+      // Retrieval.
+      await api.register(searchRoutes);
+      await api.register(playbackRoutes);
     },
     { prefix: "/api/v1" },
   );
@@ -112,6 +150,7 @@ const isEntrypoint = process.argv[1] && import.meta.url === `file://${path.resol
 
 if (isEntrypoint) {
   const app = await buildServer();
+  startMetricsReporter();
 
   const close = async (signal: string) => {
     app.log.info({ signal }, "shutting down");

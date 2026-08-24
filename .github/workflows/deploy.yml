@@ -1,0 +1,319 @@
+# Deploy to AWS ECS Fargate (ap-south-2).
+#
+# Order is the whole point of this file:
+#
+#   build image  →  push to ECR  →  migrate (one-off ECS task)  →  update services
+#
+# Migrations run BEFORE either service is updated, because the new code may
+# depend on the new schema and the old code must tolerate it. The reverse order
+# gives you tasks 500ing on a column that does not exist yet, and the ECS
+# deployment circuit breaker cannot undo a migration.
+#
+# One environment per run. A push to main deploys staging; production is a
+# deliberate workflow_dispatch, which is what makes the GitHub environment's
+# required-reviewer gate a real approval and not a rubber stamp on every merge.
+#
+# There are no AWS access keys anywhere in this workflow. Authentication is
+# OIDC: GitHub mints a short-lived token, the IAM role's trust policy checks the
+# repository AND the environment in its `sub` claim, and STS returns credentials
+# that expire in an hour. See infra/terraform/iam.tf.
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [staging, production]
+        default: staging
+        required: true
+      image_tag:
+        description: "Image tag to deploy. Blank builds this commit. Set to a previous commit SHA to roll back — see docs/RUNBOOK.md."
+        type: string
+        required: false
+
+# One deploy per environment at a time. Not cancel-in-progress: cancelling a
+# run halfway through leaves migrations applied and services not updated, which
+# is the one state this ordering exists to avoid.
+concurrency:
+  group: deploy-${{ inputs.environment || 'staging' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    name: Deploy to ${{ inputs.environment || 'staging' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    # The approval gate. Configure required reviewers on the `production`
+    # environment in the repository settings; GitHub will not start this job,
+    # and therefore will not mint an OIDC token carrying
+    # `environment:production`, until somebody approves it.
+    environment:
+      name: ${{ inputs.environment || 'staging' }}
+      url: ${{ steps.manifest.outputs.public_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve deploy parameters
+        id: params
+        env:
+          REQUESTED_TAG: ${{ inputs.image_tag }}
+        run: |
+          set -euo pipefail
+          ENVIRONMENT="${{ inputs.environment || 'staging' }}"
+          # The image tag is the commit SHA unless a rollback names an older
+          # one. Never "latest": ECR tags here are immutable precisely so that
+          # "what is running" is answerable without a digest lookup.
+          TAG="${REQUESTED_TAG:-${GITHUB_SHA}}"
+          echo "environment=${ENVIRONMENT}" >> "$GITHUB_OUTPUT"
+          echo "image_tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: gha-deploy-${{ github.run_id }}
+
+      # Cluster names, service names, subnets and the security group come from
+      # Terraform via SSM rather than from this file. They are not secret, but
+      # they are account-specific, and a workflow that hardcodes them is a
+      # workflow that silently deploys to last quarter's infrastructure.
+      - name: Read deploy manifest
+        id: manifest
+        run: |
+          set -euo pipefail
+          MANIFEST=$(aws ssm get-parameter \
+            --name "/mcos/${{ steps.params.outputs.environment }}/deploy-manifest" \
+            --query 'Parameter.Value' --output text)
+
+          for key in cluster api_service worker_service api_task_family worker_task_family \
+                     migrate_task_family migrate_log_group ecr_repository_url security_group \
+                     api_container_name worker_container_name migrate_container_name public_url; do
+            value=$(echo "$MANIFEST" | jq -r --arg k "$key" '.[$k]')
+            if [ -z "$value" ] || [ "$value" = "null" ]; then
+              echo "::error::deploy manifest is missing '$key'. Re-apply Terraform for this environment."
+              exit 1
+            fi
+            echo "${key}=${value}" >> "$GITHUB_OUTPUT"
+          done
+
+          # Comma-separated for the awsvpcConfiguration argument.
+          echo "subnets=$(echo "$MANIFEST" | jq -r '.subnets | join(",")')" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # Immutable tags mean a re-run of a deploy for the same commit would fail
+      # at push. Re-running a failed deploy is a normal thing to do at 3am, so
+      # the build is skipped when the tag already exists rather than being an
+      # error.
+      - name: Check whether the image already exists
+        id: image
+        run: |
+          set -euo pipefail
+          REPO="${{ steps.manifest.outputs.ecr_repository_url }}"
+          NAME="${REPO##*/}"
+          if aws ecr describe-images --repository-name "$NAME" \
+               --image-ids imageTag="${{ steps.params.outputs.image_tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Image ${{ steps.params.outputs.image_tag }} already in ECR; skipping build."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "uri=${REPO}:${{ steps.params.outputs.image_tag }}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Buildx
+        if: steps.image.outputs.exists == 'false'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        if: steps.image.outputs.exists == 'false'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.image.outputs.uri }}
+          # Must match var.task_cpu_architecture in Terraform. An amd64 image on
+          # an ARM64 task definition fails at start with an exec format error,
+          # which reads like a corrupt image rather than a mismatch.
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # Attestations arrive as extra untagged manifests in ECR, which the
+          # lifecycle policy then expires while they are still referenced.
+          provenance: false
+
+      # ---------------------------------------------------------------------
+      # Migrations
+      # ---------------------------------------------------------------------
+
+      # A task definition's image cannot be overridden at RunTask, so each
+      # deploy registers a fresh revision. The read-only fields have to be
+      # stripped or RegisterTaskDefinition rejects the document.
+      - name: Register task definition revisions
+        id: taskdefs
+        run: |
+          set -euo pipefail
+          IMAGE="${{ steps.image.outputs.uri }}"
+
+          register() {
+            local family="$1" container="$2"
+            aws ecs describe-task-definition --task-definition "$family" \
+              --query 'taskDefinition' --output json \
+            | jq --arg image "$IMAGE" --arg container "$container" '
+                del(.taskDefinitionArn, .revision, .status, .requiresAttributes,
+                    .compatibilities, .registeredAt, .registeredBy, .deregisteredAt)
+                | .containerDefinitions |= map(if .name == $container then .image = $image else . end)
+              ' > /tmp/${family}.json
+
+            aws ecs register-task-definition --cli-input-json "file:///tmp/${family}.json" \
+              --query 'taskDefinition.taskDefinitionArn' --output text
+          }
+
+          echo "migrate=$(register '${{ steps.manifest.outputs.migrate_task_family }}' '${{ steps.manifest.outputs.migrate_container_name }}')" >> "$GITHUB_OUTPUT"
+          echo "api=$(register '${{ steps.manifest.outputs.api_task_family }}' '${{ steps.manifest.outputs.api_container_name }}')" >> "$GITHUB_OUTPUT"
+          echo "worker=$(register '${{ steps.manifest.outputs.worker_task_family }}' '${{ steps.manifest.outputs.worker_container_name }}')" >> "$GITHUB_OUTPUT"
+
+      # `prisma migrate deploy` is idempotent — it applies pending migrations
+      # and exits 0 when there are none — so this step is safe on a re-run and
+      # safe when nothing changed.
+      - name: Run database migrations
+        id: migrate
+        run: |
+          set -euo pipefail
+
+          TASK_ARN=$(aws ecs run-task \
+            --cluster '${{ steps.manifest.outputs.cluster }}' \
+            --task-definition '${{ steps.taskdefs.outputs.migrate }}' \
+            --launch-type FARGATE \
+            --count 1 \
+            --started-by "gha-${GITHUB_RUN_ID}" \
+            --network-configuration "awsvpcConfiguration={subnets=[${{ steps.manifest.outputs.subnets }}],securityGroups=[${{ steps.manifest.outputs.security_group }}],assignPublicIp=DISABLED}" \
+            --query 'tasks[0].taskArn' --output text)
+
+          if [ -z "$TASK_ARN" ] || [ "$TASK_ARN" = "None" ]; then
+            echo "::error::RunTask returned no task. Check the Fargate capacity and the subnet ids in the manifest."
+            exit 1
+          fi
+          echo "Migration task: $TASK_ARN"
+          echo "task_arn=${TASK_ARN}" >> "$GITHUB_OUTPUT"
+
+          aws ecs wait tasks-stopped \
+            --cluster '${{ steps.manifest.outputs.cluster }}' \
+            --tasks "$TASK_ARN"
+
+          EXIT_CODE=$(aws ecs describe-tasks \
+            --cluster '${{ steps.manifest.outputs.cluster }}' \
+            --tasks "$TASK_ARN" \
+            --query 'tasks[0].containers[0].exitCode' --output text)
+          STOPPED_REASON=$(aws ecs describe-tasks \
+            --cluster '${{ steps.manifest.outputs.cluster }}' \
+            --tasks "$TASK_ARN" \
+            --query 'tasks[0].stoppedReason' --output text)
+
+          echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+          echo "Exit code: ${EXIT_CODE} (${STOPPED_REASON})"
+
+      # Always, including on failure — a failed migration is diagnosable from
+      # the Actions run rather than from a second trip to the CloudWatch console.
+      - name: Migration output
+        if: always() && steps.migrate.outputs.task_arn != ''
+        run: |
+          set -euo pipefail
+          TASK_ID="${{ steps.migrate.outputs.task_arn }}"
+          TASK_ID="${TASK_ID##*/}"
+          # awslogs stream naming: <stream-prefix>/<container-name>/<task-id>
+          STREAM="migrate/${{ steps.manifest.outputs.migrate_container_name }}/${TASK_ID}"
+
+          aws logs get-log-events \
+            --log-group-name '${{ steps.manifest.outputs.migrate_log_group }}' \
+            --log-stream-name "$STREAM" \
+            --start-from-head \
+            --query 'events[].message' --output text || \
+            echo "No log stream $STREAM yet — the task may have failed before the container started."
+
+      - name: Fail the deploy if migrations failed
+        if: steps.migrate.outputs.exit_code != '0'
+        run: |
+          echo "::error::Migrations exited ${{ steps.migrate.outputs.exit_code }}. Services were NOT updated; the previous image is still serving."
+          exit 1
+
+      # ---------------------------------------------------------------------
+      # Services
+      # ---------------------------------------------------------------------
+
+      - name: Update services
+        run: |
+          set -euo pipefail
+          aws ecs update-service \
+            --cluster '${{ steps.manifest.outputs.cluster }}' \
+            --service '${{ steps.manifest.outputs.api_service }}' \
+            --task-definition '${{ steps.taskdefs.outputs.api }}' \
+            --no-cli-pager --query 'service.serviceName' --output text
+
+          aws ecs update-service \
+            --cluster '${{ steps.manifest.outputs.cluster }}' \
+            --service '${{ steps.manifest.outputs.worker_service }}' \
+            --task-definition '${{ steps.taskdefs.outputs.worker }}' \
+            --no-cli-pager --query 'service.serviceName' --output text
+
+      # `wait services-stable` polls for up to ten minutes. Both services are
+      # waited on in one call so a worker that never stabilises fails the deploy
+      # even when the API is fine. The ECS deployment circuit breaker will have
+      # already rolled back by the time this returns non-zero — this step
+      # reports the rollback, it does not perform it.
+      - name: Wait for both services to stabilise
+        run: |
+          set -euo pipefail
+          aws ecs wait services-stable \
+            --cluster '${{ steps.manifest.outputs.cluster }}' \
+            --services '${{ steps.manifest.outputs.api_service }}' '${{ steps.manifest.outputs.worker_service }}'
+
+      # The last check that the thing actually works: /readyz is 200 only when
+      # the database is reachable AND no migration this image expects is still
+      # pending. A green deploy with a red /readyz means the ordering above
+      # broke, which is worth failing loudly for.
+      - name: Smoke check
+        run: |
+          set -euo pipefail
+          URL="${{ steps.manifest.outputs.public_url }}/readyz"
+          for attempt in 1 2 3 4 5; do
+            if curl --fail --silent --show-error --max-time 10 "$URL"; then
+              echo
+              echo "Ready."
+              exit 0
+            fi
+            echo "Attempt ${attempt} failed; retrying in 10s."
+            sleep 10
+          done
+          echo "::error::${URL} did not return 200 after five attempts."
+          exit 1
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Deploy — ${{ steps.params.outputs.environment }}"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Image tag | \`${{ steps.params.outputs.image_tag }}\` |"
+            echo "| Built | ${{ steps.image.outputs.exists == 'true' && 'no (already in ECR)' || 'yes' }} |"
+            echo "| Migration exit code | \`${{ steps.migrate.outputs.exit_code }}\` |"
+            echo "| API task definition | \`${{ steps.taskdefs.outputs.api }}\` |"
+            echo "| Worker task definition | \`${{ steps.taskdefs.outputs.worker }}\` |"
+            echo
+            echo "Roll back with **Run workflow** → same environment → \`image_tag\` = a previous commit SHA."
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -289,3 +289,25 @@ export async function createAsyncTranscript(recordingId: string): Promise<Recall
 export async function deleteBotMedia(botId: string): Promise<void> {
   await call<void>(`/bot/${botId}/delete_media/`, { method: "POST" });
 }
+
+/**
+ * Stand a bot down.
+ *
+ * A scheduled bot that has not joined yet is deleted outright; one already in
+ * the call is asked to leave. Callers rarely know which state it is in — a
+ * calendar event cancelled ten minutes before the call could be either — so
+ * this tries the delete and falls back to leave_call. A 404 means the bot is
+ * already gone, which is the desired end state, not an error.
+ */
+export async function cancelBot(botId: string): Promise<"deleted" | "left" | "already_gone"> {
+  try {
+    await call<void>(`/bot/${botId}/`, { method: "DELETE" });
+    return "deleted";
+  } catch (error) {
+    if (error instanceof RecallError && error.status === 404) return "already_gone";
+    if (!(error instanceof RecallError)) throw error;
+
+    await call<void>(`/bot/${botId}/leave_call/`, { method: "POST" });
+    return "left";
+  }
+}

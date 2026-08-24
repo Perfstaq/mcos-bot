@@ -17,12 +17,16 @@ export const QUEUE = {
   ingestRecording: "ingest-recording",
   ingestTranscript: "ingest-transcript",
   extract: "extract",
+  calendarSync: "calendar-sync",
 } as const;
 
 export type WebhookJob = { webhookEventId: string };
 export type IngestRecordingJob = { meetingId: string; tenantId: string; recordingId: string };
 export type IngestTranscriptJob = { meetingId: string; tenantId: string; transcriptId: string };
 export type ExtractJob = { meetingId: string; tenantId: string };
+/** A targeted sync carries both ids; a bare `{}` means "sweep every active
+ *  connection". The shape mirrors jobs/calendar-sync.ts, which owns the work. */
+export type CalendarSyncJob = { connectionId?: string; tenantId?: string };
 
 /**
  * Retries are generous and backed off: every job in this pipeline talks to a
@@ -52,7 +56,25 @@ export const extractQueue = new Queue<ExtractJob>(QUEUE.extract, {
   defaultJobOptions: { ...defaultJobOptions, attempts: 3, backoff: { type: "exponential", delay: 15_000 } },
 });
 
-export const allQueues = [webhookQueue, ingestRecordingQueue, ingestTranscriptQueue, extractQueue];
+export const calendarSyncQueue = new Queue<CalendarSyncJob>(QUEUE.calendarSync, {
+  connection,
+  // A calendar sync that fails is retried by the next sweep anyway, so a long
+  // retry chain here just delays the sweep behind a connection that is broken.
+  defaultJobOptions: { ...defaultJobOptions, attempts: 2 },
+});
+
+/** How often the sweep runs. Google and Microsoft both push change
+ *  notifications, but the watch channels expire and a poll is the floor that
+ *  keeps a missed notification from stranding a calendar indefinitely. */
+export const CALENDAR_SWEEP_PATTERN = "*/10 * * * *";
+
+export const allQueues = [
+  webhookQueue,
+  ingestRecordingQueue,
+  ingestTranscriptQueue,
+  extractQueue,
+  calendarSyncQueue,
+];
 
 export async function closeQueues(): Promise<void> {
   await Promise.all(allQueues.map((q) => q.close()));
