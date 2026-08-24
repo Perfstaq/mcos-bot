@@ -102,6 +102,14 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
       if (inField || event.metaKey || event.ctrlKey || event.altKey) return;
       if (!current) return;
 
+      // A decided card stays on screen for a beat so the outcome registers.
+      // The buttons swap for a status chip during that window, but the keyboard
+      // did not — so holding `a` wrote several decisions against the same claim.
+      // Harmless to memory (the second approve is a no-op) but it filled the
+      // audit log with phantom reviews, and the audit log is the artefact that
+      // proves a human made each call.
+      if (settled[current.id] || busy === current.id) return;
+
       switch (event.key) {
         case "j": case "ArrowDown":
           event.preventDefault(); setFocus((f) => Math.min(f + 1, visible.length - 1)); break;
@@ -114,7 +122,7 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [current, visible.length, decide, startEdit]);
+  }, [current, visible.length, decide, startEdit, settled, busy]);
 
   const merge = async () => {
     setMerging(true);
