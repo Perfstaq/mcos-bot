@@ -24,6 +24,10 @@ import { actionItemRoutes } from "./routes/action-items.js";
 import { searchRoutes } from "./routes/search.js";
 import { playbackRoutes } from "./routes/playback.js";
 import { collabRoutes } from "./collab/yjs-server.js";
+import { calendarEventRoutes } from "./routes/calendar-events.js";
+import { preferenceRoutes } from "./routes/preferences.js";
+import { actionItemsV2Routes } from "./routes/action-items-v2.js";
+import { libraryRoutes } from "./routes/library.js";
 import { registerObservability, startMetricsReporter } from "./observability.js";
 import { disconnect, rawPrisma } from "./db.js";
 import { closeQueues, newRedis } from "./queue.js";
@@ -120,16 +124,22 @@ export async function buildServer() {
 
       // Evidence ingestion, automated.
       await api.register(calendarRoutes);
+      await api.register(calendarEventRoutes);
+      await api.register(preferenceRoutes);
 
       // The meeting workspace.
       await api.register(notesRoutes);
       await api.register(agendaRoutes);
       await api.register(actionItemRoutes);
+      // v2 owns /action-items*; v1 keeps the meeting-scoped surface. Fastify
+      // refuses two registrations of the same method and path.
+      await api.register(actionItemsV2Routes);
       await api.register(collabRoutes);
 
       // Retrieval.
       await api.register(searchRoutes);
       await api.register(playbackRoutes);
+      await api.register(libraryRoutes);
     },
     { prefix: "/api/v1" },
   );

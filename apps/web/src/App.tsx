@@ -6,8 +6,12 @@ import { Meetings } from "./pages/Meetings.js";
 import { ReviewQueue } from "./pages/ReviewQueue.js";
 import { Brief } from "./pages/Brief.js";
 import { MeetingWorkspace } from "./pages/MeetingWorkspace.js";
-import { MyActionItems } from "./pages/MyActionItems.js";
 import { CalendarSettings } from "./pages/CalendarSettings.js";
+import { CalendarView } from "./pages/CalendarView.js";
+import { Library } from "./pages/Library.js";
+import { NotesList } from "./pages/NotesList.js";
+import { ActionItems } from "./pages/ActionItems.js";
+import { UserSettings } from "./pages/UserSettings.js";
 import { Search } from "./pages/Search.js";
 import { WorkspaceSettings } from "./pages/WorkspaceSettings.js";
 import { SignIn } from "./pages/SignIn.js";
@@ -74,9 +78,17 @@ function Workspace() {
         <Route path="/meetings/:id/workspace" element={<MeetingWorkspace />} />
         <Route path="/review" element={<ReviewQueue onCountChange={setPending} />} />
         <Route path="/brief" element={<Brief />} />
-        <Route path="/my-actions" element={<MyActionItems />} />
+        {/* MyActionItems was folded into ActionItems, which is a superset.
+            The old path still resolves so existing links do not rot. */}
+        <Route path="/action-items" element={<ActionItems />} />
+        <Route path="/my-actions" element={<Navigate to="/action-items" replace />} />
+        <Route path="/library" element={<Library />} />
+        <Route path="/notes" element={<NotesList />} />
+        <Route path="/me" element={<UserSettings />} />
         <Route path="/search" element={<Search />} />
-        <Route path="/calendar" element={<CalendarSettings />} />
+        {/* The grid is the screen people use; settings is where you go once. */}
+        <Route path="/calendar" element={<CalendarView />} />
+        <Route path="/calendar/settings" element={<CalendarSettings />} />
         <Route path="/settings" element={<WorkspaceSettings />} />
         <Route path="*" element={<Navigate to="/meetings" replace />} />
       </Routes>

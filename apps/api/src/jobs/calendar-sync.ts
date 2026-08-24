@@ -584,21 +584,37 @@ async function upsertEvent(
     cancelled: event.cancelled,
     meetingUrl: detail.meetingUrl,
     platform: detail.platform,
-    autoRecord: eligible,
+    allDay: detail.allDay ?? false,
     raw: (event.raw ?? {}) as Prisma.InputJsonValue,
   };
 
   // `botDispatched` and `meetingId` are absent from the update on purpose:
   // an edited event must never un-dispatch a bot that is already booked.
+  //
+  // `autoRecord` is absent for a related reason. It is recomputed from the
+  // connection's rules on every pass, so including it here overwrote whatever a
+  // human had chosen for this one event — the toggle appeared to work and then
+  // quietly undid itself on the next sweep, up to ten minutes later. The user's
+  // choice lives in `autoRecordOverride`, which the sync never writes, and the
+  // update below honours it when it is set.
+  const existing = await prisma.calendarEvent.findUnique({
+    where: { connectionId_externalId: { connectionId: connection.id, externalId: event.externalId } },
+    select: { autoRecordOverride: true },
+  });
+
   return prisma.calendarEvent.upsert({
     where: { connectionId_externalId: { connectionId: connection.id, externalId: event.externalId } },
     create: {
       tenantId: connection.tenantId,
       connectionId: connection.id,
       externalId: event.externalId,
+      autoRecord: eligible,
       ...fields,
     },
-    update: fields,
+    update: {
+      ...fields,
+      autoRecord: existing?.autoRecordOverride ?? eligible,
+    },
   });
 }
 

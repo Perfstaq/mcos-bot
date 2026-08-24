@@ -85,6 +85,14 @@ const inboxSchema = meetingListSchema.extend({
   limit: z.coerce.number().int().min(1).max(500).default(200),
 });
 
+/**
+ * Meeting-scoped action items.
+ *
+ * `GET /action-items` and `PATCH /action-items/:id` used to live here too. They
+ * now belong to action-items-v2.ts, which is a superset — Fastify refuses two
+ * registrations of the same method and path, so one file had to own them.
+ * What remains here is the meeting-scoped surface, which v2 does not cover.
+ */
 export async function actionItemRoutes(app: FastifyInstance): Promise<void> {
   app.get("/meetings/:id/action-items", async (request) => {
     const actor = requireActor(request);
@@ -139,7 +147,11 @@ export async function actionItemRoutes(app: FastifyInstance): Promise<void> {
         description: body.description ?? null,
         status: body.status,
         dueAt: body.due_at ? new Date(body.due_at) : null,
-        assigneeUserId: body.assignee_user_id ?? null,
+        // Unassigned means yours, not nobody's. Left null, an item created
+        // from a transcript appears in neither "my items" (no assignee) nor
+        // "assigned to others" (no assignee) — it exists and is invisible.
+        // Whoever wrote it down is on the hook until they hand it over.
+        assigneeUserId: body.assignee_user_id ?? actor.userId,
         createdByUserId: actor.userId,
         sourceSegmentId: body.source_segment_id ?? null,
         completedAt: done ? new Date() : null,
@@ -148,47 +160,6 @@ export async function actionItemRoutes(app: FastifyInstance): Promise<void> {
     });
 
     return reply.status(201).send({ item: serializeActionItem(item) });
-  });
-
-  app.patch("/action-items/:itemId", async (request) => {
-    const actor = requireActor(request);
-    const { itemId } = request.params as { itemId: string };
-
-    const existing = await prisma.actionItem.findUnique({ where: { id: itemId } });
-    if (!existing) throw ApiError.notFound(`Action item ${itemId} not found`);
-
-    const parsed = updateSchema.safeParse(request.body ?? {});
-    if (!parsed.success) {
-      throw ApiError.badRequest("Invalid patch", parsed.error.flatten().fieldErrors);
-    }
-    const patch = parsed.data;
-    await requirePatchAccess(actor, existing, Object.keys(patch));
-    if (patch.assignee_user_id) await assertWorkspaceMember(actor, patch.assignee_user_id);
-
-    // `completedAt` is derived, never sent. Letting a client set both it and
-    // `status` independently is how you end up with a done item that was never
-    // completed and an open one that was.
-    const completion =
-      patch.status === undefined || patch.status === existing.status
-        ? {}
-        : { completedAt: patch.status === ActionItemStatus.done ? new Date() : null };
-
-    const item = await prisma.actionItem.update({
-      where: { id: itemId },
-      data: {
-        ...(patch.title !== undefined ? { title: patch.title } : {}),
-        ...(patch.description !== undefined ? { description: patch.description } : {}),
-        ...(patch.status !== undefined ? { status: patch.status } : {}),
-        ...(patch.due_at !== undefined ? { dueAt: patch.due_at ? new Date(patch.due_at) : null } : {}),
-        ...(patch.assignee_user_id !== undefined
-          ? { assigneeUserId: patch.assignee_user_id }
-          : {}),
-        ...completion,
-      },
-      include: { source: { select: { id: true, idx: true, speaker: true, startMs: true } } },
-    });
-
-    return { item: serializeActionItem(item) };
   });
 
   app.delete("/action-items/:itemId", async (request, reply) => {
@@ -207,70 +178,6 @@ export async function actionItemRoutes(app: FastifyInstance): Promise<void> {
 
     await prisma.actionItem.delete({ where: { id: itemId } });
     return reply.status(204).send();
-  });
-
-  /**
-   * Everything assigned to one person, across every meeting in the workspace.
-   *
-   * Defaults to the caller. Asking for somebody else's list needs the admin
-   * role, because "what is Priya on the hook for" is a management question and
-   * not a side effect of being able to open a meeting.
-   *
-   * This deliberately does not re-filter by meeting visibility: an item on a
-   * private meeting still shows up in the assignee's list, because assigning it
-   * to them was the decision to tell them about it.
-   */
-  app.get("/action-items", async (request) => {
-    const actor = requireActor(request);
-    const parsed = inboxSchema.safeParse(request.query);
-    if (!parsed.success) throw ApiError.badRequest("Invalid query", parsed.error.flatten());
-    const query = parsed.data;
-
-    const assignee = query.assignee_user_id ?? actor.userId;
-    if (assignee !== actor.userId && !hasRole(actor, "admin")) {
-      throw new ApiError(403, "forbidden", "Only an admin can read another member's action items");
-    }
-    if (query.meeting_id) await requireMeetingRead(actor, query.meeting_id);
-
-    // Nested under AND rather than merged in: `overdue` constrains status and
-    // due date, and both are also filterable on their own. Spreading it would
-    // silently overwrite whichever the caller asked for.
-    const overdue = query.overdue
-      ? {
-          AND: [
-            { dueAt: { lt: new Date() } },
-            { status: { in: [ActionItemStatus.open, ActionItemStatus.in_progress] } },
-          ],
-        }
-      : {};
-
-    const items = await prisma.actionItem.findMany({
-      where: {
-        ...filters({ ...query, assignee_user_id: assignee }),
-        ...(query.meeting_id ? { meetingId: query.meeting_id } : {}),
-        ...overdue,
-      },
-      orderBy: [{ status: "asc" }, { dueAt: "asc" }, { createdAt: "asc" }],
-      take: query.limit,
-      include: {
-        meeting: { select: { id: true, title: true, startedAt: true } },
-        source: { select: { id: true, idx: true, speaker: true, startMs: true } },
-      },
-    });
-
-    return {
-      assignee_user_id: assignee,
-      action_items: items.map((item) => ({
-        ...serializeActionItem(item),
-        meeting: item.meeting
-          ? {
-              id: item.meeting.id,
-              title: item.meeting.title,
-              started_at: item.meeting.startedAt?.toISOString() ?? null,
-            }
-          : null,
-      })),
-    };
   });
 }
 

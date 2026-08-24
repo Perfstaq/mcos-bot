@@ -10,7 +10,14 @@ export function testDatabaseUrl(): string {
     "postgresql://mcos:mcos@localhost:5433/mcos?schema=public";
   // Same server, separate database — tests truncate aggressively and must
   // never be pointed at a database someone is developing against.
-  return base.replace(/\/([^/?]+)(\?|$)/, "/mcos_test$2");
+  //
+  // VITEST_DB_SUFFIX gives concurrent runs their own database. Without it two
+  // `vitest` processes share mcos_test and truncate each other's fixtures
+  // mid-assertion, which surfaces as deadlocks and foreign-key violations
+  // scattered across unrelated suites — failures that look like real
+  // regressions and are not.
+  const suffix = process.env.VITEST_DB_SUFFIX ? `_${process.env.VITEST_DB_SUFFIX}` : "";
+  return base.replace(/\/([^/?]+)(\?|$)/, `/mcos_test${suffix}$2`);
 }
 
 export function adminDatabaseUrl(): string {

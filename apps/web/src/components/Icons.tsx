@@ -91,3 +91,17 @@ export const IconSettings = ({ size = 18 }: Props) => (
     <path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M15.3 4.7l-1.4 1.4M6.1 13.9l-1.4 1.4" />
   </svg>
 );
+
+export const IconLibrary = ({ size = 18 }: Props) => (
+  <svg {...base(size)}>
+    <rect x="2.5" y="4" width="15" height="11" rx="2" />
+    <path d="m8.5 7.5 4.5 3-4.5 3z" />
+  </svg>
+);
+
+export const IconUser = ({ size = 18 }: Props) => (
+  <svg {...base(size)}>
+    <circle cx="10" cy="7" r="3.2" />
+    <path d="M3.8 17c.6-3.1 3.1-5 6.2-5s5.6 1.9 6.2 5" />
+  </svg>
+);

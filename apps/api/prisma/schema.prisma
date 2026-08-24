@@ -730,7 +730,19 @@ model CalendarEvent {
   meetingUrl String? @map("meeting_url")
   platform   String?
 
-  autoRecord    Boolean @default(false) @map("auto_record")
+  /// What the rules decided, recomputed on every sync.
+  autoRecord Boolean @default(false) @map("auto_record")
+
+  /// What a human decided for this one event, and the reason the two are
+  /// separate columns: the sync recomputes `autoRecord` from the connection's
+  /// rules on every pass, so storing an override in the same field meant the
+  /// next sync silently undid it. Null means "no opinion, use the rules".
+  autoRecordOverride Boolean? @map("auto_record_override")
+
+  /// The sync already refuses all-day events; storing the flag lets the read
+  /// path reproduce that decision instead of inferring it from a missing link.
+  allDay Boolean @default(false) @map("all_day")
+
   botDispatched Boolean @default(false) @map("bot_dispatched")
 
   meetingId String?  @unique @map("meeting_id")

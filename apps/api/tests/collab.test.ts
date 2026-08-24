@@ -13,6 +13,10 @@ import { NOTE_ROOT, projectPlainText } from "../src/collab/persistence.js";
 import { liveNote, shutdownCollab } from "../src/collab/yjs-server.js";
 import { registerCore } from "../src/http.js";
 import { actionItemRoutes } from "../src/routes/action-items.js";
+// v2 owns GET /action-items; v1 keeps the meeting-scoped surface. Both are
+// registered here because this suite exercises the round trip from a
+// transcript-cited create through to the inbox listing.
+import { actionItemsV2Routes } from "../src/routes/action-items-v2.js";
 import { agendaRoutes } from "../src/routes/agenda.js";
 import { collabRoutes } from "../src/collab/yjs-server.js";
 import { notesRoutes } from "../src/routes/notes.js";
@@ -365,8 +369,45 @@ describe("action item provenance", () => {
 
     const inbox = await request("GET", "/api/v1/action-items", editor);
     expect(inbox.statusCode).toBe(200);
-    const titles = inbox.json().action_items.map((item: { title: string }) => item.title);
-    expect(titles).toContain("Send the security questionnaire");
+    const items = inbox.json().action_items as Array<{
+      title: string;
+      source: unknown;
+      source_redacted?: boolean;
+    }>;
+    const assigned = items.find((i) => i.title === "Send the security questionnaire");
+
+    // Assigned work is visible to its assignee even though the meeting is
+    // private and they are not on it — otherwise the assignment fails silently.
+    expect(assigned).toBeDefined();
+
+    // But the citation is a verbatim transcript line from a meeting they
+    // cannot read, so it does not travel with the item.
+    expect(assigned?.source).toBeNull();
+    expect(assigned?.source_redacted).toBe(true);
+  });
+
+  it("keeps the citation when the assignee can read the meeting", async () => {
+    const meeting = await makeMeeting(owner.userId);
+    await db.meeting.update({
+      where: { id: meeting.id },
+      data: { visibility: MeetingVisibility.workspace },
+    });
+    const segment = await makeSegment(meeting.id, "Daniel will send the questionnaire on Monday");
+
+    await request("POST", `/api/v1/meetings/${meeting.id}/action-items`, owner, {
+      title: "Send the workspace-visible questionnaire",
+      origin: "transcript",
+      source_segment_id: segment.id,
+      assignee_user_id: editor.userId,
+    });
+
+    const inbox = await request("GET", "/api/v1/action-items", editor);
+    const items = inbox.json().action_items as Array<{
+      title: string;
+      source: { segment_id: string } | null;
+    }>;
+    const assigned = items.find((i) => i.title === "Send the workspace-visible questionnaire");
+    expect(assigned?.source).toMatchObject({ segment_id: segment.id });
   });
 
   it("will not assign an item to somebody outside the workspace", async () => {
@@ -401,6 +442,7 @@ async function buildTestApp(): Promise<FastifyInstance> {
       await api.register(notesRoutes);
       await api.register(agendaRoutes);
       await api.register(actionItemRoutes);
+      await api.register(actionItemsV2Routes);
     },
     { prefix: "/api/v1" },
   );

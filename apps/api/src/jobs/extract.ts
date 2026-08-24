@@ -6,7 +6,7 @@ import { markFailed, transition } from "../domain/state.js";
 import { chunkBySpeakerTurns, segmentHandle } from "../domain/chunking.js";
 import { dedupeKey, quoteAppearsIn } from "../domain/claims.js";
 import { PROMPT_VERSION, extractFromChunk, type ProposedClaim } from "../integrations/openai.js";
-import type { ExtractJob } from "../queue.js";
+import { suggestActionsQueue, type ExtractJob } from "../queue.js";
 import { logger } from "../logger.js";
 import { withTenantContext } from "./context.js";
 
@@ -156,6 +156,15 @@ export async function runExtraction(job: ExtractJob): Promise<void> {
     log.info(
       { meetingId: meeting.id, chunks: chunks.length, proposed, dropped, duplicates, persisted },
       "extraction complete",
+    );
+
+    // Action-item suggestions ride the same trigger but not the same job: a
+    // failure to suggest a follow-up must not mark a successfully extracted
+    // meeting as failed.
+    await suggestActionsQueue.add(
+      "suggest",
+      { meetingId: meeting.id, tenantId: meeting.tenantId },
+      { jobId: `suggest-${meeting.id}` },
     );
   });
 }

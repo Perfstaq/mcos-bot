@@ -6,6 +6,7 @@ import {
   closeQueues,
   connection,
   type CalendarSyncJob,
+  type SuggestActionsJob,
   type ExtractJob,
   type IngestRecordingJob,
   type IngestTranscriptJob,
@@ -16,6 +17,7 @@ import { failRecordingIngest, ingestRecording } from "./jobs/ingest-recording.js
 import { failTranscriptIngest, ingestTranscript } from "./jobs/ingest-transcript.js";
 import { failExtraction, runExtraction } from "./jobs/extract.js";
 import { syncActiveConnections, syncCalendarConnection } from "./jobs/calendar-sync.js";
+import { runActionItemSuggestions } from "./jobs/suggest-action-items.js";
 import { disconnect } from "./db.js";
 import { logger } from "./logger.js";
 import { env } from "./env.js";
@@ -61,6 +63,12 @@ const workers = [
     // One at a time: the sweep fans out internally, and running several sweeps
     // concurrently would race two syncs onto the same connection's sync token.
     { connection, concurrency: 1 },
+  ),
+
+  new Worker<SuggestActionsJob>(
+    QUEUE.suggestActions,
+    (job) => runActionItemSuggestions(job.data).then(() => undefined),
+    { connection, concurrency: 2 },
   ),
 ];
 

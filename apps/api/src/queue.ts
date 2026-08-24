@@ -18,6 +18,7 @@ export const QUEUE = {
   ingestTranscript: "ingest-transcript",
   extract: "extract",
   calendarSync: "calendar-sync",
+  suggestActions: "suggest-actions",
 } as const;
 
 export type WebhookJob = { webhookEventId: string };
@@ -27,6 +28,8 @@ export type ExtractJob = { meetingId: string; tenantId: string };
 /** A targeted sync carries both ids; a bare `{}` means "sweep every active
  *  connection". The shape mirrors jobs/calendar-sync.ts, which owns the work. */
 export type CalendarSyncJob = { connectionId?: string; tenantId?: string };
+
+export type SuggestActionsJob = { meetingId: string; tenantId: string };
 
 /**
  * Retries are generous and backed off: every job in this pipeline talks to a
@@ -68,12 +71,21 @@ export const calendarSyncQueue = new Queue<CalendarSyncJob>(QUEUE.calendarSync, 
  *  keeps a missed notification from stranding a calendar indefinitely. */
 export const CALENDAR_SWEEP_PATTERN = "*/10 * * * *";
 
+export const suggestActionsQueue = new Queue<SuggestActionsJob>(QUEUE.suggestActions, {
+  connection,
+  // Suggestions are a convenience layered on a meeting that is already fully
+  // processed. A failure here must never look like the pipeline broke, so it
+  // retries twice and then stops quietly.
+  defaultJobOptions: { ...defaultJobOptions, attempts: 2 },
+});
+
 export const allQueues = [
   webhookQueue,
   ingestRecordingQueue,
   ingestTranscriptQueue,
   extractQueue,
   calendarSyncQueue,
+  suggestActionsQueue,
 ];
 
 export async function closeQueues(): Promise<void> {

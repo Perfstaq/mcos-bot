@@ -29,6 +29,10 @@ const UNSCOPED = new Set([
   "Organization",
   "Member",
   "Invitation",
+  // Personal settings belong to a user, not a workspace: the same person can
+  // be in several, and their recording preference follows them. No tenant_id
+  // column exists, so injecting one would make every query throw.
+  "UserPreference",
 ]);
 
 const WHERE_OPS = new Set([

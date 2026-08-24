@@ -3,10 +3,12 @@ import { PerfstaqLogo } from "./PerfstaqLogo.js";
 import {
   IconBrief,
   IconCheck,
+  IconLibrary,
   IconMeetings,
   IconReview,
   IconSearch,
   IconSettings,
+  IconUser,
 } from "./Icons.js";
 
 /**
@@ -54,9 +56,14 @@ export function Sidebar({
       <div className="rail-section" style={{ marginTop: 18 }}>
         <div className="rail-label">Workspace</div>
 
-        <NavLink to="/my-actions" className={({ isActive }) => `rail-link${isActive ? " active" : ""}`}>
+        <NavLink to="/library" className={({ isActive }) => `rail-link${isActive ? " active" : ""}`}>
+          <IconLibrary />
+          <span className="grow">Library</span>
+        </NavLink>
+
+        <NavLink to="/action-items" className={({ isActive }) => `rail-link${isActive ? " active" : ""}`}>
           <IconCheck size={18} />
-          <span className="grow">My actions</span>
+          <span className="grow">Action items</span>
         </NavLink>
 
         <NavLink to="/search" className={({ isActive }) => `rail-link${isActive ? " active" : ""}`}>
@@ -71,7 +78,12 @@ export function Sidebar({
 
         <NavLink to="/settings" className={({ isActive }) => `rail-link${isActive ? " active" : ""}`}>
           <IconSettings />
-          <span className="grow">Settings</span>
+          <span className="grow">Workspace</span>
+        </NavLink>
+
+        <NavLink to="/me" className={({ isActive }) => `rail-link${isActive ? " active" : ""}`}>
+          <IconUser />
+          <span className="grow">My settings</span>
         </NavLink>
       </div>
 
