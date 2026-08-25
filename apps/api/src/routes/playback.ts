@@ -45,12 +45,16 @@ export async function loadPlayback(actor: Actor, meetingId: string) {
       startedAt: true,
       endedAt: true,
       durationMs: true,
-      // Audio only. Video is a separate artifact when RECALL_CAPTURE_VIDEO is
-      // on, but the audio track is always written (see jobs/ingest-recording),
-      // it is a fraction of the bytes, and click-to-seek needs a clock rather
-      // than a picture. The video stays reachable through the artifact URL
-      // route on meetings.ts.
-      artifacts: { where: { kind: ArtifactKind.recording_audio } },
+      // Both tracks. The audio is always written and is a fraction of the
+      // bytes, so it remains the clock the transcript syncs against and the
+      // fallback when no video was captured; the video is what a viewer
+      // actually wants to watch when there is one. Returning only the audio is
+      // what left a recorded meeting looking like it had no picture.
+      artifacts: {
+        where: {
+          kind: { in: [ArtifactKind.recording_audio, ArtifactKind.recording_video] },
+        },
+      },
       transcript: { select: { id: true, durationMs: true, languageCode: true, segmentCount: true } },
     },
   });
@@ -64,7 +68,10 @@ export async function loadPlayback(actor: Actor, meetingId: string) {
       })
     : [];
 
-  const artifact = meeting.artifacts[0] ?? null;
+  const artifact =
+    meeting.artifacts.find((a) => a.kind === ArtifactKind.recording_audio) ?? null;
+  const videoArtifact =
+    meeting.artifacts.find((a) => a.kind === ArtifactKind.recording_video) ?? null;
 
   // A purged artifact still has its row — the deletion path sets purged_at and
   // destroys the object. Presigning it would hand back a URL that 404s from R2
@@ -92,6 +99,25 @@ export async function loadPlayback(actor: Actor, meetingId: string) {
     };
   }
 
+  // Presigned on the same terms as the audio, and independently: a purged
+  // video next to a surviving audio track must degrade to the audio player,
+  // not to a broken <video> element.
+  let video: {
+    url: string;
+    expires_at: string;
+    content_type: string;
+    bytes: number;
+  } | null = null;
+  if (videoArtifact && !videoArtifact.purgedAt) {
+    const { url, expiresAt } = await presignGet(videoArtifact.r2Key);
+    video = {
+      url,
+      expires_at: expiresAt.toISOString(),
+      content_type: videoArtifact.contentType,
+      bytes: Number(videoArtifact.bytes),
+    };
+  }
+
   // The transcript's duration is measured off the media; meetings.duration_ms
   // is calendar-shaped and frequently unset. Fall through to the last segment
   // rather than report a zero-length recording the scrubber cannot render.
@@ -109,6 +135,7 @@ export async function loadPlayback(actor: Actor, meetingId: string) {
       duration_label: formatTimestamp(durationMs),
     },
     audio,
+    video,
     unavailable_reason: unavailableReason,
     transcript: {
       language_code: meeting.transcript?.languageCode ?? null,

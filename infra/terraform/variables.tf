@@ -364,9 +364,9 @@ variable "recall_bot_name" {
 }
 
 variable "recall_capture_video" {
-  description = "Capture mixed video as well as audio. Costs more at Recall and in R2."
+  description = "Ask Recall for mixed video as well as audio. Costs more at Recall and in R2. Note this controls the REQUEST only: a workspace-level default in the Recall dashboard can capture video regardless, and ingest stores whatever video actually exists."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "log_level" {

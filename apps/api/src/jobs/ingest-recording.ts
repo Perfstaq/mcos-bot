@@ -1,7 +1,6 @@
 import { ArtifactKind, MeetingStatus } from "@prisma/client";
 import { prisma } from "../db.js";
 import { runWithContext } from "../context.js";
-import { env } from "../env.js";
 import { markFailed } from "../domain/state.js";
 import { createAsyncTranscript, getRecording } from "../integrations/recall.js";
 import { keys, streamUrlToR2 } from "../integrations/r2.js";
@@ -50,18 +49,28 @@ export async function ingestRecording(job: IngestRecordingJob): Promise<void> {
       contentType: "audio/mpeg",
     });
 
-    if (env.RECALL_CAPTURE_VIDEO) {
-      const videoUrl = recording.media_shortcuts?.video_mixed?.data?.download_url;
-      if (videoUrl) {
-        await storeArtifact({
-          meetingId: meeting.id,
-          tenantId: meeting.tenantId,
-          kind: ArtifactKind.recording_video,
-          key: keys.recordingVideo(meeting.tenantId, meeting.id),
-          url: videoUrl,
-          contentType: "video/mp4",
-        });
-      }
+    // Store the video when there IS one, rather than when we asked for one.
+    //
+    // RECALL_CAPTURE_VIDEO controls the request we send; it does not control
+    // what Recall records. A workspace-level default in the Recall dashboard
+    // turns video_mixed_mp4 on for every bot regardless of our recording_config
+    // — which is exactly what happened here: the flag was false, the config
+    // came back carrying video_mixed_mp4, the recording had a video_mixed
+    // shortcut, and this branch skipped it. The product then had a video it
+    // refused to show anybody.
+    //
+    // Keying on the media that exists cannot drift from reality the way a flag
+    // mirroring somebody else's setting can.
+    const videoUrl = recording.media_shortcuts?.video_mixed?.data?.download_url;
+    if (videoUrl) {
+      await storeArtifact({
+        meetingId: meeting.id,
+        tenantId: meeting.tenantId,
+        kind: ArtifactKind.recording_video,
+        key: keys.recordingVideo(meeting.tenantId, meeting.id),
+        url: videoUrl,
+        contentType: "video/mp4",
+      });
     }
 
     // A transcript already exists if this job is a redelivery, or if the

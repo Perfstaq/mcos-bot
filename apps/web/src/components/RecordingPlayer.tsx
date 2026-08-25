@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type Ref,
+  type SyntheticEvent,
+} from "react";
 import { api, type MeetingStatus } from "../api.js";
 import {
   TranscriptView,
@@ -21,6 +29,8 @@ export type Playback = {
     duration_label: string;
   };
   audio: { url: string; expires_at: string; content_type: string; bytes: number } | null;
+  /** Present only when the meeting was captured with video_mixed_mp4. */
+  video: { url: string; expires_at: string; content_type: string; bytes: number } | null;
   unavailable_reason: PlaybackUnavailable | null;
   transcript: {
     language_code: string | null;
@@ -76,7 +86,14 @@ export function RecordingPlayer({
   const [playing, setPlaying] = useState(false);
   const [rate, setRate] = useState(1);
 
-  const audioRef = useRef<HTMLAudioElement>(null);
+  /**
+   * The element that is playing, whichever kind it is.
+   *
+   * `HTMLMediaElement` rather than `HTMLAudioElement` because everything below
+   * — the clock, seeking, the expiry swap — is defined on the media interface
+   * and does not care whether there is a picture attached to it.
+   */
+  const mediaRef = useRef<HTMLMediaElement | null>(null);
   /** Where to pick up after a URL swap: the element reloads from zero, paused. */
   const resume = useRef<{ at: number; playing: boolean } | null>(null);
   const reissues = useRef(0);
@@ -117,7 +134,7 @@ export function RecordingPlayer({
     }
     reissuing.current = true;
     reissues.current += 1;
-    const el = audioRef.current;
+    const el = mediaRef.current;
     if (el) resume.current = { at: el.currentTime, playing: !el.paused };
     try {
       await load();
@@ -128,20 +145,22 @@ export function RecordingPlayer({
 
   // The proactive half: re-issue before the signature dies rather than after.
   useEffect(() => {
-    const expiresAt = data?.audio?.expires_at;
+    // The one being played, not the audio: a video-backed meeting expires on
+    // the video's signature and would otherwise never be re-issued.
+    const expiresAt = data?.video?.expires_at ?? data?.audio?.expires_at;
     if (!expiresAt) return;
     const due = Date.parse(expiresAt) - REISSUE_LEAD_MS - Date.now();
     if (Number.isNaN(due)) return;
     const timer = window.setTimeout(() => void reissueUrl(), Math.max(due, 1_000));
     return () => window.clearTimeout(timer);
-  }, [data?.audio?.expires_at, reissueUrl]);
+  }, [data?.video?.expires_at, data?.audio?.expires_at, reissueUrl]);
 
   const segments = data?.transcript.segments ?? [];
   const durationMs = data?.meeting.duration_ms ?? 0;
   const current = useMemo(() => segmentAt(segments, positionMs), [segments, positionMs]);
 
   const seekTo = useCallback((ms: number) => {
-    const el = audioRef.current;
+    const el = mediaRef.current;
     setPositionMs(ms);
     if (!el) return;
     // Before `loadedmetadata` the element has no seekable range and assigning
@@ -158,7 +177,7 @@ export function RecordingPlayer({
   );
 
   const toggle = () => {
-    const el = audioRef.current;
+    const el = mediaRef.current;
     if (!el) return;
     if (el.paused) void el.play().catch((e: Error) => setError(e.message));
     else el.pause();
@@ -199,11 +218,72 @@ export function RecordingPlayer({
     );
   }
 
+  /**
+   * The handlers, shared by both element kinds.
+   *
+   * Written once and spread rather than duplicated: an <audio> and a <video>
+   * that disagree about restoring position or handling an expired URL is a bug
+   * that only ever shows up on whichever kind is rarer.
+   */
+  const mediaEvents = {
+    onLoadedMetadata: (e: SyntheticEvent<HTMLMediaElement>) => {
+      const el = e.currentTarget;
+      el.playbackRate = rate;
+      const pending = resume.current;
+      resume.current = null;
+      if (pending) {
+        el.currentTime = pending.at;
+        if (pending.playing) void el.play().catch(() => undefined);
+      }
+    },
+    // A URL that survived long enough to play is a URL that worked; only then
+    // is the retry budget worth handing back.
+    onCanPlay: () => {
+      reissues.current = 0;
+    },
+    onTimeUpdate: (e: SyntheticEvent<HTMLMediaElement>) =>
+      setPositionMs(Math.round(e.currentTarget.currentTime * 1000)),
+    onPlay: () => setPlaying(true),
+    onPause: () => setPlaying(false),
+    onEnded: () => setPlaying(false),
+    // The reactive half of the expiry handling. A 403 on a range request
+    // surfaces here as a media error with no useful detail, so the response is
+    // the same either way: get a new URL and resume.
+    onError: () => void reissueUrl(),
+  };
+
+  /** Something to play: the video when there is one, the audio track otherwise. */
+  const playable = Boolean(data.video ?? data.audio);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
       {error && <div className="banner error">{error}</div>}
 
-      {data.audio ? (
+      {playable ? (
+        <>
+          {/* The picture, when there is one. Above the transport rather than
+              beside it, so the video never moves when the controls reflow. */}
+          {data.video && (
+            <div
+              style={{
+                flex: "none",
+                background: "#000",
+                borderBottom: "1px solid var(--line-soft)",
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
+              <video
+                ref={mediaRef as Ref<HTMLVideoElement>}
+                src={data.video.url}
+                playsInline
+                preload="metadata"
+                style={{ width: "100%", maxHeight: 380, objectFit: "contain", background: "#000" }}
+                {...mediaEvents}
+              />
+            </div>
+          )}
+
         <div
           style={{
             display: "flex",
@@ -216,32 +296,16 @@ export function RecordingPlayer({
             background: "var(--pane-2)",
           }}
         >
-          <audio
-            ref={audioRef}
-            src={data.audio.url}
-            preload="metadata"
-            onLoadedMetadata={(e) => {
-              const el = e.currentTarget;
-              el.playbackRate = rate;
-              const pending = resume.current;
-              resume.current = null;
-              if (pending) {
-                el.currentTime = pending.at;
-                if (pending.playing) void el.play().catch(() => undefined);
-              }
-            }}
-            // A URL that survived long enough to play is a URL that worked;
-            // only then is the retry budget worth handing back.
-            onCanPlay={() => { reissues.current = 0; }}
-            onTimeUpdate={(e) => setPositionMs(Math.round(e.currentTarget.currentTime * 1000))}
-            onPlay={() => setPlaying(true)}
-            onPause={() => setPlaying(false)}
-            onEnded={() => setPlaying(false)}
-            // The reactive half of the expiry handling. A 403 on a range
-            // request surfaces here as a media error with no useful detail, so
-            // the response is the same either way: get a new URL and resume.
-            onError={() => void reissueUrl()}
-          />
+          {/* Only when there is no video. One ref cannot drive two elements,
+              and video_mixed already carries the audio track. */}
+          {!data.video && data.audio && (
+            <audio
+              ref={mediaRef as Ref<HTMLAudioElement>}
+              src={data.audio.url}
+              preload="metadata"
+              {...mediaEvents}
+            />
+          )}
 
           <button className="btn primary sm" onClick={toggle} aria-label={playing ? "Pause" : "Play"}>
             {playing ? <IconPause /> : <IconPlay />}
@@ -271,7 +335,7 @@ export function RecordingPlayer({
             onChange={(e) => {
               const next = Number(e.target.value);
               setRate(next);
-              if (audioRef.current) audioRef.current.playbackRate = next;
+              if (mediaRef.current) mediaRef.current.playbackRate = next;
             }}
           >
             {SPEEDS.map((speed) => (
@@ -279,6 +343,7 @@ export function RecordingPlayer({
             ))}
           </select>
         </div>
+        </>
       ) : (
         <div className="banner info" style={{ flex: "none" }}>
           {data.unavailable_reason === "purged"
@@ -289,9 +354,9 @@ export function RecordingPlayer({
 
       <TranscriptView
         segments={segments}
-        currentSegmentId={data.audio ? (current?.id ?? null) : null}
+        currentSegmentId={playable ? (current?.id ?? null) : null}
         focusSegmentId={focusSegmentId}
-        onSeek={data.audio ? onSeekSegment : undefined}
+        onSeek={playable ? onSeekSegment : undefined}
         onCreateActionItem={canWrite ? createActionItem : undefined}
       />
     </div>
