@@ -424,6 +424,7 @@ describe("incremental sync recovery", () => {
       calendarId: "primary",
       syncToken: "stale-token",
       timeMin: new Date("2026-09-01T00:00:00Z"),
+      timeMax: new Date("2026-12-30T00:00:00Z"),
     });
 
     expect(page.fullResync).toBe(true);
@@ -434,16 +435,24 @@ describe("incremental sync recovery", () => {
     // Only the last page carries it, and that is the one that must be kept.
     expect(page.nextSyncToken).toBe("fresh-sync-token");
 
-    // Google refuses timeMin alongside a sync token, and requires the other
+    // Google refuses the window alongside a sync token, and requires the other
     // parameters to be identical across every request in the round.
     expect(requested).toHaveLength(3);
     expect(requested[0]).not.toContain("timeMin=");
+    expect(requested[0]).not.toContain("timeMax=");
     expect(requested[1]).toContain("timeMin=2026-09-01T00%3A00%3A00.000Z");
     expect(requested[2]).toContain("timeMin=");
     for (const path of requested) {
       expect(path).toContain("singleEvents=true");
       expect(path).toContain("showDeleted=true");
     }
+
+    // The bound that stops `singleEvents` expanding open-ended recurrences
+    // towards Google's own horizon. Both full-sync pages carry it, and both
+    // carry the same one: a window that moved between pages would drop or
+    // duplicate events across the page boundary.
+    expect(requested[1]).toContain("timeMax=2026-12-30T00%3A00%3A00.000Z");
+    expect(requested[2]).toContain("timeMax=2026-12-30T00%3A00%3A00.000Z");
   });
 
   it("falls back to a full resync when Graph reports syncStateNotFound", async () => {

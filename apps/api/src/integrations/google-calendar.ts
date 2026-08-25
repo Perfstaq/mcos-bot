@@ -166,15 +166,31 @@ export async function listGoogleEvents(args: {
   syncToken?: string | null;
   /** Lower bound for a FULL sync only; forbidden alongside a sync token. */
   timeMin: Date;
+  /**
+   * Upper bound, under the same rule as `timeMin`.
+   *
+   * Not optional, because omitting it is not a smaller version of this call —
+   * it is a different one. `singleEvents` expands recurrences into individual
+   * instances, and an open-ended daily event has no last instance to stop at,
+   * so Google keeps paginating towards its own horizon. The first real sync of
+   * one ordinary calendar returned 5037 events from a handful of dailies.
+   */
+  timeMax: Date;
 }): Promise<GoogleEventPage> {
   const token = args.syncToken?.trim() || null;
 
   if (token) {
-    const incremental = await drain(args.accessToken, args.calendarId, token, args.timeMin);
+    const incremental = await drain(
+      args.accessToken,
+      args.calendarId,
+      token,
+      args.timeMin,
+      args.timeMax,
+    );
     if (incremental !== SYNC_TOKEN_EXPIRED) return { ...incremental, fullResync: false };
   }
 
-  const full = await drain(args.accessToken, args.calendarId, null, args.timeMin);
+  const full = await drain(args.accessToken, args.calendarId, null, args.timeMin, args.timeMax);
   if (full === SYNC_TOKEN_EXPIRED) {
     // Only a request carrying a sync token can 410. Getting here means Google
     // changed its contract, and guessing at a recovery would loop forever.
@@ -188,6 +204,7 @@ async function drain(
   calendarId: string,
   syncToken: string | null,
   timeMin: Date,
+  timeMax: Date,
 ): Promise<{ events: GoogleEvent[]; nextSyncToken: string | null } | typeof SYNC_TOKEN_EXPIRED> {
   const events: GoogleEvent[] = [];
   let pageToken: string | null = null;
@@ -196,14 +213,20 @@ async function drain(
   do {
     const url = new URL(`${CALENDAR_BASE}/calendars/${encodeURIComponent(calendarId)}/events`);
     // Every list request in a sync round must carry the same parameters as the
-    // initial one, so these two are set unconditionally. `timeMin` is the
-    // exception: it is one of the parameters Google refuses alongside a sync
-    // token, because the token already encodes the window.
+    // initial one, so these three are set unconditionally. The window is the
+    // exception: `timeMin`/`timeMax` are the parameters Google refuses
+    // alongside a sync token, because the token already encodes the window it
+    // was issued for. That is also why narrowing the horizon only takes effect
+    // at the next full resync — the token outlives the constant.
     url.searchParams.set("singleEvents", "true");
     url.searchParams.set("showDeleted", "true");
     url.searchParams.set("maxResults", String(PAGE_SIZE));
-    if (syncToken) url.searchParams.set("syncToken", syncToken);
-    else url.searchParams.set("timeMin", timeMin.toISOString());
+    if (syncToken) {
+      url.searchParams.set("syncToken", syncToken);
+    } else {
+      url.searchParams.set("timeMin", timeMin.toISOString());
+      url.searchParams.set("timeMax", timeMax.toISOString());
+    }
     if (pageToken) url.searchParams.set("pageToken", pageToken);
 
     const response = await fetch(url.toString(), {

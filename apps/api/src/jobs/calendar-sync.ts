@@ -43,9 +43,20 @@ const log = logger.child({ job: "calendar-sync" });
  *  that was moved earlier this morning; older history is not actionable. */
 const FULL_SYNC_LOOKBACK_DAYS = 1;
 
-/** Graph pins its window inside the delta token, so this is the horizon a
- *  Microsoft connection sees until its next full resync. */
-const GRAPH_WINDOW_DAYS = 120;
+/**
+ * How far ahead a full sync reaches, for both providers.
+ *
+ * Both pin the window inside the cursor they hand back — Graph in the delta
+ * link, Google in the sync token — so this is the horizon a connection sees
+ * until its next full resync, and editing it does not widen or narrow one that
+ * already exists.
+ *
+ * It has to be a real bound rather than "everything", because Google expands
+ * recurring events into instances: an open-ended daily standup otherwise
+ * mirrors thousands of them into calendar_events, none of which a grid ever
+ * asks for.
+ */
+const SYNC_HORIZON_DAYS = 120;
 
 /** Refresh this far ahead of expiry, so a token cannot die mid-round. */
 const TOKEN_SKEW_MS = 60_000;
@@ -127,11 +138,11 @@ async function runSync(connection: CalendarConnection): Promise<CalendarSyncResu
 
   const now = new Date();
   const windowStart = new Date(now.getTime() - FULL_SYNC_LOOKBACK_DAYS * 86_400_000);
-  const windowEnd = new Date(now.getTime() + GRAPH_WINDOW_DAYS * 86_400_000);
+  const windowEnd = new Date(now.getTime() + SYNC_HORIZON_DAYS * 86_400_000);
 
   const page =
     connection.provider === CalendarProvider.google
-      ? await pullGoogle(connection, token.accessToken, windowStart)
+      ? await pullGoogle(connection, token.accessToken, windowStart, windowEnd)
       : await pullMicrosoft(connection, token.accessToken, windowStart, windowEnd);
 
   let upserted = 0;
@@ -196,12 +207,14 @@ async function pullGoogle(
   connection: CalendarConnection,
   accessToken: string,
   windowStart: Date,
+  windowEnd: Date,
 ): Promise<ProviderPage> {
   const page = await listGoogleEvents({
     accessToken,
     calendarId: connection.calendarId,
     syncToken: connection.syncToken,
     timeMin: windowStart,
+    timeMax: windowEnd,
   });
   return {
     events: page.events.map(normalizeGoogle),
