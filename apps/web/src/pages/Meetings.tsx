@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api, type Meeting, type MeetingDetail, type MeetingStatus } from "../api.js";
 import { IconLink, IconPlus, IconRetry, IconTrash } from "../components/Icons.js";
+import { playbackDeepLink } from "../components/RecordingPlayer.js";
 import { ACTIVE_STATUSES, StatusChip, STATUS_LABEL } from "../components/StatusChip.js";
 
 /**
@@ -195,6 +196,14 @@ export function Meetings() {
                 </div>
 
                 <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
+                  {/* This screen is the pipeline's own view of a meeting — what
+                      happened to it, and what to do when it broke. The meeting
+                      as a person reads it, with the recording and the
+                      transcript, is the workspace; without this link there is
+                      no way to reach it from here at all. */}
+                  <Link to={playbackDeepLink(detail.id, { startMs: 0 })} className="btn sm">
+                    Open transcript
+                  </Link>
                   {detail.claim_counts.proposed > 0 && (
                     <button className="btn primary sm" onClick={() => navigate("/review")}>
                       Review {detail.claim_counts.proposed} proposal{detail.claim_counts.proposed === 1 ? "" : "s"}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import type { DecorationAttrs } from "@tiptap/pm/view";
 import StarterKit from "@tiptap/starter-kit";
@@ -43,7 +43,24 @@ type Peer = { clientId: number; name: string; color: string };
 
 type Session = { doc: Y.Doc; provider: WebsocketProvider };
 
-export function NotesEditor({ meetingId, user }: { meetingId: string; user: NotesUser }) {
+export function NotesEditor({
+  meetingId,
+  user,
+  head,
+}: {
+  meetingId: string;
+  user: NotesUser;
+  /**
+   * Replaces the "Notes" label in the header row.
+   *
+   * Exists so a page that puts the notes behind a tab can put the tabs in this
+   * row instead of stacking a second 40px header above it. The presence avatars
+   * and the connection chip stay here either way — they report on the notes,
+   * and a reader who cannot see that the document has stopped saving is the one
+   * failure this component must never allow.
+   */
+  head?: ReactNode;
+}) {
   const [session, setSession] = useState<Session | null>(null);
   const [link, setLink] = useState<LinkState>("connecting");
   const [peers, setPeers] = useState<Peer[]>([]);
@@ -157,7 +174,14 @@ export function NotesEditor({ meetingId, user }: { meetingId: string; user: Note
   return (
     <>
       <div className="pane-head">
-        <span className="grow">Notes</span>
+        {head ? (
+          <>
+            {head}
+            <div className="grow" />
+          </>
+        ) : (
+          <span className="grow">Notes</span>
+        )}
         {peers.length > 0 && <Presence peers={peers} />}
         <LinkChip state={link} />
       </div>
