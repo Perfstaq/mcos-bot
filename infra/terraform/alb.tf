@@ -146,37 +146,39 @@ resource "aws_lb_listener" "https" {
   }
 }
 
-# Redirect to HTTPS only when there is somewhere to redirect to.
-resource "aws_lb_listener" "http_redirect" {
-  count = local.tls_enabled ? 1 : 0
-
+# One listener on port 80, two behaviours.
+#
+# This was two mutually-exclusive resources — a redirect and a direct forward,
+# each with a count. Terraform does not know they contend for the same port, so
+# toggling TLS made it create the new one before destroying the old, and the
+# apply died on DuplicateListener with the stack half-migrated. A single
+# resource whose action varies cannot race itself.
+resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.this.arn
   port              = 80
   protocol          = "HTTP"
 
-  default_action {
-    type = "redirect"
+  dynamic "default_action" {
+    for_each = local.tls_enabled ? [1] : []
+    content {
+      type = "redirect"
 
-    redirect {
-      port        = "443"
-      protocol    = "HTTPS"
-      status_code = "HTTP_301"
+      redirect {
+        port        = "443"
+        protocol    = "HTTPS"
+        status_code = "HTTP_301"
+      }
     }
   }
-}
 
-# Without a certificate, port 80 serves the app rather than redirecting into a
-# listener that does not exist. This is the deliberate no-domain posture: the
-# stack is reachable on the ALB's own hostname the moment it comes up.
-resource "aws_lb_listener" "http_direct" {
-  count = local.tls_enabled ? 0 : 1
-
-  load_balancer_arn = aws_lb.this.arn
-  port              = 80
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.api.arn
+  # Without a certificate there is nowhere to redirect to, so port 80 serves
+  # the application directly rather than bouncing to a listener that does not
+  # exist.
+  dynamic "default_action" {
+    for_each = local.tls_enabled ? [] : [1]
+    content {
+      type             = "forward"
+      target_group_arn = aws_lb_target_group.api.arn
+    }
   }
 }

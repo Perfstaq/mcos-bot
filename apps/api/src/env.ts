@@ -118,6 +118,21 @@ export const allowedOrigins = [
 
 export const authBaseUrl = env.BETTER_AUTH_URL ?? env.APP_BASE_URL;
 
-/** A provider is only wired up when both halves of its credential are present. */
-export const googleConfigured = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
-export const microsoftConfigured = Boolean(env.MICROSOFT_CLIENT_ID && env.MICROSOFT_CLIENT_SECRET);
+/**
+ * A provider counts as configured only when both halves are present AND neither
+ * is a placeholder.
+ *
+ * The emptiness check alone was not enough. Secrets Manager entries are created
+ * ahead of their values and hold a literal "REPLACE_ME", which is perfectly
+ * non-empty — so the deployment advertised Google as available, rendered the
+ * button, and sent Google a nonsense client id. The user got
+ * "Error 401: invalid_client" from Google itself, which points at their OAuth
+ * setup rather than at our unset secret.
+ */
+const PLACEHOLDER = /^(replace[-_ ]?me|changeme|todo|placeholder|dev-placeholder|xxx+|<.*>)/i;
+
+const configured = (...parts: (string | undefined)[]): boolean =>
+  parts.every((v) => Boolean(v) && !PLACEHOLDER.test(v!.trim()));
+
+export const googleConfigured = configured(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET);
+export const microsoftConfigured = configured(env.MICROSOFT_CLIENT_ID, env.MICROSOFT_CLIENT_SECRET);
