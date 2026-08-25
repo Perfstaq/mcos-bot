@@ -1,13 +1,30 @@
 import { NavLink } from "react-router-dom";
 import { PerfstaqLogo } from "./PerfstaqLogo.js";
-import { IconBrief, IconMeetings, IconReview } from "./Icons.js";
+import {
+  IconBrief,
+  IconCheck,
+  IconLibrary,
+  IconMeetings,
+  IconReview,
+  IconSearch,
+  IconSettings,
+  IconUser,
+} from "./Icons.js";
 
 /**
  * The persistent rail. It never scrolls with content and never changes between
- * screens, so the three stages of the ring — evidence in, decision, memory —
- * stay visible as a single pipeline rather than three unrelated pages.
+ * screens, so the stages of the ring — evidence in, decision, memory — stay
+ * visible as one pipeline rather than a set of unrelated pages.
  */
-export function Sidebar({ pending, tenant, reviewer }: { pending: number | null; tenant: string; reviewer: string }) {
+export function Sidebar({
+  pending,
+  reviewer,
+  userName,
+}: {
+  pending: number | null;
+  reviewer: string;
+  userName: string;
+}) {
   return (
     <aside className="rail">
       <div className="rail-brand">
@@ -36,9 +53,43 @@ export function Sidebar({ pending, tenant, reviewer }: { pending: number | null;
         </NavLink>
       </div>
 
+      <div className="rail-section" style={{ marginTop: 18 }}>
+        <div className="rail-label">Workspace</div>
+
+        <NavLink to="/library" className={({ isActive }) => `rail-link${isActive ? " active" : ""}`}>
+          <IconLibrary />
+          <span className="grow">Library</span>
+        </NavLink>
+
+        <NavLink to="/action-items" className={({ isActive }) => `rail-link${isActive ? " active" : ""}`}>
+          <IconCheck size={18} />
+          <span className="grow">Action items</span>
+        </NavLink>
+
+        <NavLink to="/search" className={({ isActive }) => `rail-link${isActive ? " active" : ""}`}>
+          <IconSearch />
+          <span className="grow">Search</span>
+        </NavLink>
+
+        <NavLink to="/calendar" className={({ isActive }) => `rail-link${isActive ? " active" : ""}`}>
+          <IconMeetings />
+          <span className="grow">Calendars</span>
+        </NavLink>
+
+        <NavLink to="/settings" className={({ isActive }) => `rail-link${isActive ? " active" : ""}`}>
+          <IconSettings />
+          <span className="grow">Workspace</span>
+        </NavLink>
+
+        <NavLink to="/me" className={({ isActive }) => `rail-link${isActive ? " active" : ""}`}>
+          <IconUser />
+          <span className="grow">My settings</span>
+        </NavLink>
+      </div>
+
       <div className="rail-foot">
-        <div className="who">{reviewer}</div>
-        <div className="where mono">{tenant}</div>
+        <div className="who">{userName || reviewer}</div>
+        <div className="where mono">{reviewer}</div>
       </div>
     </aside>
   );

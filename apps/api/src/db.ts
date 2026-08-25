@@ -15,7 +15,25 @@ import { currentContext } from "./context.js";
  *   WebhookEvent  — written before the tenant is known (the payload has to be
  *                   parsed first), so it scopes itself explicitly.
  */
-const UNSCOPED = new Set(["Tenant", "ClaimSegment", "WebhookEvent"]);
+const UNSCOPED = new Set([
+  "Tenant",
+  "ClaimSegment",
+  "WebhookEvent",
+  // Better Auth owns these. They have no tenant_id — identity exists before a
+  // workspace does, and a user can belong to several. Tenancy for auth data is
+  // enforced by membership checks in the authorization layer, not by a column.
+  "User",
+  "Session",
+  "Account",
+  "Verification",
+  "Organization",
+  "Member",
+  "Invitation",
+  // Personal settings belong to a user, not a workspace: the same person can
+  // be in several, and their recording preference follows them. No tenant_id
+  // column exists, so injecting one would make every query throw.
+  "UserPreference",
+]);
 
 const WHERE_OPS = new Set([
   "findFirst",

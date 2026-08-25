@@ -315,6 +315,23 @@ button, input, textarea, select { font: inherit; color: inherit; }
   white-space: nowrap;
 }
 
+/* A plain card surface. The auth screens render outside the pane shell and
+   need something to sit on that is not a modal. */
+.card {
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--pane);
+  padding: 22px 24px;
+}
+.card-centred {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--canvas);
+}
+.card-centred .card { width: min(400px, 100%); }
+
 .empty { padding: 46px 28px; text-align: center; color: var(--muted); }
 .empty h3 { margin: 0 0 6px; color: var(--ink); font-size: 14px; font-weight: 600; }
 .empty p { margin: 0 auto; max-width: 40ch; font-size: 13px; }

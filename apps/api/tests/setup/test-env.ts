@@ -10,7 +10,14 @@ export function testDatabaseUrl(): string {
     "postgresql://mcos:mcos@localhost:5433/mcos?schema=public";
   // Same server, separate database — tests truncate aggressively and must
   // never be pointed at a database someone is developing against.
-  return base.replace(/\/([^/?]+)(\?|$)/, "/mcos_test$2");
+  //
+  // VITEST_DB_SUFFIX gives concurrent runs their own database. Without it two
+  // `vitest` processes share mcos_test and truncate each other's fixtures
+  // mid-assertion, which surfaces as deadlocks and foreign-key violations
+  // scattered across unrelated suites — failures that look like real
+  // regressions and are not.
+  const suffix = process.env.VITEST_DB_SUFFIX ? `_${process.env.VITEST_DB_SUFFIX}` : "";
+  return base.replace(/\/([^/?]+)(\?|$)/, `/mcos_test${suffix}$2`);
 }
 
 export function adminDatabaseUrl(): string {
@@ -53,6 +60,11 @@ export function applyTestEnv(): void {
   process.env.OPENAI_API_KEY = "test-openai-key";
   process.env.OPENAI_MODEL = "gpt-5.6-terra";
   process.env.OPENAI_REASONING_EFFORT = "low";
+  // The pipeline suite is about webhooks, artifacts and the review gate, not
+  // about logging in. Header identity keeps those tests testing one thing.
+  process.env.AUTH_DEV_HEADERS = "true";
+  process.env.BETTER_AUTH_SECRET = "test-secret-at-least-thirty-two-characters-long";
+  process.env.WEB_ORIGIN = "http://localhost:5173";
   process.env.DEFAULT_TENANT_SLUG = "freshworks-demo";
   process.env.DEFAULT_REVIEWER_EMAIL = "reviewer@test.example";
 }

@@ -57,7 +57,7 @@ memory) and 6 (performance results re-enter as evidence) are **interface-only** 
 
 1. **Which `RECALL_REGION`?** API keys, webhook secrets, bots and recordings are all
    region-scoped and non-portable. **Recall has no India region** — the four are
-   `us-east-1`, `us-west-2`, `eu-central-1`, `ap-northeast-1`. With compute in Hyderabad,
+   `us-east-1`, `us-west-2`, `eu-central-1`, `ap-northeast-1`. With compute in Mumbai,
    `ap-northeast-1` (Tokyo) is the lowest-latency option and `us-east-1` the cheapest to
    operate; the choice is a data-residency call, not a technical one, because meeting media
    transits Recall's region either way.
@@ -351,27 +351,27 @@ response → review queue → approve → brief version → diff.
 Plus units: state machine rank guards, out-of-order webhook ordering, claim dedupe,
 chunking boundaries, evidence validation rejection, brief diff.
 
-## 9. Deploy — AWS Hyderabad (`ap-south-2`)
+## 9. Deploy — AWS Mumbai (`ap-south-1`)
 
 One ECS Fargate service (`node dist/server.js`) + one worker service
-(`node dist/worker.js`) from the same image, both in **`ap-south-2`**. RDS Postgres 16,
+(`node dist/worker.js`) from the same image, both in **`ap-south-1`**. RDS Postgres 16,
 ElastiCache Redis. R2 for artifacts. `ALLOWED_ORIGINS` for CORS; the API serves the built
 SPA, so there is usually only one origin.
 
-**Three things about `ap-south-2` that will bite if nobody checks them first:**
+**Three things about `ap-south-1` that will bite if nobody checks them first:**
 
 1. **It is an opt-in region.** A new AWS account cannot see it until it is enabled in
    Account → AWS Regions. IAM propagation after enabling takes minutes, not seconds.
 2. **Service and instance-type coverage is thinner than Mumbai (`ap-south-1`).** Verify
    Fargate, RDS Postgres 16 and ElastiCache instance classes are all available in
-   `ap-south-2` before committing — availability differs by AZ within the region, so check
+   `ap-south-1` before committing — availability differs by AZ within the region, so check
    per-AZ, not just per-region.
 3. **The Recall region is a separate decision.** Recall has no India region, so meeting
    media is processed outside India regardless of where this service runs. If data
-   residency is the reason for choosing Hyderabad, that constraint is not satisfied by
+   residency is the reason for choosing Mumbai, that constraint is not satisfied by
    compute placement alone and needs to be raised explicitly.
 
-**Cloudflare R2** has no Hyderabad location. The closest control is a bucket **location
+**Cloudflare R2** has no Mumbai location. The closest control is a bucket **location
 hint of `apac`**, set once at bucket creation and immutable afterwards — so it must be
 right the first time:
 

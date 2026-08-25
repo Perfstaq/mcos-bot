@@ -135,6 +135,35 @@ export async function fetchWithRetry(
   throw new RecallError(`Exhausted retries for ${url}`, lastStatus, "");
 }
 
+/**
+ * Turn Recall's error body into something the person who sees it can act on.
+ *
+ * The bare "Recall POST /bot/ failed" that this replaces was true and useless:
+ * it reached the UI as the entire explanation for a bot that never joined,
+ * while the response body said precisely what was wrong. An error that
+ * discards the diagnosis is worse than no error handling at all, because it
+ * looks like the diagnosis.
+ */
+function describeFailure(status: number, body: string): string {
+  let detail = body.slice(0, 300);
+  try {
+    const parsed = JSON.parse(body) as { detail?: string; code?: string; message?: string };
+    detail = parsed.detail ?? parsed.message ?? parsed.code ?? detail;
+  } catch {
+    // Not JSON. The truncated body is the best available description.
+  }
+
+  if (status === 401) {
+    return (
+      `${status} — ${detail} ` +
+      `(check RECALLAI_API_KEY, and that it belongs to RECALL_REGION: keys are region-scoped)`
+    );
+  }
+  if (status === 402) return `${status} — ${detail} (Recall account has no credit or an inactive plan)`;
+  if (status === 403) return `${status} — ${detail} (Recall rejects request bodies containing localhost or an IP; APP_BASE_URL must be a public URL)`;
+  return `${status} — ${detail}`;
+}
+
 async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
   const url = `${recallBaseUrl}${path}`;
   const response = await fetchWithRetry(url, {
@@ -149,7 +178,11 @@ async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
 
   if (!response.ok) {
     const body = await response.text().catch(() => "");
-    throw new RecallError(`Recall ${init.method ?? "GET"} ${path} failed`, response.status, body);
+    throw new RecallError(
+      `Recall ${init.method ?? "GET"} ${path} failed: ${describeFailure(response.status, body)}`,
+      response.status,
+      body,
+    );
   }
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
@@ -288,4 +321,26 @@ export async function createAsyncTranscript(recordingId: string): Promise<Recall
 
 export async function deleteBotMedia(botId: string): Promise<void> {
   await call<void>(`/bot/${botId}/delete_media/`, { method: "POST" });
+}
+
+/**
+ * Stand a bot down.
+ *
+ * A scheduled bot that has not joined yet is deleted outright; one already in
+ * the call is asked to leave. Callers rarely know which state it is in — a
+ * calendar event cancelled ten minutes before the call could be either — so
+ * this tries the delete and falls back to leave_call. A 404 means the bot is
+ * already gone, which is the desired end state, not an error.
+ */
+export async function cancelBot(botId: string): Promise<"deleted" | "left" | "already_gone"> {
+  try {
+    await call<void>(`/bot/${botId}/`, { method: "DELETE" });
+    return "deleted";
+  } catch (error) {
+    if (error instanceof RecallError && error.status === 404) return "already_gone";
+    if (!(error instanceof RecallError)) throw error;
+
+    await call<void>(`/bot/${botId}/leave_call/`, { method: "POST" });
+    return "left";
+  }
 }
