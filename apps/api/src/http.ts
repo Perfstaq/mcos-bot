@@ -133,11 +133,28 @@ export function registerCore(app: FastifyInstance, opts: { spa?: boolean } = {})
       request.url.startsWith("/api") ||
       request.url === "/healthz" ||
       request.url === "/readyz";
-    if (opts.spa && !isApi) return reply.sendFile("index.html");
+
+    // A path whose last segment names a file — /assets/index-a1b2c3.js — is a
+    // missing asset, never a client route. Answering it with index.html is how
+    // a stale asset manifest becomes a blank screen: the browser asks for a
+    // module script, is handed HTML, and refuses it with a MIME error that says
+    // nothing about the actual cause. @fastify/static is registered with
+    // `wildcard: false`, which enumerates the directory once at startup, so a
+    // frontend rebuilt while the server is up serves exactly this way until it
+    // restarts. A 404 says what happened.
+    const isAsset = /\.[a-z0-9]+$/i.test(pathnameOf(request.url));
+
+    if (opts.spa && !isApi && !isAsset) return reply.sendFile("index.html");
     return reply.status(404).send({
       error: { code: "not_found", message: `No route for ${request.method} ${request.url}` },
     });
   });
+}
+
+/** The path alone. A query string must not decide whether something is a file. */
+function pathnameOf(url: string): string {
+  const cut = url.search(/[?#]/);
+  return cut === -1 ? url : url.slice(0, cut);
 }
 
 export function requireCtx(request: FastifyRequest): RequestContext {

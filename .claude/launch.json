@@ -8,7 +8,20 @@
         "run",
         "dev"
       ],
-      "port": 3000
+      "port": 8787,
+      "autoPort": false
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "-w",
+        "@mcos/web"
+      ],
+      "port": 5173,
+      "autoPort": false
     }
   ]
 }
