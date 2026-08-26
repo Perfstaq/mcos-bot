@@ -26,11 +26,17 @@ import { passwordSourceMessage, seedWorkspace } from "./seed-workspace.js";
  * `seedGoldenMeetings` is the reusable half: given a tenantId, it ingests
  * both fixtures with plain Prisma writes under `runWithContext`, no Better
  * Auth involved, so tests can call it directly against a lightweight test
- * tenant (see tests/seed-golden.test.ts). `main` below is the CLI entrypoint,
- * which additionally resolves/creates the real demo tenant through Better
- * Auth — that half is intentionally NOT exercised by the automated suite,
- * because pipeline.test.ts truncates the `tenants` table before every test
- * and would orphan the Organization row this creates.
+ * tenant (see tests/seed-golden.test.ts). The five writes per meeting
+ * (meeting, evidence source, transcript, segments, state transition) run
+ * inside one `prisma.$transaction`, so a crash mid-seed can never leave a
+ * half-written meeting behind for the idempotency check (`findFirst` by
+ * title, then `findUniqueOrThrow` on its transcript) to trip over on rerun.
+ *
+ * `main` below is the CLI entrypoint, which additionally resolves/creates
+ * the real demo tenant through Better Auth — that half is intentionally NOT
+ * exercised by the automated suite, because pipeline.test.ts truncates the
+ * `tenants` table before every test and would orphan the Organization row
+ * this creates.
  */
 
 export type GoldenMeetingSummary = {
@@ -121,73 +127,86 @@ export async function seedGoldenMeetings(tenantId: string): Promise<GoldenSeedSu
       throw new Error(`${def.fixtureFile} produced no segments — fixture is broken`);
     }
 
-    const startedAt = new Date();
-    const endedAt = new Date(startedAt.getTime() + parsed.durationMs);
+    // Backdated so a seeded "completed" meeting doesn't end in the future:
+    // it ended just now and ran for as long as the transcript's own duration.
+    const endedAt = new Date();
+    const startedAt = new Date(endedAt.getTime() - parsed.durationMs);
 
-    const meeting = await prisma.meeting.create({
-      data: {
-        tenantId,
-        title: def.title,
-        meetingUrl: def.meetingUrl,
-        platform: def.platform,
-        status: MeetingStatus.transcript_ready,
-        startedAt,
-        endedAt,
-        durationMs: parsed.durationMs,
-        recallBotId: `${def.key}-bot`,
-        recallTranscriptId: `${def.key}-transcript`,
-      },
-    });
-
-    const evidence = await prisma.evidenceSource.create({
-      data: {
-        tenantId,
-        kind: EvidenceKind.meeting_transcript,
-        meetingId: meeting.id,
-        externalId: `${def.key}-transcript`,
-        capturedAt: startedAt,
-        metadata: {
-          provider: "golden-fixture",
-          fixture: def.fixtureFile,
-          note: "Seeded from a golden fixture — no Recall call was made.",
+    const meeting = await prisma.$transaction(async (tx) => {
+      const meeting = await tx.meeting.create({
+        data: {
+          tenantId,
+          title: def.title,
+          meetingUrl: def.meetingUrl,
+          platform: def.platform,
+          status: MeetingStatus.transcript_ready,
+          startedAt,
+          endedAt,
+          durationMs: parsed.durationMs,
+          // recallBotId/recallTranscriptId are globally @unique on Meeting.
+          // No real Recall bot ever ran for a seeded meeting, so a synthetic
+          // per-fixture string here (e.g. "golden-freshworks-bot") would
+          // collide with P2002 the moment a second tenant on the same
+          // database seeded these fixtures too. null is the honest value —
+          // idempotency for this seed is by (tenantId, title), not by these
+          // columns.
+          recallBotId: null,
+          recallTranscriptId: null,
         },
-      },
-    });
+      });
 
-    const transcript = await prisma.transcript.create({
-      data: {
-        tenantId,
-        meetingId: meeting.id,
-        evidenceSourceId: evidence.id,
-        provider: "golden-fixture",
-        languageCode: parsed.languageCode,
-        segmentCount: parsed.segments.length,
-        wordCount: parsed.wordCount,
-        durationMs: parsed.durationMs,
-      },
-    });
+      const evidence = await tx.evidenceSource.create({
+        data: {
+          tenantId,
+          kind: EvidenceKind.meeting_transcript,
+          meetingId: meeting.id,
+          externalId: `${def.key}-transcript`,
+          capturedAt: startedAt,
+          metadata: {
+            provider: "golden-fixture",
+            fixture: def.fixtureFile,
+            note: "Seeded from a golden fixture — no Recall call was made.",
+          },
+        },
+      });
 
-    await prisma.transcriptSegment.createMany({
-      data: parsed.segments.map((s) => ({
-        tenantId,
-        transcriptId: transcript.id,
-        idx: s.idx,
-        speaker: s.speaker,
-        speakerId: s.speakerId,
-        startMs: s.startMs,
-        endMs: s.endMs,
-        text: s.text,
-      })),
-    });
+      const transcript = await tx.transcript.create({
+        data: {
+          tenantId,
+          meetingId: meeting.id,
+          evidenceSourceId: evidence.id,
+          provider: "golden-fixture",
+          languageCode: parsed.languageCode,
+          segmentCount: parsed.segments.length,
+          wordCount: parsed.wordCount,
+          durationMs: parsed.durationMs,
+        },
+      });
 
-    await prisma.stateTransition.create({
-      data: {
-        tenantId,
-        meetingId: meeting.id,
-        fromStatus: null,
-        toStatus: MeetingStatus.transcript_ready,
-        reason: `golden fixture ingested (${def.fixtureFile})`,
-      },
+      await tx.transcriptSegment.createMany({
+        data: parsed.segments.map((s) => ({
+          tenantId,
+          transcriptId: transcript.id,
+          idx: s.idx,
+          speaker: s.speaker,
+          speakerId: s.speakerId,
+          startMs: s.startMs,
+          endMs: s.endMs,
+          text: s.text,
+        })),
+      });
+
+      await tx.stateTransition.create({
+        data: {
+          tenantId,
+          meetingId: meeting.id,
+          fromStatus: null,
+          toStatus: MeetingStatus.transcript_ready,
+          reason: `golden fixture ingested (${def.fixtureFile})`,
+        },
+      });
+
+      return meeting;
     });
 
     meetings.push({
@@ -203,12 +222,20 @@ export async function seedGoldenMeetings(tenantId: string): Promise<GoldenSeedSu
   return { tenantId, meetings };
 }
 
-async function main(): Promise<void> {
-  if (env.NODE_ENV === "production") {
-    console.error("Refusing to run the golden seed against NODE_ENV=production.");
-    process.exitCode = 1;
-    return;
+/**
+ * Hard refusal to run this seed anywhere near a production environment.
+ * Extracted from `main` so the guard is behaviorally unit-testable (see
+ * tests/seed-golden.test.ts) rather than only verifiable by grepping the
+ * compiled source for the check.
+ */
+export function assertNotProduction(nodeEnv: string): void {
+  if (nodeEnv === "production") {
+    throw new Error("Refusing to run the golden seed against NODE_ENV=production.");
   }
+}
+
+async function main(): Promise<void> {
+  assertNotProduction(env.NODE_ENV);
 
   const { tenantId, email } = await seedWorkspace();
   console.log(passwordSourceMessage(email));

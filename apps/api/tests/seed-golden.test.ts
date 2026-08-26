@@ -1,7 +1,7 @@
 import { MeetingStatus } from "@prisma/client";
 import { beforeEach, describe, expect, it } from "vitest";
 import { runWithContext } from "../src/context.js";
-import { seedGoldenMeetings } from "../src/seed-golden.js";
+import { assertNotProduction, seedGoldenMeetings } from "../src/seed-golden.js";
 import { db, resetDb, seedTenant } from "./helpers.js";
 
 /**
@@ -67,15 +67,49 @@ describe("seedGoldenMeetings", () => {
     expect(await db.meeting.count({ where: { tenantId: tenant.id } })).toBe(2);
   });
 
-  it("refuses to run against NODE_ENV=production at the CLI entrypoint", async () => {
-    // The hard guard lives in seed-golden.ts#main, which only runs when the
-    // file is executed directly (see the isDirectRun check at the bottom of
-    // that file) — importing it here, as this test does, never triggers it.
-    // This test documents the guard's existence for reviewers; the substance
-    // is a source read rather than a subprocess spawn, so it stays fast.
-    const source = await import("node:fs").then((fs) =>
-      fs.readFileSync(new URL("../src/seed-golden.ts", import.meta.url), "utf-8"),
+  it("seeds a second tenant without colliding on recallBotId/recallTranscriptId", async () => {
+    // Regression test: these seeded meetings have no real Recall bot behind
+    // them, and recallBotId/recallTranscriptId are globally @unique on
+    // Meeting. A synthetic-but-fixed value per fixture (e.g.
+    // "golden-freshworks-bot") collided with P2002 the moment a second
+    // tenant on the same database seeded the same fixtures — exactly what
+    // this test seeds.
+    const tenantA = await seedTenant("tenant-a");
+    const tenantB = await seedTenant("tenant-b");
+
+    await runWithContext(
+      { tenantId: tenantA.id, tenantSlug: tenantA.slug, reviewer: "test" },
+      () => seedGoldenMeetings(tenantA.id),
     );
-    expect(source).toMatch(/NODE_ENV === "production"/);
+    const summaryB = await runWithContext(
+      { tenantId: tenantB.id, tenantSlug: tenantB.slug, reviewer: "test" },
+      () => seedGoldenMeetings(tenantB.id),
+    );
+
+    expect(summaryB.meetings).toHaveLength(2);
+    expect(summaryB.meetings.every((m) => !m.reused)).toBe(true);
+    expect(await db.meeting.count({ where: { tenantId: tenantB.id } })).toBe(2);
+  });
+});
+
+/**
+ * `assertNotProduction` is the hard guard `main` calls before touching
+ * anything. `main` itself only runs when seed-golden.ts is executed directly
+ * (see the isDirectRun check at the bottom of that file), so it is not
+ * exercised by importing the module in a test — this tests the guard
+ * function itself, behaviorally, rather than grepping the source for the
+ * check.
+ */
+describe("assertNotProduction", () => {
+  it("throws when NODE_ENV is production", () => {
+    expect(() => assertNotProduction("production")).toThrow(/production/);
+  });
+
+  it("does not throw for development", () => {
+    expect(() => assertNotProduction("development")).not.toThrow();
+  });
+
+  it("does not throw for test", () => {
+    expect(() => assertNotProduction("test")).not.toThrow();
   });
 });
