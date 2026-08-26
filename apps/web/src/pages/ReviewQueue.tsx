@@ -65,6 +65,10 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
   const rowRefs = useRef(new Map<string, HTMLElement>());
   const editRef = useRef<HTMLTextAreaElement>(null);
   const undoTimer = useRef<number | null>(null);
+  // The pending "drop this row from the list" timers, by claim. Undo inside
+  // that window has to cancel one, or the row leaves the queue and its type
+  // count is decremented for a decision that no longer exists.
+  const settleTimers = useRef(new Map<string, number>());
 
   const load = useCallback(async () => {
     try {
@@ -95,7 +99,14 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
     if (claims) onCountChange(claims.length);
   }, [claims, onCountChange]);
 
-  useEffect(() => () => { if (undoTimer.current) window.clearTimeout(undoTimer.current); }, []);
+  useEffect(() => {
+    const timers = settleTimers.current;
+    return () => {
+      if (undoTimer.current) window.clearTimeout(undoTimer.current);
+      for (const timer of timers.values()) window.clearTimeout(timer);
+      timers.clear();
+    };
+  }, []);
 
   const visible = useMemo(
     () => (claims ?? []).filter((c) => filter === "all" || c.type === filter),
@@ -139,10 +150,12 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
         void loadAudit();
         // Hold the row briefly so the decision registers, then drop it. Yanking
         // rows out from under a fast reviewer loses their place.
-        window.setTimeout(() => {
+        const timer = window.setTimeout(() => {
+          settleTimers.current.delete(claim.id);
           setClaims((cs) => (cs ?? []).filter((c) => c.id !== claim.id));
           setCounts((c) => ({ ...c, [claim.type]: Math.max(0, (c[claim.type] ?? 1) - 1) }));
         }, SETTLE_MS);
+        settleTimers.current.set(claim.id, timer);
       } catch (e) {
         setError((e as Error).message);
       } finally {
@@ -162,6 +175,13 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
     const { claim, outcome } = undoable;
     setUndoable(null);
     if (undoTimer.current) window.clearTimeout(undoTimer.current);
+    // Cancel the row's exit before it happens. Undoing inside the settle window
+    // would otherwise still drop the row and still decrement its type count.
+    const pendingSettle = settleTimers.current.get(claim.id);
+    if (pendingSettle !== undefined) {
+      window.clearTimeout(pendingSettle);
+      settleTimers.current.delete(claim.id);
+    }
     try {
       await api.post(`/claims/${claim.id}/undo`);
       setSession((s) => ({ ...s, [outcome]: Math.max(0, s[outcome] - 1) }));
