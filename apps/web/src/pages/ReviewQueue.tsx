@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   api,
   CLAIM_TYPE_LABEL,
@@ -42,6 +43,7 @@ const ACTION_LABEL: Record<ReviewDecision["action"], string> = {
  * will until someone on this screen decides it should.
  */
 export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => void }) {
+  const navigate = useNavigate();
   const [claims, setClaims] = useState<Claim[] | null>(null);
   const [counts, setCounts] = useState<Partial<Record<ClaimType, number>>>({});
   const [decisions, setDecisions] = useState<ReviewDecision[]>([]);
@@ -268,12 +270,31 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
     return () => window.removeEventListener("keydown", onKey);
   }, [current, visible.length, decide, startEdit, settled, busy, undoable, undo, keepAllHighConfidence]);
 
+  /**
+   * Merge, then leave.
+   *
+   * Staying on an emptied queue to read a one-line notice wastes the moment the
+   * whole gate exists to produce: the reviewer has just changed the brief and
+   * wants to see what they changed. So the merge hands off to the brief with
+   * the diff already open on the version it just wrote.
+   *
+   * `meeting_id` is sent only when the queue held exactly one call. The merge
+   * is never scoped to it — a version is everything approved and unmerged — so
+   * a queue spanning two meetings has no single honest answer, and the server
+   * infers the same way rather than being handed a guess.
+   */
   const merge = async () => {
     setMerging(true);
     try {
-      const r = await api.post<{ version: { version: number; added: number; edited: number; removed: number } }>("/brief/versions");
-      setNotice(`Brief v${r.version.version} created — ${r.version.added} added, ${r.version.edited} edited, ${r.version.removed} removed.`);
+      const meetingIds = new Set((claims ?? []).map((c) => c.meeting.id));
+      const body = meetingIds.size === 1 ? { meeting_id: [...meetingIds][0] } : {};
+
+      const r = await api.post<{
+        version: { version: number; added: number; edited: number; removed: number };
+      }>("/brief/versions", body);
+
       setError(null);
+      navigate(`/brief?v=${r.version.version}&diff=1`);
     } catch (e) {
       setNotice(null);
       setError((e as Error).message);
