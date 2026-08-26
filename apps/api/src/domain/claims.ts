@@ -93,20 +93,22 @@ function approximateSubstringDistance(needle: string, haystack: string): number 
   return best;
 }
 
-/** 1 = verbatim (after normalisation), 0 = nothing in common. */
-export function quoteSimilarity(quote: string, segmentTexts: string[]): number {
-  const needle = normalizeClaimText(quote);
-  if (needle.length === 0) return 0;
-  const haystack = normalizeClaimText(segmentTexts.join(" "));
-  if (haystack.includes(needle)) return 1;
-  return Math.max(0, 1 - approximateSubstringDistance(needle, haystack) / needle.length);
-}
-
 /** The evidence gate's quote check: fuzzy containment, floored at 0.85. */
 export function quoteAppearsIn(quote: string, segmentTexts: string[]): boolean {
   const needle = normalizeClaimText(quote);
   if (needle.length < 8) return false;
-  return quoteSimilarity(quote, segmentTexts) >= QUOTE_SIMILARITY_FLOOR;
+  const haystack = normalizeClaimText(segmentTexts.join(" "));
+
+  // Edits close the length gap one character at a time, so the distance is at
+  // least (needle − haystack). When that gap alone puts similarity under the
+  // floor, the DP cannot possibly rescue the quote — skip it.
+  if (1 - Math.max(0, needle.length - haystack.length) / needle.length < QUOTE_SIMILARITY_FLOOR) {
+    return false;
+  }
+  if (haystack.includes(needle)) return true;
+
+  const similarity = 1 - approximateSubstringDistance(needle, haystack) / needle.length;
+  return similarity >= QUOTE_SIMILARITY_FLOOR;
 }
 
 /**
@@ -161,14 +163,16 @@ function levenshtein(a: string, b: string): number {
   return prev[m]!;
 }
 
-/** Whole-text similarity of two claims after normalisation. 1 = identical. */
-export function claimTextSimilarity(a: string, b: string): number {
-  const na = normalizeClaimText(a);
-  const nb = normalizeClaimText(b);
+function normalizedSimilarity(na: string, nb: string): number {
   if (na === nb) return na.length === 0 ? 0 : 1;
   const longest = Math.max(na.length, nb.length);
   if (longest === 0) return 0;
   return Math.max(0, 1 - levenshtein(na, nb) / longest);
+}
+
+/** Whole-text similarity of two claims after normalisation. 1 = identical. */
+export function claimTextSimilarity(a: string, b: string): number {
+  return normalizedSimilarity(normalizeClaimText(a), normalizeClaimText(b));
 }
 
 /**
@@ -182,18 +186,29 @@ export function dedupeNearIdenticalClaims<
   T extends { type: ClaimType; text: string; confidence: number },
 >(claims: T[], threshold: number = CLAIM_DEDUPE_SIMILARITY): { kept: T[]; duplicates: number } {
   const kept: T[] = [];
+  const keptNorm: string[] = [];
   let duplicates = 0;
 
   outer: for (const claim of claims) {
+    const norm = normalizeClaimText(claim.text);
     for (let i = 0; i < kept.length; i++) {
       const existing = kept[i]!;
       if (existing.type !== claim.type) continue;
-      if (claimTextSimilarity(existing.text, claim.text) < threshold) continue;
+      const other = keptNorm[i]!;
+      const longest = Math.max(norm.length, other.length);
+      // Distance is at least the length gap; when the gap alone breaks the
+      // threshold, skip the O(n·m) comparison outright.
+      if (longest === 0 || 1 - Math.abs(norm.length - other.length) / longest < threshold) continue;
+      if (normalizedSimilarity(norm, other) < threshold) continue;
       duplicates += 1;
-      if (claim.confidence > existing.confidence) kept[i] = claim;
+      if (claim.confidence > existing.confidence) {
+        kept[i] = claim;
+        keptNorm[i] = norm;
+      }
       continue outer;
     }
     kept.push(claim);
+    keptNorm.push(norm);
   }
 
   return { kept, duplicates };
