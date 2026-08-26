@@ -154,6 +154,11 @@ export function Meetings() {
                   {meeting.claim_counts.proposed > 0 && <span style={{ color: "var(--orange)" }}>{meeting.claim_counts.proposed} to review</span>}
                   {meeting.claim_counts.total > 0 && meeting.claim_counts.proposed === 0 && <span>{meeting.claim_counts.total} claims</span>}
                 </div>
+                {meeting.digest && (
+                  <div style={{ color: "var(--faint)", fontSize: 12, marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {meeting.digest}
+                  </div>
+                )}
               </button>
             ))}
           </div>
@@ -178,9 +183,13 @@ export function Meetings() {
                 <h2 style={{ margin: "6px 0 4px", fontSize: 20, fontWeight: 600, letterSpacing: "-0.02em" }}>
                   {detail.title ?? hostOf(detail.meeting_url)}
                 </h2>
-                <div className="mono" style={{ color: "var(--faint)", marginBottom: 20, wordBreak: "break-all" }}>
+                <div className="mono" style={{ color: "var(--faint)", marginBottom: 8, wordBreak: "break-all" }}>
                   {detail.meeting_url}
                 </div>
+
+                {detail.digest && (
+                  <p style={{ color: "var(--muted)", marginBottom: 20, maxWidth: 640 }}>{detail.digest}</p>
+                )}
 
                 {detail.status === "failed" && detail.failure_reason && (
                   <div className="banner error" style={{ margin: "0 0 18px" }}>

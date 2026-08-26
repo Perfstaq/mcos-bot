@@ -257,3 +257,118 @@ function clamp01(n: number): number {
 }
 
 export { segmentHandle };
+
+/* --------------------------------------------------------- meeting digest */
+
+/** Bumped whenever the digest prompt or schema changes — meetings.digest_model
+ *  records which harness produced a given digest, the same reasoning as
+ *  PROMPT_VERSION above. */
+export const DIGEST_PROMPT_VERSION = "meeting_digest/v1-openai";
+
+export type MeetingDigest = {
+  title: string;
+  digest: string;
+  inputTokens: number;
+  outputTokens: number;
+};
+
+export class DigestRefused extends Error {
+  constructor(readonly refusal: string) {
+    super(`Model refused the digest request: ${refusal}`);
+    this.name = "DigestRefused";
+  }
+}
+
+const DIGEST_SYSTEM_PROMPT = `You write a one-line title and a short digest for a B2B meeting transcript.
+
+This is a convenience label shown in a meetings list and atop a review queue — not an
+analysis, and not a substitute for reading the transcript. Be concrete and specific to
+what was actually discussed; never generic ("Team sync", "Client call").
+
+Rules:
+
+1. "title" is under 80 characters, third person, naming the actual subject
+   ("Mid-market pricing objections and the Zendesk comparison" not "Sales call").
+2. "digest" is exactly three sentences, plain prose, summarising what the call was
+   about and what came out of it. No bullet points, no headers, no claims about
+   positioning that belong to the review gate instead — this is a summary for a
+   human deciding whether to open the call, not a substitute for reviewing it.
+3. Never invent attendees, numbers, or outcomes that are not evident from the
+   excerpt. When the excerpt is thin, say so plainly rather than padding.`;
+
+const DIGEST_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["title", "digest"],
+  properties: {
+    title: { type: "string", description: "Under 80 characters, third person, specific." },
+    digest: { type: "string", description: "Exactly three sentences of plain prose." },
+  },
+} as const;
+
+/**
+ * Generate a one-line title and three-sentence digest from a transcript
+ * excerpt.
+ *
+ * Deliberately the same strict-Structured-Outputs shape as `extractFromChunk`:
+ * no free-text JSON to parse, and a refusal or truncated response is an error
+ * rather than a silently empty digest — the caller (jobs/digest.ts) decides
+ * what "no digest" means, this function never guesses.
+ *
+ * A NEW function, added alongside the existing extraction harness rather than
+ * folded into it: the digest is a different prompt, a different (cheaper)
+ * model tier, and a different failure posture (non-blocking), and giving it
+ * its own entry point keeps all three from leaking into `extractFromChunk`.
+ */
+export async function generateMeetingDigest(args: {
+  transcriptExcerpt: string;
+  existingTitle: string | null;
+  model?: string;
+}): Promise<MeetingDigest> {
+  const header = args.existingTitle
+    ? `The meeting was created with the working title "${args.existingTitle}" — replace it ` +
+      `with something more specific if the transcript supports one.\n\n`
+    : "";
+
+  const response = await client.responses.create({
+    model: args.model ?? env.DIGEST_MODEL,
+    input: [
+      { role: "system", content: DIGEST_SYSTEM_PROMPT },
+      {
+        role: "user",
+        content: `${header}Transcript excerpt:\n\n${args.transcriptExcerpt}\n\nWrite the title and digest.`,
+      },
+    ],
+    text: { format: { type: "json_schema", name: "meeting_digest", strict: true, schema: DIGEST_SCHEMA } },
+    reasoning: { effort: "minimal" },
+    max_output_tokens: 1_000,
+  });
+
+  const refusal = findRefusal(response);
+  if (refusal) throw new DigestRefused(refusal);
+
+  if (response.status === "incomplete") {
+    throw new Error(
+      `Digest response truncated (${response.incomplete_details?.reason ?? "unknown reason"})`,
+    );
+  }
+
+  const text = response.output_text ?? "";
+  const parsed = text ? coerceDigest(safeParse(text)) : null;
+  if (!parsed) throw new Error("Digest response did not contain a usable title and digest");
+
+  return {
+    ...parsed,
+    inputTokens: response.usage?.input_tokens ?? 0,
+    outputTokens: response.usage?.output_tokens ?? 0,
+  };
+}
+
+function coerceDigest(input: unknown): { title: string; digest: string } | null {
+  if (typeof input !== "object" || input === null) return null;
+  const obj = input as Record<string, unknown>;
+  const title = typeof obj["title"] === "string" ? obj["title"].trim().slice(0, 200) : "";
+  const digest = typeof obj["digest"] === "string" ? obj["digest"].trim() : "";
+  if (!title || !digest) return null;
+  return { title, digest };
+}

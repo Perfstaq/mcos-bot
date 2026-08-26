@@ -330,6 +330,12 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
         </button>
       </header>
 
+      {current?.meeting.digest && (
+        <div className="banner info" role="note">
+          <strong>{current.meeting.title ?? "This call"}</strong> — {current.meeting.digest}
+        </div>
+      )}
+
       {highConfidence.length > 0 && (
         <div className="bulk-bar">
           <button

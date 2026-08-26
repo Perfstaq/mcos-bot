@@ -53,7 +53,7 @@ export async function reviewRoutes(app: FastifyInstance): Promise<void> {
       orderBy: [{ type: "asc" }, { confidence: "desc" }, { timestampMs: "asc" }],
       take: limit,
       include: {
-        meeting: { select: { id: true, title: true, meetingUrl: true, startedAt: true } },
+        meeting: { select: { id: true, title: true, digest: true, meetingUrl: true, startedAt: true } },
         segments: { include: { segment: true } },
       },
     });
@@ -214,7 +214,7 @@ type ClaimRow = {
   timestampMs: number;
   editedFromId: string | null;
   createdAt: Date;
-  meeting: { id: string; title: string | null; meetingUrl: string; startedAt: Date | null };
+  meeting: { id: string; title: string | null; digest: string | null; meetingUrl: string; startedAt: Date | null };
   segments: Array<{ segment: { id: string; idx: number; speaker: string; startMs: number; text: string } }>;
 };
 
@@ -253,6 +253,7 @@ function serializeClaim(claim: ClaimRow) {
     meeting: {
       id: claim.meeting.id,
       title: claim.meeting.title,
+      digest: claim.meeting.digest,
       meeting_url: claim.meeting.meetingUrl,
       started_at: claim.meeting.startedAt?.toISOString() ?? null,
     },

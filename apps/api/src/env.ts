@@ -58,6 +58,11 @@ const schema = z.object({
   // default; sol is the lever to pull if recall on messy transcripts is poor.
   OPENAI_MODEL: z.string().default("gpt-5.6-terra"),
   OPENAI_REASONING_EFFORT: z.enum(["minimal", "low", "medium", "high"]).default("low"),
+  // The one-line title + 3-sentence digest generated at transcript_ready is a
+  // convenience, not an analysis — it never needs the extraction tier's
+  // judgement, so it defaults to the cheapest one. Still its own knob, and
+  // still OpenAI: this milestone does not switch providers.
+  DIGEST_MODEL: z.string().default("gpt-5.6-luna"),
 
   // --- Authentication ------------------------------------------------------
   // Better Auth requires >=32 chars. Rotating it invalidates every session and
