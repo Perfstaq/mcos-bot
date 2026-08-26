@@ -168,7 +168,11 @@ export function createExtractFromChunkMockFromAnswerKey(
           text: hit.text_gist,
           confidence: 0.9,
           evidence: {
-            transcript_segment_ids: [handle],
+            // Cite every handle the answer key names for this entry, not just
+            // the one that triggered this iteration — an entry with several
+            // evidence_segment_ids must not be under-linked to only its first
+            // matching segment.
+            transcript_segment_ids: hit.evidence_segment_ids,
             verbatim_quote: segment.text,
             speaker: segment.speaker,
             timestamp_ms: segment.startMs,
