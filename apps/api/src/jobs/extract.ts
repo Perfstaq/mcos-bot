@@ -4,7 +4,7 @@ import { runWithContext } from "../context.js";
 import { env } from "../env.js";
 import { markFailed, transition } from "../domain/state.js";
 import { chunkBySpeakerTurns, segmentHandle } from "../domain/chunking.js";
-import { dedupeKey, quoteAppearsIn } from "../domain/claims.js";
+import { dedupeKey, dedupeNearIdenticalClaims, quoteAppearsIn } from "../domain/claims.js";
 import { PROMPT_VERSION, extractFromChunk, type ProposedClaim } from "../integrations/openai.js";
 import { suggestActionsQueue, type ExtractJob } from "../queue.js";
 import { logger } from "../logger.js";
@@ -79,9 +79,14 @@ export async function runExtraction(job: ExtractJob): Promise<void> {
     let persisted = 0;
     let inputTokens = 0;
     let outputTokens = 0;
-    const seen = new Set<string>();
 
     try {
+      // Gate first, persist last. Claims are collected across every chunk so
+      // that near-identical re-proposals from the overlap seam can be compared
+      // against each other — a chunk-at-a-time persist would have written the
+      // low-confidence copy before ever seeing the better one.
+      const gated: Array<ProposedClaim & { segmentIds: string[] }> = [];
+
       for (const chunk of chunks) {
         const result = await extractFromChunk({ chunk, meetingTitle: meeting.title });
         inputTokens += result.inputTokens;
@@ -92,28 +97,37 @@ export async function runExtraction(job: ExtractJob): Promise<void> {
           const validated = validate(claim, byHandle);
           if (!validated) {
             dropped += 1;
+            log.warn(
+              {
+                meetingId: meeting.id,
+                extractionRunId: run.id,
+                reason: "failed_evidence_gate",
+                type: claim.type,
+                citedSegments: claim.evidence.transcript_segment_ids,
+              },
+              "claim dropped",
+            );
             continue;
           }
-
-          const key = dedupeKey(claim.type, claim.text);
-          if (seen.has(key)) {
-            duplicates += 1;
-            continue;
-          }
-          seen.add(key);
-
-          const written = await persist({
-            tenantId: meeting.tenantId,
-            meetingId: meeting.id,
-            evidenceSourceId: transcript.evidenceSourceId,
-            extractionRunId: run.id,
-            claim,
-            segmentIds: validated.segmentIds,
-            key,
-          });
-          if (written) persisted += 1;
-          else duplicates += 1;
+          gated.push({ ...claim, segmentIds: validated.segmentIds });
         }
+      }
+
+      const deduped = dedupeNearIdenticalClaims(gated);
+      duplicates += deduped.duplicates;
+
+      for (const claim of deduped.kept) {
+        const written = await persist({
+          tenantId: meeting.tenantId,
+          meetingId: meeting.id,
+          evidenceSourceId: transcript.evidenceSourceId,
+          extractionRunId: run.id,
+          claim,
+          segmentIds: claim.segmentIds,
+          key: dedupeKey(claim.type, claim.text),
+        });
+        if (written) persisted += 1;
+        else duplicates += 1;
       }
     } catch (error) {
       await prisma.extractionRun.update({
