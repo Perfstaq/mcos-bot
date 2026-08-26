@@ -110,6 +110,27 @@ export function quoteAppearsIn(quote: string, segmentTexts: string[]): boolean {
 }
 
 /**
+ * The whole evidence gate as one pure function, so the extraction job and the
+ * eval harness run the SAME gate rather than two copies that drift. A claim
+ * fails when it cites a handle that does not resolve, cites nothing after
+ * unknown handles are removed, or quotes text that does not appear in the
+ * segments it cites. Returns the resolved segments, or null for "drop".
+ */
+export function gateClaimEvidence<S extends { text: string }>(
+  claim: { evidence: { transcript_segment_ids: string[]; verbatim_quote: string } },
+  byHandle: ReadonlyMap<string, S>,
+): S[] | null {
+  const resolved = claim.evidence.transcript_segment_ids
+    .map((handle) => byHandle.get(handle.trim()))
+    .filter((s): s is S => Boolean(s));
+
+  if (resolved.length === 0) return null;
+  if (!quoteAppearsIn(claim.evidence.verbatim_quote, resolved.map((s) => s.text))) return null;
+
+  return resolved;
+}
+
+/**
  * Two claims count as the same claim when their normalised texts are ≥0.9
  * similar. That collapses chunk-overlap re-proposals that drifted a word —
  * "pricing page" vs "pricing pages" — which the exact dedupe hash cannot.

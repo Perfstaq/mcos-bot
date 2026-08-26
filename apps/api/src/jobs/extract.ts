@@ -4,7 +4,7 @@ import { runWithContext } from "../context.js";
 import { env } from "../env.js";
 import { markFailed, transition } from "../domain/state.js";
 import { chunkBySpeakerTurns, segmentHandle } from "../domain/chunking.js";
-import { dedupeKey, dedupeNearIdenticalClaims, quoteAppearsIn } from "../domain/claims.js";
+import { dedupeKey, dedupeNearIdenticalClaims, gateClaimEvidence } from "../domain/claims.js";
 import { PROMPT_VERSION, extractFromChunk, type ProposedClaim } from "../integrations/openai.js";
 import { suggestActionsQueue, type ExtractJob } from "../queue.js";
 import { logger } from "../logger.js";
@@ -187,28 +187,18 @@ export async function runExtraction(job: ExtractJob): Promise<void> {
 type SegmentRow = { id: string; idx: number; text: string };
 
 /**
- * The evidence gate. A claim that fails any of these never reaches a reviewer:
- *
- *   - cites a segment id that does not exist (the model invented a handle)
- *   - cites nothing after unknown handles are removed
- *   - quotes text that does not appear in the segments it cites
- *
- * Dropping these is the point. A reviewer approving a claim is vouching for
- * the evidence attached to it, so unverifiable evidence must never be shown as
- * if it were real.
+ * The evidence gate. A claim that fails it never reaches a reviewer —
+ * dropping these is the point: a reviewer approving a claim is vouching for
+ * the evidence attached to it, so unverifiable evidence must never be shown
+ * as if it were real. The gate itself is `gateClaimEvidence` in
+ * domain/claims.ts, shared verbatim with the eval harness.
  */
 function validate(
   claim: ProposedClaim,
   byHandle: Map<string, SegmentRow>,
 ): { segmentIds: string[] } | null {
-  const resolved = claim.evidence.transcript_segment_ids
-    .map((handle) => byHandle.get(handle.trim()))
-    .filter((s): s is SegmentRow => Boolean(s));
-
-  if (resolved.length === 0) return null;
-  if (!quoteAppearsIn(claim.evidence.verbatim_quote, resolved.map((s) => s.text))) return null;
-
-  return { segmentIds: resolved.map((s) => s.id) };
+  const resolved = gateClaimEvidence(claim, byHandle);
+  return resolved ? { segmentIds: resolved.map((s) => s.id) } : null;
 }
 
 async function persist(args: {

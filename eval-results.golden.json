@@ -1,0 +1,40 @@
+{
+  "generatedAt": "2026-08-26T09:10:17.974Z",
+  "mode": "mock",
+  "model": "mock(answer-key)",
+  "promptVersion": "propose_claims/v3-openai",
+  "transcript": "golden-freshworks.json",
+  "thresholds": {
+    "recall": 0.8,
+    "falsePositives": 0,
+    "typeAccuracy": 0.85,
+    "evidenceAccuracy": 0.9
+  },
+  "pass": true,
+  "metrics": {
+    "recall": 1,
+    "falsePositives": 0,
+    "typeAccuracy": 1,
+    "evidenceAccuracy": 1
+  },
+  "counts": {
+    "segments": 252,
+    "chunks": 2,
+    "mustExtract": 28,
+    "matched": 28,
+    "predicted": 28,
+    "proposedByModel": 28,
+    "droppedByEvidenceGate": 0,
+    "duplicatesCollapsed": 0,
+    "unscoredExtras": 0
+  },
+  "tokens": {
+    "input": 2000,
+    "output": 1920
+  },
+  "elapsedMs": 6,
+  "missed": [],
+  "typeMisses": [],
+  "evidenceMisses": [],
+  "falsePositiveClaims": []
+}

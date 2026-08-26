@@ -2,7 +2,7 @@
   "name": "mcos",
   "private": true,
   "version": "0.1.0",
-  "description": "MCOS \u2014 Marketing Context Operating System. Milestone 1: ingestion \u2192 review gate \u2192 versioned brief.",
+  "description": "MCOS — Marketing Context Operating System. Milestone 1: ingestion → review gate → versioned brief.",
   "workspaces": [
     "apps/api",
     "apps/web"
@@ -25,6 +25,7 @@
     "db:studio": "npm run db:studio -w @mcos/api",
     "setup": "npm install && npm run db:up && npm run db:migrate && npm run db:seed:demo",
     "db:seed:demo": "npm run db:seed -w @mcos/api -- --demo",
-    "seed:golden": "npm run seed:golden -w @mcos/api"
+    "seed:golden": "npm run seed:golden -w @mcos/api",
+    "eval:extraction": "npm run eval:extraction -w @mcos/api --"
   }
 }
