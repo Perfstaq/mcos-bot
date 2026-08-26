@@ -108,3 +108,72 @@ export function quoteAppearsIn(quote: string, segmentTexts: string[]): boolean {
   if (needle.length < 8) return false;
   return quoteSimilarity(quote, segmentTexts) >= QUOTE_SIMILARITY_FLOOR;
 }
+
+/**
+ * Two claims count as the same claim when their normalised texts are ≥0.9
+ * similar. That collapses chunk-overlap re-proposals that drifted a word —
+ * "pricing page" vs "pricing pages" — which the exact dedupe hash cannot.
+ * It stays far above the point where two genuinely different observations
+ * could collide; merging those is a judgement call and belongs to the
+ * reviewer, not to a ratio.
+ */
+export const CLAIM_DEDUPE_SIMILARITY = 0.9;
+
+function levenshtein(a: string, b: string): number {
+  const n = a.length;
+  const m = b.length;
+  if (n === 0) return m;
+  if (m === 0) return n;
+
+  let prev: number[] = Array.from({ length: m + 1 }, (_, j) => j);
+  let curr: number[] = new Array(m + 1).fill(0);
+
+  for (let i = 1; i <= n; i++) {
+    curr[0] = i;
+    const ac = a.charCodeAt(i - 1);
+    for (let j = 1; j <= m; j++) {
+      const cost = ac === b.charCodeAt(j - 1) ? 0 : 1;
+      curr[j] = Math.min(prev[j]! + 1, curr[j - 1]! + 1, prev[j - 1]! + cost);
+    }
+    [prev, curr] = [curr, prev];
+  }
+  return prev[m]!;
+}
+
+/** Whole-text similarity of two claims after normalisation. 1 = identical. */
+export function claimTextSimilarity(a: string, b: string): number {
+  const na = normalizeClaimText(a);
+  const nb = normalizeClaimText(b);
+  if (na === nb) return na.length === 0 ? 0 : 1;
+  const longest = Math.max(na.length, nb.length);
+  if (longest === 0) return 0;
+  return Math.max(0, 1 - levenshtein(na, nb) / longest);
+}
+
+/**
+ * Collapse near-identical claims within one extraction run, keeping the
+ * highest-confidence copy of each. Order-stable: the survivor sits where the
+ * first copy of its claim appeared. The exact-hash dedupe key and its unique
+ * index remain the cross-run guarantee; this handles what a hash cannot —
+ * the same claim re-proposed across a chunk seam with a word of drift.
+ */
+export function dedupeNearIdenticalClaims<
+  T extends { type: ClaimType; text: string; confidence: number },
+>(claims: T[], threshold: number = CLAIM_DEDUPE_SIMILARITY): { kept: T[]; duplicates: number } {
+  const kept: T[] = [];
+  let duplicates = 0;
+
+  outer: for (const claim of claims) {
+    for (let i = 0; i < kept.length; i++) {
+      const existing = kept[i]!;
+      if (existing.type !== claim.type) continue;
+      if (claimTextSimilarity(existing.text, claim.text) < threshold) continue;
+      duplicates += 1;
+      if (claim.confidence > existing.confidence) kept[i] = claim;
+      continue outer;
+    }
+    kept.push(claim);
+  }
+
+  return { kept, duplicates };
+}
