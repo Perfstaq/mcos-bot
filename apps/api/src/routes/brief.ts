@@ -8,6 +8,7 @@ import {
   diffVersions,
   groupByType,
   mergeApprovedClaims,
+  MergeContentionError,
   NothingToMergeError,
 } from "../domain/brief.js";
 import { CLAIM_TYPE_LABEL } from "../domain/claims.js";
@@ -31,6 +32,9 @@ export async function briefRoutes(app: FastifyInstance): Promise<void> {
       return reply.status(201).send({ version: result });
     } catch (error) {
       if (error instanceof NothingToMergeError) throw ApiError.conflict(error.message);
+      if (error instanceof MergeContentionError) {
+        throw new ApiError(409, "merge_contention", error.message);
+      }
       if (error instanceof ConflictingLineageError) throw ApiError.conflict(error.message);
       throw error;
     }
