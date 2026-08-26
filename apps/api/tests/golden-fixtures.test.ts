@@ -1,3 +1,4 @@
+import { ClaimType } from "@prisma/client";
 import { describe, expect, it } from "vitest";
 import { parseTranscript } from "../src/domain/transcript.js";
 import { segmentHandle } from "../src/domain/chunking.js";
@@ -34,6 +35,22 @@ function assertEvidenceResolves(answerKey: AnswerKeyEntry[], entries: RecallTran
   }
 }
 
+/**
+ * `type` is a free-standing string in the fixture JSON, not an enum-checked
+ * value — a typo (e.g. "postioning_statement") would still load and would
+ * only surface downstream as a Prisma enum-validation error when a claim
+ * actually gets persisted. Catching it here, against the same ClaimType
+ * Prisma generates, keeps that failure local to the fixture that caused it.
+ */
+const VALID_CLAIM_TYPES = new Set<string>(Object.values(ClaimType));
+
+function assertTypesAreValid(answerKey: AnswerKeyEntry[]): void {
+  for (const claim of answerKey) {
+    if (claim.type === null) continue;
+    expect(VALID_CLAIM_TYPES.has(claim.type)).toBe(true);
+  }
+}
+
 function countsByType(answerKey: AnswerKeyEntry[]): Record<string, number> {
   const counts: Record<string, number> = {};
   for (const claim of answerKey) {
@@ -67,6 +84,10 @@ describe("golden-freshworks fixture", () => {
       freshworksAnswerKey as AnswerKeyEntry[],
       freshworksTranscript as RecallTranscriptEntry[],
     );
+  });
+
+  it("every non-null answer-key type is a real ClaimType", () => {
+    assertTypesAreValid(freshworksAnswerKey as AnswerKeyEntry[]);
   });
 
   it("meets the minimum count for every required claim type, plus noise", () => {
@@ -123,6 +144,10 @@ describe("golden-discovery fixture", () => {
       discoveryAnswerKey as AnswerKeyEntry[],
       discoveryTranscript as RecallTranscriptEntry[],
     );
+  });
+
+  it("every non-null answer-key type is a real ClaimType", () => {
+    assertTypesAreValid(discoveryAnswerKey as AnswerKeyEntry[]);
   });
 
   it("has its own mini set of claims and at least a couple of noise entries", () => {
