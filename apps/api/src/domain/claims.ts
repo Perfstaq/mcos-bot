@@ -26,6 +26,26 @@ export function isClaimType(value: string): value is ClaimType {
 }
 
 /**
+ * Confidence bands.
+ *
+ * The model returns a float; a reviewer needs a decision. `high` is the only
+ * band bulk-approve will touch — everything below it is a claim someone has to
+ * read before it becomes memory, which is the entire premise of the gate. The
+ * threshold is deliberately strict: the cost of a mis-kept claim is a wrong
+ * fact in the brief, the cost of a false exclusion is one keystroke.
+ */
+export const HIGH_CONFIDENCE_MIN = 0.85;
+export const MEDIUM_CONFIDENCE_MIN = 0.6;
+
+export type ConfidenceBand = "high" | "medium" | "low";
+
+export function confidenceBand(confidence: number): ConfidenceBand {
+  if (confidence >= HIGH_CONFIDENCE_MIN) return "high";
+  if (confidence >= MEDIUM_CONFIDENCE_MIN) return "medium";
+  return "low";
+}
+
+/**
  * Deduplication is deterministic, not a second model call.
  *
  * Chunk overlap means the same claim is genuinely proposed twice, phrased
@@ -51,6 +71,25 @@ export function normalizeClaimText(text: string): string {
 export function dedupeKey(type: ClaimType, text: string): string {
   const normalized = normalizeClaimText(text);
   return crypto.createHash("sha256").update(`${type}::${normalized}`).digest("hex").slice(0, 32);
+}
+
+/**
+ * The dedupe key for a claim a human wrote by editing another one.
+ *
+ * Deliberately outside the extraction keyspace. Dedupe exists to collapse the
+ * same proposal arriving twice from overlapping chunks; a reviewer's rewrite is
+ * not a duplicate proposal, and letting the two collide would mean an edit that
+ * happens to restore the original wording fails on a unique constraint instead
+ * of being recorded. Keyed by lineage root and revision, so it stays
+ * deterministic and still cannot collide within a lineage.
+ */
+export function editDedupeKey(rootClaimId: string, revision: number, text: string): string {
+  const normalized = normalizeClaimText(text);
+  return crypto
+    .createHash("sha256")
+    .update(`edit::${rootClaimId}::${revision}::${normalized}`)
+    .digest("hex")
+    .slice(0, 32);
 }
 
 /** Loose containment check used to validate a quote against its cited segments. */

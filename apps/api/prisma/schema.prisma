@@ -325,7 +325,13 @@ enum ClaimStatus {
   proposed
   approved
   rejected
+  /// Legacy. Edit-approve used to rewrite the claim in place and mark it
+  /// `edited`; it now writes a new row and supersedes the old one. Rows written
+  /// before that change keep this status and still merge into the brief.
   edited
+  /// Replaced by an edit-approved successor. The row is kept — it is the text a
+  /// human was shown when they decided — and is never a merge candidate again.
+  superseded
 
   @@map("claim_status")
 }
@@ -351,6 +357,14 @@ model CandidateClaim {
 
   dedupeKey String @map("dedupe_key")
 
+  // The claim this one was edited from — always the ORIGINAL of the lineage,
+  // never the immediate predecessor, so a claim rewritten five times still has
+  // one stable identity. The brief keys its rows off that identity, which is
+  // what lets version N+1 report an edit rather than an add plus a removal.
+  editedFromId String?          @map("edited_from_id")
+  editedFrom   CandidateClaim?  @relation("ClaimEdits", fields: [editedFromId], references: [id], onDelete: Cascade)
+  edits        CandidateClaim[] @relation("ClaimEdits")
+
   createdAt DateTime  @default(now()) @map("created_at")
   decidedAt DateTime? @map("decided_at")
   mergedAt  DateTime? @map("merged_at")
@@ -366,6 +380,7 @@ model CandidateClaim {
   @@unique([tenantId, dedupeKey])
   @@index([tenantId, status, type])
   @@index([meetingId, status])
+  @@index([tenantId, editedFromId])
   @@map("candidate_claims")
 }
 
@@ -390,6 +405,10 @@ enum ReviewAction {
   approve
   reject
   edit_approve
+  /// A compensating decision. Undo never deletes the decision it reverses —
+  /// the audit log only ever grows, so "who kept this, and did they change
+  /// their mind" stays answerable.
+  undo
 
   @@map("review_action")
 }
@@ -406,11 +425,18 @@ model ReviewDecision {
   note         String?
   createdAt    DateTime     @default(now()) @map("created_at")
 
+  // The row this decision produced (edit-approve: the successor claim) or
+  // compensated (undo: the successor it withdrew). Deliberately not a foreign
+  // key: the audit log must outlive the rows it describes, and a cascade is
+  // exactly how an append-only log quietly loses entries.
+  resultClaimId String? @map("result_claim_id")
+
   tenant Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   claim  CandidateClaim @relation(fields: [claimId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, createdAt])
   @@index([claimId, createdAt])
+  @@index([resultClaimId])
   @@map("review_decisions")
 }
 
