@@ -493,6 +493,8 @@ describe("extraction and the review gate", () => {
     expect(claims.every((c) => c.status === ClaimStatus.proposed)).toBe(true);
     // Provenance is structural: no claim exists without a segment link.
     expect(claims.every((c) => c.segments.length > 0)).toBe(true);
+    // Every claim is tagged with the model that produced it.
+    expect(claims.every((c) => c.extractedByModel === "gpt-5.6-terra")).toBe(true);
 
     const run = await db.extractionRun.findFirstOrThrow({ where: { meetingId } });
     expect(run.status).toBe("succeeded");

@@ -122,6 +122,7 @@ export async function runExtraction(job: ExtractJob): Promise<void> {
           meetingId: meeting.id,
           evidenceSourceId: transcript.evidenceSourceId,
           extractionRunId: run.id,
+          extractedByModel: run.model,
           claim,
           segmentIds: claim.segmentIds,
           key: dedupeKey(claim.type, claim.text),
@@ -215,6 +216,7 @@ async function persist(args: {
   meetingId: string;
   evidenceSourceId: string;
   extractionRunId: string;
+  extractedByModel: string;
   claim: ProposedClaim;
   segmentIds: string[];
   key: string;
@@ -227,6 +229,7 @@ async function persist(args: {
           meetingId: args.meetingId,
           evidenceSourceId: args.evidenceSourceId,
           extractionRunId: args.extractionRunId,
+          extractedByModel: args.extractedByModel,
           type: args.claim.type,
           text: args.claim.text,
           confidence: args.claim.confidence,

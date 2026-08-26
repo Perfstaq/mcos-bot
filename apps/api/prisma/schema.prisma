@@ -351,6 +351,11 @@ model CandidateClaim {
 
   dedupeKey String @map("dedupe_key")
 
+  // Which model proposed this claim. The run's model is the run-level record;
+  // this pins it to the row so provenance survives even a re-run with a
+  // different model. Nullable: claims extracted before the column existed.
+  extractedByModel String? @map("extracted_by_model")
+
   createdAt DateTime  @default(now()) @map("created_at")
   decidedAt DateTime? @map("decided_at")
   mergedAt  DateTime? @map("merged_at")
