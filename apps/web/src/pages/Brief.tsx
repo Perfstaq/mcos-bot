@@ -88,6 +88,11 @@ export function Brief() {
       try {
         setDiff(await api.get<BriefDiff>(`/brief/versions/${selected - 1}/diff/${selected}`));
       } catch (e) {
+        // Clear first: a failed fetch that left the previous version's diff in
+        // place would paint this version's document with the last one's marks,
+        // labelling claims "+ NEW" that this merge never touched. Showing no
+        // marks is honest; showing the wrong ones is not.
+        setDiff(null);
         setError((e as Error).message);
       }
     })();

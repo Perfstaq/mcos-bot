@@ -31,11 +31,18 @@ export const APPEND_ONLY_MODELS = new Set(["BriefVersion", "BriefClaim"]);
 const INSERT_OPS = new Set(["create", "createMany", "createManyAndReturn"]);
 
 /**
+ * What a redacted quote is replaced with.
+ *
+ * Defined here rather than in the purge that writes it, because this module is
+ * what decides whether a given write counts as a redaction — and a rule about
+ * legal values cannot live downstream of the code it constrains.
+ */
+export const REDACTED = "[evidence redacted]";
+
+/**
  * The only columns the purge may rewrite on a published brief row, and only on
  * BriefClaim. See routes/meetings.ts — the claim survives, the evidence does not.
  */
-const REDACTION_FIELDS = new Set(["evidenceRedacted", "verbatimQuote"]);
-
 const REDACTABLE_MODEL = "BriefClaim";
 const REDACTION_OPS = new Set(["update", "updateMany"]);
 
@@ -56,8 +63,8 @@ export class AppendOnlyViolationError extends Error {
 /**
  * Throw unless this operation is one an append-only table permits.
  *
- * Deliberately reads `data` rather than trusting the call site: the redaction
- * allowance is about which COLUMNS move, not about who is asking.
+ * Deliberately reads `data` rather than trusting the call site: the allowance
+ * is about what the write DOES, not about who is asking.
  */
 export function assertAppendOnly(model: string, operation: string, args: unknown): void {
   if (!APPEND_ONLY_MODELS.has(model)) return;
@@ -84,11 +91,26 @@ function isReadOperation(operation: string): boolean {
   return READ_OPS.has(operation);
 }
 
-/** True only when every column the write touches is one the purge may scrub. */
+/**
+ * True only for the exact write the purge performs.
+ *
+ * Checking the columns alone is not enough. `{ verbatimQuote: "…" }` names a
+ * redactable column while doing the opposite of redacting — it rewrites the
+ * evidence a reviewer vouched for into whatever the caller likes, and calls it
+ * scrubbing. So the VALUES are checked too: a quote may only become the
+ * redaction sentinel, and the flag may only be raised, never lowered. Redaction
+ * is one-way; there is no un-redacting a claim whose transcript is gone.
+ */
 function isRedaction(args: unknown): boolean {
   const data = (args as { data?: unknown } | undefined)?.data;
   if (!data || typeof data !== "object" || Array.isArray(data)) return false;
 
-  const keys = Object.keys(data as Record<string, unknown>);
-  return keys.length > 0 && keys.every((key) => REDACTION_FIELDS.has(key));
+  const entries = Object.entries(data as Record<string, unknown>);
+  if (entries.length === 0) return false;
+
+  return entries.every(([key, value]) => {
+    if (key === "verbatimQuote") return value === REDACTED;
+    if (key === "evidenceRedacted") return value === true;
+    return false;
+  });
 }
