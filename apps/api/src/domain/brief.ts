@@ -10,6 +10,17 @@ export class NothingToMergeError extends Error {
   }
 }
 
+/** Two live claims in one edit lineage — see the guard in mergeApprovedClaims. */
+export class ConflictingLineageError extends Error {
+  constructor(readonly claimId: string) {
+    super(
+      `Two approved claims share the edit lineage of ${claimId}. ` +
+        "Reject one of them before merging.",
+    );
+    this.name = "ConflictingLineageError";
+  }
+}
+
 /**
  * Merge every approved-but-unmerged claim into a new brief version.
  *
@@ -137,6 +148,19 @@ export async function mergeApprovedClaims(args: {
       });
     }
 
+    // A lineage is exactly one row in the brief, so two pending claims sharing
+    // a root is not a merge we can perform — it is a gate bug that has already
+    // happened. Saying so beats a raw unique-constraint 500 from createMany,
+    // which tells whoever is paged nothing about which claims collided.
+    const seenKeys = new Set<string>();
+    for (const claim of pending) {
+      const key = briefKey(claim);
+      if (seenKeys.has(key)) {
+        throw new ConflictingLineageError(key);
+      }
+      seenKeys.add(key);
+    }
+
     if (pending.length > 0) {
       await tx.briefClaim.createMany({
         data: pending.map((claim) => ({
@@ -155,9 +179,23 @@ export async function mergeApprovedClaims(args: {
         })),
       });
 
+      // Stamp the lineage ROOTS too, not just the claims that were merged.
+      //
+      // brief_claims.claim_id points at the root, and brief_claims cascades
+      // from candidate_claims. Deleting a meeting purges every claim that never
+      // reached a brief — `mergedAt: null` — so an unstamped superseded root
+      // would be swept up by that purge and take a published brief version's
+      // row with it. A version is immutable; nothing downstream may delete a
+      // row out of one.
       const mergedAt = new Date();
+      const mergedIds = [
+        ...new Set([
+          ...pending.map((c) => c.id),
+          ...pending.map((c) => c.editedFromId).filter((id): id is string => id !== null),
+        ]),
+      ];
       await tx.candidateClaim.updateMany({
-        where: { id: { in: pending.map((c) => c.id) } },
+        where: { id: { in: mergedIds } },
         data: { mergedAt },
       });
 

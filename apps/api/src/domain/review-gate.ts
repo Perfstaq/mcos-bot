@@ -1,4 +1,4 @@
-import { ClaimStatus, ClaimType, MeetingStatus, ReviewAction } from "@prisma/client";
+import { ClaimStatus, ClaimType, MeetingStatus, Prisma, ReviewAction } from "@prisma/client";
 import { prisma } from "../db.js";
 import { ApiError } from "../http.js";
 import { confidenceBand, editDedupeKey } from "./claims.js";
@@ -40,7 +40,7 @@ export type GateResult = {
   remaining_in_meeting: number;
 };
 
-export type BulkErrorCode = "not_found" | "not_high_confidence" | "already_decided";
+export type BulkErrorCode = "not_found" | "not_high_confidence" | "already_decided" | "conflict";
 
 export type BulkResult = {
   approved: DecidedClaim[];
@@ -97,6 +97,12 @@ export async function recordDecision(args: {
   /** Required for `edit_approve` — the text the reviewer wrote. */
   text?: string;
   note?: string;
+  /**
+   * The status the caller believes the claim is in. Set by callers that read
+   * the claim before deciding on it — the bulk path chiefly — so a claim
+   * someone else ruled on in between is refused rather than silently flipped.
+   */
+  expectStatus?: ClaimStatus;
 }): Promise<GateResult> {
   return prisma.$transaction(async (tx) => {
     // Tenant-scoped by the client extension in db.ts: a claim belonging to
@@ -106,6 +112,12 @@ export async function recordDecision(args: {
       where: { id: args.claimId },
     })) as ClaimRow | null;
     if (!claim) throw ApiError.notFound(`Claim ${args.claimId} not found`);
+
+    if (args.expectStatus && claim.status !== args.expectStatus) {
+      throw ApiError.conflict(
+        `Claim ${claim.id} was ${claim.status} by someone else while this batch was being prepared`,
+      );
+    }
 
     switch (args.action) {
       case "approve":
@@ -128,6 +140,40 @@ type Settled = {
   result: ClaimRow | null;
 };
 
+/** Prisma's "the record you asked to update was not there". */
+const RECORD_NOT_FOUND = "P2025";
+
+/**
+ * Update a claim only if it is still in the state we read it in.
+ *
+ * Every gate action is a read, a decision, and a write. Two reviewers working
+ * the same queue — or one reviewer and their own double-tap — can interleave
+ * inside that gap, and last-write-wins would let an approval quietly overwrite
+ * someone else's rejection with no trace but two audit rows that disagree.
+ * Putting the expected state in the WHERE turns that race into a 409 the caller
+ * can see, which is the only outcome an audit log can honestly report.
+ */
+async function guardedUpdate(
+  tx: Tx,
+  claim: ClaimRow,
+  where: { status: ClaimStatus; mergedAt?: null },
+  data: Record<string, unknown>,
+): Promise<ClaimRow> {
+  try {
+    return (await tx.candidateClaim.update({
+      where: { id: claim.id, ...where },
+      data,
+    })) as ClaimRow;
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === RECORD_NOT_FOUND) {
+      throw ApiError.conflict(
+        `Claim ${claim.id} changed while you were deciding it. Reload the queue and look again.`,
+      );
+    }
+    throw error;
+  }
+}
+
 /** Approve or reject: one status, one audit row, nothing else moves. */
 async function settle(
   tx: Tx,
@@ -138,17 +184,22 @@ async function settle(
 ): Promise<Settled> {
   refuseSuperseded(claim);
 
-  const updated = (await tx.candidateClaim.update({
-    where: { id: claim.id },
-    data: {
-      status,
-      decidedAt: new Date(),
-      // Re-deciding a claim that already reached the brief makes it eligible
-      // for the next version, which is how a change of mind becomes a delta
-      // rather than a silent rewrite of history.
-      ...(claim.mergedAt ? { mergedAt: null } : {}),
-    },
-  })) as ClaimRow;
+  // Deciding a claim the way it is already decided is not a decision. Allowing
+  // it writes a second audit row for a reviewer who changed nothing, and — for
+  // a claim already in the brief — clears mergedAt so the next version reports
+  // an "edit" whose before and after are the same sentence.
+  if (claim.status === status) {
+    throw ApiError.conflict(`Claim ${claim.id} is already ${status}`);
+  }
+
+  const updated = await guardedUpdate(tx, claim, { status: claim.status }, {
+    status,
+    decidedAt: new Date(),
+    // Re-deciding a claim that already reached the brief makes it eligible
+    // for the next version, which is how a change of mind becomes a delta
+    // rather than a silent rewrite of history.
+    ...(claim.mergedAt ? { mergedAt: null } : {}),
+  });
 
   const decision = await tx.reviewDecision.create({
     data: {
@@ -222,10 +273,10 @@ async function editApprove(
     skipDuplicates: true,
   });
 
-  const superseded = (await tx.candidateClaim.update({
-    where: { id: claim.id },
-    data: { status: ClaimStatus.superseded, decidedAt: new Date() },
-  })) as ClaimRow;
+  const superseded = await guardedUpdate(tx, claim, { status: claim.status }, {
+    status: ClaimStatus.superseded,
+    decidedAt: new Date(),
+  });
 
   // One human action, one audit row. Hung off the claim the reviewer was
   // actually looking at, pointing forward at what it produced.
@@ -267,7 +318,41 @@ async function undo(
   if (last.action === ReviewAction.undo) {
     throw ApiError.conflict(`The last decision on claim ${claim.id} was already undone`);
   }
-  if (claim.mergedAt) {
+
+  // Resolve everything and refuse everything BEFORE writing anything: a
+  // half-applied undo is worse than a refused one.
+  const successor =
+    last.action === ReviewAction.edit_approve && last.resultClaimId
+      ? ((await tx.candidateClaim.findUnique({
+          where: { id: last.resultClaimId },
+        })) as ClaimRow | null)
+      : null;
+
+  if (successor) {
+    if (successor.mergedAt) {
+      throw ApiError.conflict(
+        `The edit of claim ${claim.id} is already part of a brief version and cannot be withdrawn`,
+      );
+    }
+    // The edit has since been edited again. Undoing this one would withdraw a
+    // link in the middle of the chain: the original would go back to proposed
+    // while its grandchild stayed approved, leaving TWO live claims in one
+    // lineage — which the brief cannot represent, because a lineage is exactly
+    // one row there. Unwind from the end instead.
+    if (successor.status === ClaimStatus.superseded) {
+      throw ApiError.conflict(
+        `The edit of claim ${claim.id} was itself edited. Undo the newer edit first.`,
+      );
+    }
+  } else if (claim.mergedAt) {
+    // An approve or reject whose result is already in a brief version cannot be
+    // taken back — versions are immutable, so the honest move is a fresh
+    // decision that lands in the next one.
+    //
+    // An edit is judged by its successor instead, checked above. The root's own
+    // mergedAt records an EARLIER decision reaching the brief, not the edit
+    // being undone, and blocking on it would make a merged claim uneditable in
+    // practice: edit it, think better of it, and you could never get back.
     throw ApiError.conflict(
       `Claim ${claim.id} is already part of a brief version. Decide it again instead — ` +
         "brief versions are never rewritten.",
@@ -275,28 +360,24 @@ async function undo(
   }
 
   let withdrawn: ClaimRow | null = null;
-  if (last.action === ReviewAction.edit_approve && last.resultClaimId) {
-    const successor = (await tx.candidateClaim.findUnique({
-      where: { id: last.resultClaimId },
-    })) as ClaimRow | null;
-    if (successor?.mergedAt) {
-      throw ApiError.conflict(
-        `The edit of claim ${claim.id} is already part of a brief version and cannot be withdrawn`,
-      );
-    }
-    if (successor) {
-      // Marked, never deleted. A withdrawn edit is a thing that happened.
-      withdrawn = (await tx.candidateClaim.update({
-        where: { id: successor.id },
-        data: { status: ClaimStatus.rejected, decidedAt: new Date() },
-      })) as ClaimRow;
-    }
+  if (successor) {
+    // Marked, never deleted. A withdrawn edit is a thing that happened.
+    withdrawn = await guardedUpdate(
+      tx,
+      successor,
+      { status: successor.status, mergedAt: null },
+      { status: ClaimStatus.rejected, decidedAt: new Date() },
+    );
   }
 
-  const restored = (await tx.candidateClaim.update({
-    where: { id: claim.id },
-    data: { status: ClaimStatus.proposed, decidedAt: null },
-  })) as ClaimRow;
+  const restored = await guardedUpdate(
+    tx,
+    claim,
+    // The root of an undone edit legitimately carries a mergedAt from an
+    // earlier version, so only a plain approve/reject undo asserts on it.
+    successor ? { status: claim.status } : { status: claim.status, mergedAt: null },
+    { status: ClaimStatus.proposed, decidedAt: null },
+  );
 
   const decision = await tx.reviewDecision.create({
     data: {
@@ -388,13 +469,31 @@ export async function bulkApprove(args: {
       continue;
     }
 
-    const result = await recordDecision({
-      claimId,
-      reviewer: args.reviewer,
-      action: "approve",
-      note: args.note,
-    });
-    approved.push(result.claim);
+    // The checks above ran on a read outside the write transaction, so state
+    // the batch was assembled against is passed down and re-asserted inside
+    // it. Without that, a claim rejected in the gap between the two would be
+    // silently flipped back to approved by a button that promised only to keep
+    // things nobody had ruled on yet.
+    try {
+      const result = await recordDecision({
+        claimId,
+        reviewer: args.reviewer,
+        action: "approve",
+        note: args.note,
+        expectStatus: ClaimStatus.proposed,
+      });
+      approved.push(result.claim);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 409) {
+        errors.push({ claim_id: claimId, code: "conflict", message: error.message });
+        continue;
+      }
+      if (error instanceof ApiError && error.status === 404) {
+        errors.push({ claim_id: claimId, code: "not_found", message: "No such claim in this workspace" });
+        continue;
+      }
+      throw error;
+    }
   }
 
   return { approved, errors };

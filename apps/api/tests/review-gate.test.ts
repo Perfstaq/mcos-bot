@@ -691,6 +691,249 @@ function claimWriteCalls(source: string): Array<{ op: string; args: string }> {
   return found;
 }
 
+/* -------------------------------------------- edits, merges and deletions */
+
+describe("an edited claim that reached the brief", () => {
+  /**
+   * The lineage root is what brief_claims points at, and brief_claims cascades
+   * from candidate_claims. Purging a meeting deletes every claim that never
+   * reached a brief — so if the merge forgets to stamp the superseded root,
+   * the purge takes a published version's row with it. Brief versions are
+   * immutable; this is invariant 3 with a delete statement behind it.
+   */
+  it("survives its meeting being purged", async () => {
+    const [claim] = await seedClaims(tenantId, meetingId, THREE_CLAIMS);
+
+    await app.inject({
+      method: "PATCH",
+      url: `/api/v1/claims/${claim!.id}`,
+      headers: HOME,
+      payload: { text: "ICP sweet spot is 200-2,000 seats, IT-led." },
+    });
+    const merged = await app.inject({ method: "POST", url: "/api/v1/brief/versions", headers: HOME, payload: {} });
+    expect(merged.statusCode).toBe(201);
+
+    // Both the successor AND the superseded root it is filed under must be
+    // stamped, or the purge below sweeps the root away.
+    const root = await db.candidateClaim.findUniqueOrThrow({ where: { id: claim!.id } });
+    expect(root.status).toBe(ClaimStatus.superseded);
+    expect(root.mergedAt).toBeInstanceOf(Date);
+
+    const purged = await app.inject({ method: "DELETE", url: `/api/v1/meetings/${meetingId}`, headers: HOME });
+    expect(purged.statusCode).toBeLessThan(300);
+
+    const v1 = (await app.inject({ method: "GET", url: "/api/v1/brief/versions/1", headers: HOME })).json();
+    expect(v1.total).toBe(1);
+    expect(v1.claims_by_type[0].claims[0].text).toBe("ICP sweet spot is 200-2,000 seats, IT-led.");
+    // The evidence is redacted, as a purge should. The claim itself is not gone.
+    expect(v1.claims_by_type[0].claims[0].evidence.redacted).toBe(true);
+    expect(await db.briefClaim.count()).toBe(1);
+  });
+});
+
+describe("undoing an edit that was itself edited", () => {
+  /**
+   * Withdrawing a link in the middle of the chain would put the original back
+   * in the queue while its grandchild stayed approved — two live claims in one
+   * lineage, which the brief cannot represent, because a lineage is exactly one
+   * row there. The merge would then die on a unique constraint and stay dead.
+   */
+  it("is refused, pointing at the newer edit", async () => {
+    const [claim] = await seedClaims(tenantId, meetingId, THREE_CLAIMS);
+
+    await app.inject({
+      method: "PATCH",
+      url: `/api/v1/claims/${claim!.id}`,
+      headers: HOME,
+      payload: { text: "First rewrite." },
+    });
+    const first = await db.candidateClaim.findFirstOrThrow({ where: { editedFromId: claim!.id } });
+    await app.inject({
+      method: "PATCH",
+      url: `/api/v1/claims/${first.id}`,
+      headers: HOME,
+      payload: { text: "Second rewrite." },
+    });
+
+    const response = await app.inject({
+      method: "POST",
+      url: `/api/v1/claims/${claim!.id}/undo`,
+      headers: HOME,
+      payload: {},
+    });
+    expect(response.statusCode).toBe(409);
+    expect(response.json().error.message).toMatch(/itself edited/i);
+
+    // Nothing moved: exactly one live claim in the lineage, and it is the last
+    // rewrite. The merge that follows must not explode.
+    const lineage = await db.candidateClaim.findMany({
+      where: { OR: [{ id: claim!.id }, { editedFromId: claim!.id }] },
+      orderBy: { createdAt: "asc" },
+    });
+    expect(lineage.filter((c) => c.status === ClaimStatus.approved)).toHaveLength(1);
+    expect(lineage.filter((c) => c.status === ClaimStatus.approved)[0]!.text).toBe("Second rewrite.");
+
+    const merged = await app.inject({ method: "POST", url: "/api/v1/brief/versions", headers: HOME, payload: {} });
+    expect(merged.statusCode).toBe(201);
+  });
+
+  it("succeeds when the newest edit is unwound first", async () => {
+    const [claim] = await seedClaims(tenantId, meetingId, THREE_CLAIMS);
+
+    await app.inject({
+      method: "PATCH",
+      url: `/api/v1/claims/${claim!.id}`,
+      headers: HOME,
+      payload: { text: "First rewrite." },
+    });
+    const first = await db.candidateClaim.findFirstOrThrow({ where: { editedFromId: claim!.id } });
+    await app.inject({
+      method: "PATCH",
+      url: `/api/v1/claims/${first.id}`,
+      headers: HOME,
+      payload: { text: "Second rewrite." },
+    });
+
+    const unwindNewer = await app.inject({
+      method: "POST",
+      url: `/api/v1/claims/${first.id}/undo`,
+      headers: HOME,
+      payload: {},
+    });
+    expect(unwindNewer.statusCode).toBe(200);
+
+    const unwindOlder = await app.inject({
+      method: "POST",
+      url: `/api/v1/claims/${claim!.id}/undo`,
+      headers: HOME,
+      payload: {},
+    });
+    expect(unwindOlder.statusCode).toBe(200);
+
+    const original = await db.candidateClaim.findUniqueOrThrow({ where: { id: claim!.id } });
+    expect(original.status).toBe(ClaimStatus.proposed);
+  });
+});
+
+describe("two live claims in one lineage", () => {
+  /**
+   * The gate no longer allows this state to be reached. If a future change ever
+   * does, the merge must say which claims collided rather than surfacing a raw
+   * unique-constraint failure as a 500 and wedging every later merge.
+   */
+  it("is refused by the merge with an explanation, not a 500", async () => {
+    const [claim] = await seedClaims(tenantId, meetingId, THREE_CLAIMS);
+    await app.inject({
+      method: "PATCH",
+      url: `/api/v1/claims/${claim!.id}`,
+      headers: HOME,
+      payload: { text: "The legitimate rewrite." },
+    });
+    const successor = await db.candidateClaim.findFirstOrThrow({ where: { editedFromId: claim!.id } });
+
+    // Forge the impossible state directly, bypassing the gate on purpose.
+    await db.candidateClaim.create({
+      data: {
+        tenantId,
+        meetingId,
+        evidenceSourceId: successor.evidenceSourceId,
+        extractionRunId: successor.extractionRunId,
+        type: successor.type,
+        text: "A second live claim in the same lineage.",
+        confidence: successor.confidence,
+        status: ClaimStatus.approved,
+        verbatimQuote: successor.verbatimQuote,
+        speaker: successor.speaker,
+        timestampMs: successor.timestampMs,
+        dedupeKey: "forged-duplicate-lineage",
+        editedFromId: claim!.id,
+      },
+    });
+
+    const response = await app.inject({ method: "POST", url: "/api/v1/brief/versions", headers: HOME, payload: {} });
+    expect(response.statusCode).toBe(409);
+    expect(response.json().error.message).toMatch(/share the edit lineage/i);
+    expect(await db.briefVersion.count()).toBe(0);
+  });
+});
+
+/* ------------------------------------------------------------ concurrency */
+
+describe("racing decisions", () => {
+  it("refuses to re-decide a claim the way it is already decided", async () => {
+    const [claim] = await seedClaims(tenantId, meetingId, THREE_CLAIMS);
+    await app.inject({ method: "POST", url: `/api/v1/claims/${claim!.id}/approve`, headers: HOME, payload: {} });
+
+    const again = await app.inject({
+      method: "POST",
+      url: `/api/v1/claims/${claim!.id}/approve`,
+      headers: HOME,
+      payload: {},
+    });
+    expect(again.statusCode).toBe(409);
+
+    // One decision, because one thing was decided.
+    expect(await db.reviewDecision.count({ where: { claimId: claim!.id } })).toBe(1);
+  });
+
+  it("lets exactly one of two simultaneous decisions win", async () => {
+    const [claim] = await seedClaims(tenantId, meetingId, THREE_CLAIMS);
+
+    const [approve, reject] = await Promise.all([
+      app.inject({ method: "POST", url: `/api/v1/claims/${claim!.id}/approve`, headers: HOME, payload: {} }),
+      app.inject({ method: "POST", url: `/api/v1/claims/${claim!.id}/reject`, headers: HOME, payload: {} }),
+    ]);
+
+    // Either order is legitimate; what is not legitimate is both landing and
+    // the audit log disagreeing with the claim.
+    const outcomes = [approve.statusCode, reject.statusCode].sort();
+    expect(outcomes[0]).toBe(200);
+
+    const stored = await db.candidateClaim.findUniqueOrThrow({ where: { id: claim!.id } });
+    const decisions = await db.reviewDecision.findMany({ where: { claimId: claim!.id } });
+
+    if (outcomes[1] === 200) {
+      // Both were serialised cleanly: the last decision is the claim's state.
+      const last = decisions.sort((a, b) => +a.createdAt - +b.createdAt).at(-1)!;
+      expect(last.action).toBe(stored.status === ClaimStatus.approved ? ReviewAction.approve : ReviewAction.reject);
+    } else {
+      expect(outcomes[1]).toBe(409);
+      expect(decisions).toHaveLength(1);
+      expect(decisions[0]!.action).toBe(
+        stored.status === ClaimStatus.approved ? ReviewAction.approve : ReviewAction.reject,
+      );
+    }
+  });
+
+  it("reports a conflict per id when a claim is decided under the batch", async () => {
+    const seeded = await seedClaims(tenantId, meetingId, [THREE_CLAIMS[0]!, THREE_CLAIMS[1]!]);
+    const { runWithContext } = await import("../src/context.js");
+    const { recordDecision } = await import("../src/domain/review-gate.js");
+
+    // The state the batch was assembled against, asserted inside the write
+    // transaction. A claim someone rejected in the gap must not be flipped.
+    await app.inject({ method: "POST", url: `/api/v1/claims/${seeded[0]!.id}/reject`, headers: HOME, payload: {} });
+
+    await runWithContext(
+      { tenantId, tenantSlug: "freshworks-demo", reviewer: "reviewer@test.example" },
+      async () => {
+        await expect(
+          recordDecision({
+            claimId: seeded[0]!.id,
+            reviewer: "reviewer@test.example",
+            action: "approve",
+            expectStatus: ClaimStatus.proposed,
+          }),
+        ).rejects.toMatchObject({ status: 409 });
+      },
+    );
+
+    const stored = await db.candidateClaim.findUniqueOrThrow({ where: { id: seeded[0]!.id } });
+    expect(stored.status).toBe(ClaimStatus.rejected);
+    expect(await db.reviewDecision.count({ where: { claimId: seeded[0]!.id } })).toBe(1);
+  });
+});
+
 /* ------------------------------------------------- the brief, still intact */
 
 describe("merge after an edit", () => {
@@ -723,5 +966,75 @@ describe("merge after an edit", () => {
     expect(diff.edited).toHaveLength(1);
     expect(diff.edited[0].before).toBe(claim!.text);
     expect(diff.edited[0].after).toBe("ICP sweet spot is 200-2,000 seats, IT-led.");
+  });
+
+  /**
+   * Whether a claim is still in the brief is a question about the lineage's
+   * CURRENT member, not its root. These two cases pull in opposite directions
+   * and both run through the same branch.
+   */
+  it("drops a lineage out when the edit that replaced the original is rejected", async () => {
+    const [claim] = await seedClaims(tenantId, meetingId, THREE_CLAIMS);
+
+    await app.inject({ method: "POST", url: `/api/v1/claims/${claim!.id}/approve`, headers: HOME, payload: {} });
+    await app.inject({ method: "POST", url: "/api/v1/brief/versions", headers: HOME, payload: {} });
+
+    await app.inject({
+      method: "PATCH",
+      url: `/api/v1/claims/${claim!.id}`,
+      headers: HOME,
+      payload: { text: "A rewrite that turns out to be wrong." },
+    });
+    await app.inject({ method: "POST", url: "/api/v1/brief/versions", headers: HOME, payload: {} });
+
+    const successor = await db.candidateClaim.findFirstOrThrow({ where: { editedFromId: claim!.id } });
+    await app.inject({ method: "POST", url: `/api/v1/claims/${successor.id}/reject`, headers: HOME, payload: {} });
+
+    const third = await app.inject({ method: "POST", url: "/api/v1/brief/versions", headers: HOME, payload: {} });
+    expect(third.statusCode).toBe(201);
+    expect(third.json().version).toMatchObject({ version: 3, removed: 1, total: 0 });
+
+    const current = (await app.inject({ method: "GET", url: "/api/v1/brief/current", headers: HOME })).json();
+    expect(current.total).toBe(0);
+
+    // The versions that already contained it still do. Append-only means the
+    // brief loses a claim going forward, never retroactively.
+    const v2 = (await app.inject({ method: "GET", url: "/api/v1/brief/versions/2", headers: HOME })).json();
+    expect(v2.total).toBe(1);
+  });
+
+  it("keeps a lineage when an edit is withdrawn by undo rather than rejected", async () => {
+    const [claim] = await seedClaims(tenantId, meetingId, THREE_CLAIMS);
+
+    await app.inject({ method: "POST", url: `/api/v1/claims/${claim!.id}/approve`, headers: HOME, payload: {} });
+    await app.inject({ method: "POST", url: "/api/v1/brief/versions", headers: HOME, payload: {} });
+
+    // Edit, then think better of it. Undo marks the abandoned successor
+    // rejected — which must NOT read as "the reviewer rejected this claim".
+    await app.inject({
+      method: "PATCH",
+      url: `/api/v1/claims/${claim!.id}`,
+      headers: HOME,
+      payload: { text: "An edit the reviewer immediately regrets." },
+    });
+    const undone = await app.inject({
+      method: "POST",
+      url: `/api/v1/claims/${claim!.id}/undo`,
+      headers: HOME,
+      payload: {},
+    });
+    expect(undone.statusCode).toBe(200);
+
+    const successor = await db.candidateClaim.findFirstOrThrow({ where: { editedFromId: claim!.id } });
+    expect(successor.status).toBe(ClaimStatus.rejected);
+
+    // Nothing to merge — and crucially, no removal either.
+    const second = await app.inject({ method: "POST", url: "/api/v1/brief/versions", headers: HOME, payload: {} });
+    expect(second.statusCode).toBe(409);
+
+    const current = (await app.inject({ method: "GET", url: "/api/v1/brief/current", headers: HOME })).json();
+    expect(current.version).toBe(1);
+    expect(current.total).toBe(1);
+    expect(current.claims_by_type[0].claims[0].text).toBe(claim!.text);
   });
 });

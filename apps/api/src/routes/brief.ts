@@ -3,7 +3,13 @@ import type { BriefClaim } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../db.js";
 import { ApiError, requireCtx } from "../http.js";
-import { diffVersions, groupByType, mergeApprovedClaims, NothingToMergeError } from "../domain/brief.js";
+import {
+  ConflictingLineageError,
+  diffVersions,
+  groupByType,
+  mergeApprovedClaims,
+  NothingToMergeError,
+} from "../domain/brief.js";
 import { CLAIM_TYPE_LABEL } from "../domain/claims.js";
 import { formatTimestamp } from "../domain/transcript.js";
 
@@ -25,6 +31,7 @@ export async function briefRoutes(app: FastifyInstance): Promise<void> {
       return reply.status(201).send({ version: result });
     } catch (error) {
       if (error instanceof NothingToMergeError) throw ApiError.conflict(error.message);
+      if (error instanceof ConflictingLineageError) throw ApiError.conflict(error.message);
       throw error;
     }
   });
