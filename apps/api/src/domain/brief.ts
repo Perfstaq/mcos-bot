@@ -1,4 +1,4 @@
-import { ClaimStatus, ClaimType, MeetingStatus, type BriefClaim } from "@prisma/client";
+import { ClaimStatus, ClaimType, MeetingStatus, Prisma, type BriefClaim } from "@prisma/client";
 import { prisma } from "../db.js";
 import { transition } from "./state.js";
 import { CLAIM_TYPES } from "./claims.js";
@@ -21,6 +21,48 @@ export class ConflictingLineageError extends Error {
   }
 }
 
+/** The merge kept losing a race with the review queue. Retry, do not guess. */
+export class MergeContentionError extends Error {
+  constructor() {
+    super(
+      "Someone was deciding claims while this merge ran. Nothing was written — press merge again.",
+    );
+    this.name = "MergeContentionError";
+  }
+}
+
+/**
+ * Postgres cannot always order two serializable transactions, and says so with
+ * `serialization_failure` (40001) or `deadlock_detected` (40P01). Prisma maps
+ * the first to P2034 and leaves the second as an unknown request error carrying
+ * only the SQLSTATE, so both shapes have to be matched. Same pattern as
+ * routes/agenda.ts, which reorders rows under the same kind of contention.
+ */
+const WRITE_CONFLICT = "P2034";
+const RETRYABLE_SQLSTATE = /\b(40001|40P01)\b/;
+const CONFLICT_ATTEMPTS = 5;
+
+const SERIALIZABLE = {
+  isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+} as const;
+
+function isWriteConflict(error: unknown): boolean {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) return error.code === WRITE_CONFLICT;
+  if (error instanceof Prisma.PrismaClientUnknownRequestError) {
+    return RETRYABLE_SQLSTATE.test(error.message);
+  }
+  return false;
+}
+
+export type MergeResult = {
+  version: number;
+  added: number;
+  removed: number;
+  edited: number;
+  total: number;
+  sourceMeetingId: string | null;
+};
+
 /**
  * Merge every approved-but-unmerged claim into a new brief version.
  *
@@ -37,7 +79,41 @@ export async function mergeApprovedClaims(args: {
   tenantId: string;
   reviewer: string;
   note?: string | null;
-}): Promise<{ version: number; added: number; removed: number; edited: number; total: number }> {
+  /**
+   * The call the reviewer had just finished. Recorded on the version as the
+   * provenance of the merge action; when omitted it is inferred, below, from
+   * the claims being merged.
+   */
+  sourceMeetingId?: string | null;
+}): Promise<MergeResult> {
+  // SERIALIZABLE, because the transaction below reads the pending claims and
+  // then writes a version from what it read.
+  //
+  // Under READ COMMITTED an `undo` committing in that gap is invisible: the
+  // merge would carry a withdrawn edit's text into a published version, and no
+  // later decision can take it back out, because versions are immutable. That
+  // is invariant 3 being broken by a race rather than by a bug in anyone's
+  // code. Serializable makes Postgres refuse the interleaving instead, and the
+  // loser reruns against whatever the winner committed — which is the honest
+  // outcome, since the reviewer's undo genuinely happened first.
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await runMerge(args);
+    } catch (error) {
+      if (isWriteConflict(error) && attempt < CONFLICT_ATTEMPTS) continue;
+      // Out of retries: a 409 the reviewer can act on beats a 500 they cannot.
+      if (isWriteConflict(error)) throw new MergeContentionError();
+      throw error;
+    }
+  }
+}
+
+async function runMerge(args: {
+  tenantId: string;
+  reviewer: string;
+  note?: string | null;
+  sourceMeetingId?: string | null;
+}): Promise<MergeResult> {
   return prisma.$transaction(async (tx) => {
     const previous = await tx.briefVersion.findFirst({
       orderBy: { version: "desc" },
@@ -116,12 +192,20 @@ export async function mergeApprovedClaims(args: {
       (c) => !pendingIds.has(c.claimId) && !rejectedIds.has(c.claimId),
     );
 
+    // Which call this merge came from. The reviewer's own answer wins; failing
+    // that, a merge whose claims all came from one meeting names that meeting,
+    // and a merge spanning several names none — a single id would be a guess
+    // presented as provenance, and provenance is the one thing here that may
+    // never be guessed.
+    const sourceMeetingId = args.sourceMeetingId ?? soleMeetingOf(pending);
+
     const created = await tx.briefVersion.create({
       data: {
         tenantId: args.tenantId,
         version,
         createdBy: args.reviewer,
         note: args.note ?? null,
+        sourceMeetingId,
         addedCount: added,
         removedCount: removed,
         editedCount: edited,
@@ -215,8 +299,21 @@ export async function mergeApprovedClaims(args: {
       }
     }
 
-    return { version, added, removed, edited, total: created.totalCount };
-  });
+    return {
+      version,
+      added,
+      removed,
+      edited,
+      total: created.totalCount,
+      sourceMeetingId: created.sourceMeetingId,
+    };
+  }, SERIALIZABLE);
+}
+
+/** The one meeting every merged claim came from, or null if they disagree. */
+function soleMeetingOf(claims: Array<{ meetingId: string }>): string | null {
+  const ids = new Set(claims.map((c) => c.meetingId));
+  return ids.size === 1 ? [...ids][0]! : null;
 }
 
 export type GroupedClaims = Array<{ type: ClaimType; label: string; claims: BriefClaim[] }>;

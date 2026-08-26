@@ -690,7 +690,16 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .version-item:hover { background: var(--line-soft); }
 .version-item.active { background: var(--pane); border-left-color: var(--orange); }
 .version-item .vn { font-weight: 600; font-size: 13px; }
+.version-item .vsource {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .version-item .vmeta { color: var(--faint); display: flex; gap: 8px; margin-top: 3px; }
+.version-item .vmeta .grow { flex: 1; }
 .version-item .plus { color: var(--green); }
 .version-item .tilde { color: var(--orange); }
 .version-item .minus { color: var(--red); }
@@ -718,6 +727,55 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .doc-claim .cite { margin-top: 5px; color: var(--faint); display: flex; flex-wrap: wrap; gap: 9px; align-items: baseline; }
 .doc-claim .cite q { color: var(--muted); font-style: italic; }
 .doc-claim.redacted .cite q { color: var(--faint); font-style: normal; }
+
+/* The source chip: which call said this, and when. */
+.doc-claim .src-chip {
+  padding: 1px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--pane-2);
+  color: var(--muted);
+}
+
+/* The verbatim quote is the evidence a reviewer vouched for, so it stays out
+   of the way until asked for — hover, or keyboard focus on the row. */
+.doc-claim .quote-reveal {
+  display: none;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-left: 2px solid var(--orange-line);
+  background: var(--pane-2);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+}
+.doc-claim:hover .quote-reveal,
+.doc-claim:focus-within .quote-reveal,
+.doc-claim:focus .quote-reveal { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; }
+.doc-claim .quote-reveal q { color: var(--ink-2); font-style: italic; font-size: 13px; }
+.doc-claim .quote-reveal .mono { color: var(--faint); }
+.doc-claim:focus { outline: none; }
+.doc-claim:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; border-radius: var(--r-sm); }
+
+/* Diff marks, applied to the document in place rather than in a separate view. */
+.doc-claim .mark {
+  display: inline-block;
+  margin-bottom: 4px;
+  padding: 1px 6px;
+  border-radius: var(--r-sm);
+  font-family: "Geist Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+.doc-claim .mark.new { color: var(--orange); background: var(--orange-soft); }
+.doc-claim .mark.gone { color: var(--red); background: var(--red-soft); }
+.doc-claim .mark.changed { color: var(--blue); background: var(--blue-soft); }
+
+.doc-claim.is-new { background: var(--orange-soft); box-shadow: inset 2px 0 0 var(--orange); padding-left: 10px; }
+.doc-claim.is-edited { box-shadow: inset 2px 0 0 var(--blue); padding-left: 10px; }
+.doc-claim.is-gone { opacity: 0.62; box-shadow: inset 2px 0 0 var(--red); padding-left: 10px; }
+.doc-claim.is-gone .assertion { text-decoration: line-through; text-decoration-color: var(--red); }
+.doc-claim .was { color: var(--muted); text-decoration: line-through; font-size: 14px; line-height: 1.45; }
+.doc-claim .assertion.now { margin-top: 3px; }
 
 .diff-block { padding: 12px 14px; border-radius: var(--r); border: 1px solid var(--line); border-left: 3px solid var(--line-strong); margin-bottom: 8px; background: var(--pane-2); }
 .diff-block.added { border-left-color: var(--green); }

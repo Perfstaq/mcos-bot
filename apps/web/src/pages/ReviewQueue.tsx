@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   api,
   CLAIM_TYPE_LABEL,
@@ -42,6 +43,7 @@ const ACTION_LABEL: Record<ReviewDecision["action"], string> = {
  * will until someone on this screen decides it should.
  */
 export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => void }) {
+  const navigate = useNavigate();
   const [claims, setClaims] = useState<Claim[] | null>(null);
   const [counts, setCounts] = useState<Partial<Record<ClaimType, number>>>({});
   const [decisions, setDecisions] = useState<ReviewDecision[]>([]);
@@ -268,12 +270,34 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
     return () => window.removeEventListener("keydown", onKey);
   }, [current, visible.length, decide, startEdit, settled, busy, undoable, undo, keepAllHighConfidence]);
 
+  /**
+   * Merge, then leave.
+   *
+   * Staying on an emptied queue to read a one-line notice wastes the moment the
+   * whole gate exists to produce: the reviewer has just changed the brief and
+   * wants to see what they changed. So the merge hands off to the brief with
+   * the diff already open on the version it just wrote.
+   *
+   * No `meeting_id` is sent, deliberately. This screen cannot compute one: a
+   * decided claim is dropped from `claims` as soon as it settles, so by the time
+   * merge runs that state holds what the reviewer has NOT decided — the
+   * complement of what is about to be merged. A queue holding meetings A and B
+   * with all of A approved would name B as the source of a version whose every
+   * claim came from A, and the server treats the caller's answer as
+   * authoritative and writes it into a row that can never be corrected.
+   *
+   * The server infers it instead, from the claims actually being merged. That
+   * is the only set with the right answer in it.
+   */
   const merge = async () => {
     setMerging(true);
     try {
-      const r = await api.post<{ version: { version: number; added: number; edited: number; removed: number } }>("/brief/versions");
-      setNotice(`Brief v${r.version.version} created — ${r.version.added} added, ${r.version.edited} edited, ${r.version.removed} removed.`);
+      const r = await api.post<{
+        version: { version: number; added: number; edited: number; removed: number };
+      }>("/brief/versions");
+
       setError(null);
+      navigate(`/brief?v=${r.version.version}&diff=1`);
     } catch (e) {
       setNotice(null);
       setError((e as Error).message);

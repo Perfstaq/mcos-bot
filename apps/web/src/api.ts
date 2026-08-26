@@ -146,6 +146,16 @@ export type BulkApproveResult = {
   error_count: number;
 };
 
+/** Which call a claim came from — the chip under every line of the document. */
+export type ClaimSource = {
+  meeting_id: string;
+  meeting_title: string | null;
+  meeting_date: string | null;
+};
+
+/** Which call a whole version was merged from. */
+export type SourceMeeting = { id: string; title: string | null; date: string | null };
+
 export type BriefClaim = {
   claim_id: string;
   type: ClaimType;
@@ -154,6 +164,7 @@ export type BriefClaim = {
   confidence: number;
   introduced_in_version: number;
   meeting_id: string;
+  source: ClaimSource | null;
   evidence: { verbatim_quote: string; speaker: string; timestamp_label: string; redacted: boolean };
 };
 
@@ -165,7 +176,9 @@ export type BriefVersionSummary = {
   added: number;
   removed: number;
   edited: number;
+  counts: { added: number; removed: number; edited: number };
   total: number;
+  source_meeting: SourceMeeting | null;
 };
 
 export type BriefVersion = {
@@ -174,7 +187,17 @@ export type BriefVersion = {
   created_by?: string;
   note?: string | null;
   total: number;
+  source_meeting: SourceMeeting | null;
   claims_by_type: Array<{ type: ClaimType; label: string; claims: BriefClaim[] }>;
+};
+
+export type BriefEdit = {
+  claim_id: string;
+  type: ClaimType;
+  type_label: string;
+  from: string;
+  to: string;
+  source: SourceMeeting | null;
 };
 
 export type BriefDiff = {
@@ -182,7 +205,7 @@ export type BriefDiff = {
   to: number;
   added: BriefClaim[];
   removed: BriefClaim[];
-  edited: Array<{ claim_id: string; type: ClaimType; type_label: string; before: string; after: string }>;
+  edited: BriefEdit[];
   unchanged: number;
 };
 

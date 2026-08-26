@@ -124,6 +124,7 @@ model Meeting {
   claims          CandidateClaim[]
   extractionRuns  ExtractionRun[]
   briefClaims     BriefClaim[]
+  mergedInto      BriefVersion[]    @relation("BriefVersionSource")
 
   calendarEvent CalendarEvent?
   note          MeetingNote?
@@ -453,15 +454,26 @@ model BriefVersion {
   createdBy String   @map("created_by")
   note      String?
 
+  // The call the reviewer had just finished when they pressed merge.
+  //
+  // Provenance for the merge ACTION, not for its contents: the claims carry
+  // their own meetingId, and one version can legitimately gather approvals
+  // from several meetings. Nullable and SetNull on delete — a purged meeting
+  // must never take a published version with it.
+  sourceMeetingId String? @map("source_meeting_id")
+
   addedCount   Int @default(0) @map("added_count")
   removedCount Int @default(0) @map("removed_count")
   editedCount  Int @default(0) @map("edited_count")
   totalCount   Int @default(0) @map("total_count")
 
-  tenant Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sourceMeeting Meeting? @relation("BriefVersionSource", fields: [sourceMeetingId], references: [id], onDelete: SetNull)
+
   claims BriefClaim[]
 
   @@unique([tenantId, version])
+  @@index([tenantId, sourceMeetingId])
   @@map("brief_versions")
 }
 
