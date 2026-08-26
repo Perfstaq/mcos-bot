@@ -152,14 +152,16 @@ export type ExtractionModelResponse = {
 export async function extractFromChunk(args: {
   chunk: Chunk;
   meetingTitle: string | null;
-  model?: string;
 }): Promise<ChunkExtraction> {
   const rendered = renderChunk(args.chunk, formatTimestamp);
   const header = args.meetingTitle ? `Meeting: ${args.meetingTitle}\n\n` : "";
 
   return retryOnceOnMalformed(async () => {
     const response = await client.responses.create({
-      model: args.model ?? env.OPENAI_MODEL,
+      // Always the configured model — extraction_runs.model and each claim's
+      // extracted_by_model record env.OPENAI_MODEL, so a per-call override
+      // here would make those records lie.
+      model: env.OPENAI_MODEL,
       input: [
         { role: "system", content: SYSTEM_PROMPT },
         {
