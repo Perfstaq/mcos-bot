@@ -217,6 +217,13 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
       if (inField || event.metaKey || event.ctrlKey || event.altKey) return;
 
       if (event.key === "u" && undoable) { event.preventDefault(); void undo(); return; }
+      // Shift+A is the whole point of the bulk bar for a keyboard reviewer:
+      // fourteen claims in under a minute means never reaching for the mouse.
+      if (event.key === "A" && event.shiftKey && busy !== "bulk") {
+        event.preventDefault();
+        void keepAllHighConfidence();
+        return;
+      }
       if (!current) return;
 
       // A decided card stays on screen for a beat so the outcome registers.
@@ -239,7 +246,7 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [current, visible.length, decide, startEdit, settled, busy, undoable, undo]);
+  }, [current, visible.length, decide, startEdit, settled, busy, undoable, undo, keepAllHighConfidence]);
 
   const merge = async () => {
     setMerging(true);
@@ -363,8 +370,18 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
             )}
 
             {visible.map((claim, i) => (
+              <div key={claim.id}>
+              {/* The queue arrives ordered by type, so a header wherever the
+                  type changes groups it without a second pass. Reviewing six
+                  positioning statements in a row is a different task from
+                  bouncing between a pain point and an objection. */}
+              {filter === "all" && visible[i - 1]?.type !== claim.type && (
+                <div className="group-head mono">
+                  {CLAIM_TYPE_LABEL[claim.type]}
+                  <span className="n">{visible.filter((c) => c.type === claim.type).length}</span>
+                </div>
+              )}
               <button
-                key={claim.id}
                 ref={(el) => { if (el) rowRefs.current.set(claim.id, el); }}
                 className={`row${current?.id === claim.id ? " selected" : ""}${settled[claim.id] ? " settled" : ""}`}
                 onClick={() => setFocus(i)}
@@ -389,6 +406,7 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
                   <span>{claim.evidence.timestamp_label}</span>
                 </div>
               </button>
+              </div>
             ))}
           </div>
         </div>
@@ -574,6 +592,7 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
               <dt>a</dt><dd>Keep the selected claim</dd>
               <dt>e</dt><dd>Edit, then keep in one action</dd>
               <dt>r</dt><dd>Toss it</dd>
+              <dt>⇧A</dt><dd>Keep every high-confidence claim in view</dd>
               <dt>u</dt><dd>Undo the last decision, within five seconds</dd>
               <dt>j / k</dt><dd>Move down / up the queue</dd>
               <dt>⌘⏎</dt><dd>Save an edit and keep</dd>

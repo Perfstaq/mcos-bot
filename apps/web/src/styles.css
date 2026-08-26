@@ -526,6 +526,23 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .bulk-flagged .pct { flex: none; width: 34px; color: var(--orange); font-size: 11px; }
 .bulk-flagged .what { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+.group-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px 5px;
+  border-bottom: 1px solid var(--line-soft);
+  background: var(--pane);
+  color: var(--faint);
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.group-head .n { margin-left: auto; color: var(--muted); }
+
 .conf-chip {
   display: inline-flex;
   align-items: center;
