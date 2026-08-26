@@ -142,4 +142,50 @@ describe("evidence validation", () => {
   it("rejects a quote too short to verify anything", () => {
     expect(quoteAppearsIn("flat", segmentTexts)).toBe(false);
   });
+
+  // --- Adversarial cases: the fuzzy floor is for transcription drift, not
+  // --- paraphrase. Each of these reuses real vocabulary from the segment and
+  // --- must still be dropped.
+
+  it("rejects a quote that reorders the segment's own words", () => {
+    // Every content word here appears in the segment — a bag-of-words overlap
+    // check would wave it through. It was never said in this order.
+    expect(
+      quoteAppearsIn(
+        "the layer that makes support position as we should cost curve flat",
+        segmentTexts,
+      ),
+    ).toBe(false);
+  });
+
+  it("rejects a paraphrase that keeps the substance but not the words", () => {
+    expect(
+      quoteAppearsIn("we ought to frame ourselves as keeping the support budget level", segmentTexts),
+    ).toBe(false);
+  });
+
+  it("rejects a quote corrupted well past the similarity floor", () => {
+    expect(
+      quoteAppearsIn(
+        "we could position as the platform which keeps support spending curves flatter",
+        segmentTexts,
+      ),
+    ).toBe(false);
+  });
+
+  it("accepts punctuation, casing and whitespace drift", () => {
+    expect(
+      quoteAppearsIn(
+        "  We should position as the layer that makes support-cost-curve flat!  ",
+        segmentTexts,
+      ),
+    ).toBe(true);
+  });
+
+  it("accepts a single-word transcription slip in a long quote", () => {
+    // "the" transcribed as "a" — the kind of drift the 0.85 floor exists for.
+    expect(
+      quoteAppearsIn("we should position as a layer that makes support cost curve flat", segmentTexts),
+    ).toBe(true);
+  });
 });
