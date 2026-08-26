@@ -1,11 +1,10 @@
 import { ClaimType, EvidenceKind, MeetingStatus } from "@prisma/client";
 import { rawPrisma, disconnect } from "./db.js";
-import { auth } from "./auth.js";
 import { runWithContext } from "./context.js";
 import { prisma } from "./db.js";
 import { dedupeKey } from "./domain/claims.js";
 import { PROMPT_VERSION } from "./integrations/openai.js";
-import { env } from "./env.js";
+import { passwordSourceMessage, seedWorkspace } from "./seed-workspace.js";
 
 /**
  * Seeds the demo tenant, and — with --demo — a fully populated meeting that
@@ -119,69 +118,12 @@ const DEMO_CLAIMS: Array<{
   },
 ];
 
-/**
- * The default is documented in the README, so it is not a secret. SEED_PASSWORD
- * may well be, which is why neither is ever printed: the seed's output lands in
- * terminal history, CI logs and log aggregators, and a script that decides
- * case-by-case whether a credential is "safe enough to echo" gets it wrong
- * eventually. It reports which source was used and nothing more.
- */
-const DEFAULT_DEMO_PASSWORD = "perfstaq-demo-password";
-const DEMO_PASSWORD = process.env.SEED_PASSWORD ?? DEFAULT_DEMO_PASSWORD;
-const PASSWORD_SOURCE = process.env.SEED_PASSWORD
-  ? "the value of SEED_PASSWORD"
-  : "the default documented in the README";
-
-/**
- * Create the demo account through Better Auth rather than by inserting rows.
- *
- * Writing a user and a member row directly would produce an account that cannot
- * sign in — the password would be unhashed, the `issuer` unset, and the
- * organization's tenant never provisioned, because all three happen inside the
- * auth layer. Going through the public API means the seeded workspace is
- * identical to one a real signup produces.
- */
-async function seedWorkspace(): Promise<{ tenantId: string; email: string }> {
-  const email = env.DEFAULT_REVIEWER_EMAIL;
-
-  const existing = await rawPrisma.user.findUnique({ where: { email }, select: { id: true } });
-  if (!existing) {
-    await auth.api.signUpEmail({
-      body: { email, password: DEMO_PASSWORD, name: "Demo Reviewer" },
-    });
-    console.log(`user ${email} created`);
-  }
-
-  const user = await rawPrisma.user.findUniqueOrThrow({ where: { email }, select: { id: true } });
-
-  const org = await rawPrisma.organization.findUnique({
-    where: { slug: env.DEFAULT_TENANT_SLUG },
-    include: { tenant: { select: { id: true } } },
-  });
-
-  if (org?.tenant) return { tenantId: org.tenant.id, email };
-
-  // createOrganization runs afterCreateOrganization, which provisions the
-  // tenant. Calling it with the user's headers is what makes them the owner.
-  const created = await auth.api.createOrganization({
-    body: { name: "Freshworks (demo)", slug: env.DEFAULT_TENANT_SLUG, userId: user.id },
-  });
-  if (!created) throw new Error("Better Auth declined to create the demo organization");
-
-  const tenant = await rawPrisma.tenant.findUniqueOrThrow({
-    where: { organizationId: created.id },
-    select: { id: true, slug: true },
-  });
-  console.log(`workspace ${tenant.slug} -> tenant ${tenant.id}`);
-  return { tenantId: tenant.id, email };
-}
-
 async function main(): Promise<void> {
   const withDemo = process.argv.includes("--demo") || process.env.SEED_DEMO === "1";
 
   const { tenantId, email } = await seedWorkspace();
   const tenant = await rawPrisma.tenant.findUniqueOrThrow({ where: { id: tenantId } });
-  console.log(`sign in as ${email} — password is ${PASSWORD_SOURCE}`);
+  console.log(passwordSourceMessage(email));
 
   if (!withDemo) {
     console.log("Seeded tenant only. Re-run with --demo for a populated meeting.");

@@ -24,6 +24,7 @@
     "db:seed": "npm run db:seed -w @mcos/api --",
     "db:studio": "npm run db:studio -w @mcos/api",
     "setup": "npm install && npm run db:up && npm run db:migrate && npm run db:seed:demo",
-    "db:seed:demo": "npm run db:seed -w @mcos/api -- --demo"
+    "db:seed:demo": "npm run db:seed -w @mcos/api -- --demo",
+    "seed:golden": "npm run seed:golden -w @mcos/api"
   }
 }
