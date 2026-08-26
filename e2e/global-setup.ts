@@ -44,8 +44,16 @@ export default async function globalSetup(): Promise<void> {
 
   // Run as a subprocess, deliberately — see the doc comment in
   // e2e/setup/seed.ts for why `seedWorkspace()` cannot run in THIS process.
+  // The absolute path matters: tsx's CLI resolves a bare relative entry
+  // argument in a way that does not always match the `cwd` given here (see
+  // the doc comment on `seedScript` in apps/api/src/demo-reset.ts, which hit
+  // this directly), so every tsx invocation in this file passes one.
   console.log("[e2e] seeding the demo workspace and the two golden meetings…");
-  execFileSync("npx", ["tsx", "setup/seed.ts"], { cwd: here, stdio: "inherit", env: process.env });
+  execFileSync("npx", ["tsx", path.resolve(here, "setup/seed.ts")], {
+    cwd: here,
+    stdio: "inherit",
+    env: process.env,
+  });
   const seedResultFile = path.resolve(here, ".seed-result.json");
   const seeded = JSON.parse(fs.readFileSync(seedResultFile, "utf-8")) as {
     tenantId: string;
@@ -102,7 +110,7 @@ function startServer(): Promise<number> {
   const logPath = path.resolve(here, "server.log");
   const logFd = fs.openSync(logPath, "w");
 
-  const child = spawn("npx", ["tsx", "src/server.ts"], {
+  const child = spawn("npx", ["tsx", path.resolve(apiDir, "src/server.ts")], {
     cwd: apiDir,
     env: process.env,
     stdio: ["ignore", logFd, logFd],
