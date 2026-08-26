@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-26T09:10:17.974Z",
+  "generatedAt": "2026-08-26T13:17:32.677Z",
   "mode": "mock",
   "model": "mock(answer-key)",
   "promptVersion": "propose_claims/v3-openai",
@@ -23,16 +23,16 @@
     "mustExtract": 28,
     "matched": 28,
     "predicted": 28,
-    "proposedByModel": 28,
+    "proposedByModel": 32,
     "droppedByEvidenceGate": 0,
-    "duplicatesCollapsed": 0,
+    "duplicatesCollapsed": 4,
     "unscoredExtras": 0
   },
   "tokens": {
     "input": 2000,
-    "output": 1920
+    "output": 2160
   },
-  "elapsedMs": 6,
+  "elapsedMs": 4,
   "missed": [],
   "typeMisses": [],
   "evidenceMisses": [],

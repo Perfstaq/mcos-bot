@@ -30,8 +30,12 @@ describe("eval pipeline + scorer calibration (golden freshworks, mock model)", (
       meetingTitle: "Freshworks positioning sync",
     });
 
-    // The mock re-proposes claims across the chunk-overlap seam; the pipeline
-    // must collapse those, not double-count them.
+    // Multi-segment answer-key entries make the mock propose the same claim
+    // once per cited segment; the pipeline must collapse those to one kept
+    // claim, not double-count them. (Duplicate collapse across the chunk-seam
+    // overlap is pinned by the dedupeNearIdenticalClaims unit tests — on this
+    // fixture the seam segments carry no answer-key evidence.)
+    expect(result.duplicates).toBeGreaterThan(0);
     const scores = scoreAgainstAnswerKey(result.predicted, answerKey);
     expect(scores.recall).toBe(1);
     expect(scores.falsePositives).toBe(0);
