@@ -144,14 +144,18 @@ export async function seedGoldenMeetings(tenantId: string): Promise<GoldenSeedSu
           endedAt,
           durationMs: parsed.durationMs,
           // recallBotId/recallTranscriptId are globally @unique on Meeting.
-          // No real Recall bot ever ran for a seeded meeting, so a synthetic
-          // per-fixture string here (e.g. "golden-freshworks-bot") would
-          // collide with P2002 the moment a second tenant on the same
-          // database seeded these fixtures too. null is the honest value —
-          // idempotency for this seed is by (tenantId, title), not by these
-          // columns.
+          // No real Recall bot ever ran for a seeded meeting, so recallBotId
+          // is null — every consumer tolerates that. recallTranscriptId is
+          // different: jobs/ingest-transcript.ts always sets it once a
+          // transcript row exists, so a transcript_ready meeting with a null
+          // recallTranscriptId is a state production can never produce, and
+          // routes/meetings.ts gates the retry-after-failed-extract path on
+          // `stage === "extract" && meeting.recallTranscriptId` — null falls
+          // through to the branch that dispatches a real Recall bot at the
+          // meeting's (fake) URL. Scoped by tenantId so it stays unique
+          // across tenants seeding the same fixture.
           recallBotId: null,
-          recallTranscriptId: null,
+          recallTranscriptId: `${def.key}-${tenantId}`,
         },
       });
 
