@@ -345,6 +345,52 @@ describe("merging the golden meetings", () => {
     expect(list.versions[0].source_meeting.id).toBe(discoveryId);
   });
 
+  /**
+   * The inference is computed from the claims being merged, so it cannot name a
+   * call that contributed nothing. That property is the reason the review queue
+   * sends no meeting_id of its own: the queue's state holds what has NOT been
+   * decided, so a screen deriving the source from it would name the one meeting
+   * whose claims are absent from the version.
+   */
+  it("never names a source call that put no claims in the version", async () => {
+    await extract(workshopId);
+    await extract(discoveryId);
+    await approveAll(await proposedClaims(workshopId));
+    await approveAll(await proposedClaims(discoveryId));
+
+    await mergeOk();
+
+    const list = await getJson("/api/v1/brief/versions");
+    // Two calls contributed; neither one is the answer, so there is no answer.
+    expect(list.versions[0].source_meeting).toBeNull();
+
+    const doc = await getJson("/api/v1/brief/versions/1");
+    const contributors = new Set(
+      doc.claims_by_type.flatMap((g: { claims: DocClaim[] }) => g.claims.map((c) => c.meeting_id)),
+    );
+    expect(contributors).toEqual(new Set([workshopId, discoveryId]));
+  });
+
+  it("infers one call's worth of provenance even when another call is still unreviewed", async () => {
+    // The exact shape the queue used to get wrong: two meetings extracted, only
+    // one reviewed. The version is entirely the workshop's, so the workshop is
+    // what it must say — never the call whose claims are all still proposed.
+    await extract(workshopId);
+    await extract(discoveryId);
+    await approveAll(await proposedClaims(workshopId));
+
+    await mergeOk();
+
+    const list = await getJson("/api/v1/brief/versions");
+    expect(list.versions[0].source_meeting.id).toBe(workshopId);
+    expect(list.versions[0].source_meeting.id).not.toBe(discoveryId);
+
+    const doc = await getJson("/api/v1/brief/versions/1");
+    for (const group of doc.claims_by_type) {
+      for (const claim of group.claims) expect(claim.meeting_id).toBe(workshopId);
+    }
+  });
+
   it("refuses a merge that names a meeting from another workspace", async () => {
     const away = await seedTenant("rival-corp");
     const theirs = await db.meeting.create({
@@ -413,6 +459,51 @@ describe("append-only enforcement", () => {
     expect(await db.briefClaim.count({ where: { tenantId } })).toBe(version.totalCount);
   });
 
+  /**
+   * Naming a redactable column is not the same as redacting. A write that puts
+   * arbitrary text in `verbatimQuote` rewrites the evidence a reviewer vouched
+   * for while wearing the purge's clothes, so the guard checks the values too.
+   */
+  it("refuses an evidence rewrite dressed up as a redaction", async () => {
+    await extract(workshopId);
+    await approveAll(await proposedClaims(workshopId));
+    await mergeOk({ meeting_id: workshopId });
+
+    const { prisma } = await import("../src/db.js");
+    const { AppendOnlyViolationError, REDACTED } = await import("../src/domain/append-only.js");
+
+    await runWithContext({ tenantId, tenantSlug, reviewer: "attacker" }, async () => {
+      // A quote that is not the sentinel.
+      await expect(
+        prisma.briefClaim.updateMany({
+          where: {},
+          data: { evidenceRedacted: true, verbatimQuote: "something they never said" },
+        }),
+      ).rejects.toBeInstanceOf(AppendOnlyViolationError);
+
+      // Un-redacting: there is no transcript left to restore from.
+      await expect(
+        prisma.briefClaim.updateMany({ where: {}, data: { evidenceRedacted: false } }),
+      ).rejects.toBeInstanceOf(AppendOnlyViolationError);
+
+      // The real thing still goes through.
+      await expect(
+        prisma.briefClaim.updateMany({
+          where: {},
+          data: { evidenceRedacted: true, verbatimQuote: REDACTED },
+        }),
+      ).resolves.toMatchObject({ count: expect.any(Number) });
+    });
+
+    const claims = await db.briefClaim.findMany({ where: { tenantId } });
+    expect(claims.every((c) => c.verbatimQuote === "[evidence redacted]")).toBe(true);
+
+    // Nothing moved.
+    const version = await db.briefVersion.findFirstOrThrow({ where: { tenantId, version: 1 } });
+    expect(version.note).toBeNull();
+    expect(await db.briefClaim.count({ where: { tenantId } })).toBe(version.totalCount);
+  });
+
   it("still lets the purge redact evidence in place", async () => {
     await extract(workshopId);
     await approveAll(await proposedClaims(workshopId));
@@ -437,21 +528,30 @@ describe("append-only enforcement", () => {
     const srcRoot = path.resolve(here, "../src");
 
     const offenders: string[] = [];
+    const seen: string[] = [];
     for (const file of walk(srcRoot)) {
       const source = fs.readFileSync(file, "utf-8");
       for (const call of briefWriteCalls(source)) {
+        const where = `${path.relative(srcRoot, file)} -> ${call.model}.${call.op}`;
+        seen.push(where);
         if (CREATE_OPS.has(call.op)) continue;
         const isRedaction =
           call.model === "briefClaim" &&
           (call.op === "update" || call.op === "updateMany") &&
           onlyRedactionFields(call.args);
-        if (!isRedaction) {
-          offenders.push(`${path.relative(srcRoot, file)} -> ${call.model}.${call.op}`);
-        }
+        if (!isRedaction) offenders.push(where);
       }
     }
 
     expect(offenders).toEqual([]);
+
+    // …and the scan is still finding things. An empty offender list is only
+    // evidence of anything if the regex that produces it still matches the
+    // writes we know are there — otherwise a rename upstream turns this test
+    // into one that passes no matter what anybody does to the brief tables.
+    expect(seen).toContain("domain/brief.ts -> briefVersion.create");
+    expect(seen.filter((s) => s === "domain/brief.ts -> briefClaim.createMany")).toHaveLength(2);
+    expect(seen).toContain("routes/meetings.ts -> briefClaim.updateMany");
   });
 });
 

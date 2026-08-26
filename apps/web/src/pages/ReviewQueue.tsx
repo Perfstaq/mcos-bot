@@ -278,20 +278,23 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
    * wants to see what they changed. So the merge hands off to the brief with
    * the diff already open on the version it just wrote.
    *
-   * `meeting_id` is sent only when the queue held exactly one call. The merge
-   * is never scoped to it — a version is everything approved and unmerged — so
-   * a queue spanning two meetings has no single honest answer, and the server
-   * infers the same way rather than being handed a guess.
+   * No `meeting_id` is sent, deliberately. This screen cannot compute one: a
+   * decided claim is dropped from `claims` as soon as it settles, so by the time
+   * merge runs that state holds what the reviewer has NOT decided — the
+   * complement of what is about to be merged. A queue holding meetings A and B
+   * with all of A approved would name B as the source of a version whose every
+   * claim came from A, and the server treats the caller's answer as
+   * authoritative and writes it into a row that can never be corrected.
+   *
+   * The server infers it instead, from the claims actually being merged. That
+   * is the only set with the right answer in it.
    */
   const merge = async () => {
     setMerging(true);
     try {
-      const meetingIds = new Set((claims ?? []).map((c) => c.meeting.id));
-      const body = meetingIds.size === 1 ? { meeting_id: [...meetingIds][0] } : {};
-
       const r = await api.post<{
         version: { version: number; added: number; edited: number; removed: number };
-      }>("/brief/versions", body);
+      }>("/brief/versions");
 
       setError(null);
       navigate(`/brief?v=${r.version.version}&diff=1`);
