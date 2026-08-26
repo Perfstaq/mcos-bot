@@ -44,7 +44,16 @@ export type ClaimType =
   | "positioning_statement" | "icp_fact" | "pain_point" | "objection"
   | "messaging_decision" | "competitor_mention" | "proof_point";
 
-export type ClaimCounts = { proposed: number; approved: number; rejected: number; edited: number; total: number };
+export type ClaimCounts = {
+  proposed: number;
+  approved: number;
+  rejected: number;
+  edited: number;
+  superseded: number;
+  total: number;
+};
+
+export type ConfidenceBand = "high" | "medium" | "low";
 
 export type Meeting = {
   id: string;
@@ -87,6 +96,8 @@ export type Evidence = {
   segments: Array<{ id: string; idx: number; speaker: string; start_ms: number; text: string }>;
 };
 
+export type ClaimStatus = "proposed" | "approved" | "rejected" | "edited" | "superseded";
+
 export type Claim = {
   id: string;
   type: ClaimType;
@@ -94,10 +105,45 @@ export type Claim = {
   text: string;
   original_text: string;
   confidence: number;
-  status: "proposed" | "approved" | "rejected" | "edited";
+  confidence_band: ConfidenceBand;
+  status: ClaimStatus;
+  /** Set when this claim is a reviewer's rewrite of an earlier one. */
+  edited_from: string | null;
   created_at: string;
   evidence: Evidence;
   meeting: { id: string; title: string | null; meeting_url: string; started_at: string | null };
+};
+
+export type ReviewAction = "approve" | "reject" | "edit_approve" | "undo";
+
+/** One row of the append-only audit log behind the gate. */
+export type ReviewDecision = {
+  id: string;
+  action: ReviewAction;
+  reviewer: string;
+  at: string;
+  note: string | null;
+  previous_text: string | null;
+  edited_text: string | null;
+  result_claim_id: string | null;
+  claim: { id: string; type: ClaimType; type_label: string; text: string; meeting_id: string };
+};
+
+export type DecidedClaim = {
+  id: string;
+  type: ClaimType;
+  status: ClaimStatus;
+  text: string;
+  confidence: number;
+  edited_from: string | null;
+  decided_at: string | null;
+};
+
+export type BulkApproveResult = {
+  approved: DecidedClaim[];
+  errors: Array<{ claim_id: string; code: string; message: string }>;
+  approved_count: number;
+  error_count: number;
 };
 
 export type BriefClaim = {

@@ -1,21 +1,50 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { api, CLAIM_TYPE_LABEL, CLAIM_TYPE_ORDER, type Claim, type ClaimType } from "../api.js";
-import { IconCheck, IconPencil, IconQuote, IconX } from "../components/Icons.js";
+import {
+  api,
+  CLAIM_TYPE_LABEL,
+  CLAIM_TYPE_ORDER,
+  type BulkApproveResult,
+  type Claim,
+  type ClaimType,
+  type ReviewDecision,
+} from "../api.js";
+import { IconCheck, IconPencil, IconQuote, IconRetry, IconX } from "../components/Icons.js";
 
 type QueueResponse = { claims: Claim[]; counts_by_type: Partial<Record<ClaimType, number>>; total: number };
+type DecisionsResponse = { decisions: ReviewDecision[] };
+
+type Outcome = "kept" | "edited" | "tossed";
+
+/** How long a reviewer gets to take a decision back. */
+const UNDO_WINDOW_MS = 5_000;
+/** How long a decided card stays on screen before the queue closes over it. */
+const SETTLE_MS = 380;
+
+const OUTCOME_LABEL: Record<Outcome, string> = { kept: "Kept", edited: "Edited", tossed: "Tossed" };
+
+const ACTION_LABEL: Record<ReviewDecision["action"], string> = {
+  approve: "kept",
+  reject: "tossed",
+  edit_approve: "edited",
+  undo: "undone",
+};
 
 /**
  * The review gate — a triage workspace, not a feed.
  *
- * Three panes: types, queue, claim. The list is the reviewer's position and it
- * does not move when something loads; the detail pane is where the whole
- * decision is made, with the quote and its surrounding turns both on screen.
+ * Four panes: types, queue, claim, audit. The list is the reviewer's position
+ * and it does not move when something loads; the detail pane is where the whole
+ * decision is made, with the quote and its surrounding turns both on screen;
+ * the right rail shows the decisions piling up behind them, because the audit
+ * log is the artefact this screen exists to produce.
+ *
  * Every claim here is a proposal. Nothing has entered the brief, and nothing
  * will until someone on this screen decides it should.
  */
 export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => void }) {
   const [claims, setClaims] = useState<Claim[] | null>(null);
   const [counts, setCounts] = useState<Partial<Record<ClaimType, number>>>({});
+  const [decisions, setDecisions] = useState<ReviewDecision[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [filter, setFilter] = useState<ClaimType | "all">("all");
@@ -23,12 +52,19 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
-  const [settled, setSettled] = useState<Record<string, "approve" | "reject">>({});
+  const [settled, setSettled] = useState<Record<string, Outcome>>({});
   const [showHelp, setShowHelp] = useState(false);
   const [merging, setMerging] = useState(false);
+  const [showFlagged, setShowFlagged] = useState(false);
+
+  // What this sitting has produced. Reset only by a reload, so the completion
+  // panel can report the session rather than the table.
+  const [session, setSession] = useState({ kept: 0, edited: 0, tossed: 0 });
+  const [undoable, setUndoable] = useState<{ claim: Claim; outcome: Outcome } | null>(null);
 
   const rowRefs = useRef(new Map<string, HTMLElement>());
   const editRef = useRef<HTMLTextAreaElement>(null);
+  const undoTimer = useRef<number | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -41,13 +77,25 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  const loadAudit = useCallback(async () => {
+    try {
+      const data = await api.get<DecisionsResponse>("/review-decisions?limit=60");
+      setDecisions(data.decisions);
+    } catch {
+      // The feed is a witness, not a blocker: a queue that refuses to work
+      // because its sidebar failed to load would be the worse failure.
+    }
+  }, []);
+
+  useEffect(() => { void load(); void loadAudit(); }, [load, loadAudit]);
 
   // Reported from an effect, never from inside a state updater — updaters run
   // during render, and setting parent state there is a React error.
   useEffect(() => {
     if (claims) onCountChange(claims.length);
   }, [claims, onCountChange]);
+
+  useEffect(() => () => { if (undoTimer.current) window.clearTimeout(undoTimer.current); }, []);
 
   const visible = useMemo(
     () => (claims ?? []).filter((c) => filter === "all" || c.type === filter),
@@ -56,42 +104,109 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
 
   const current = visible[Math.min(focus, Math.max(visible.length - 1, 0))];
 
+  const flagged = useMemo(() => visible.filter((c) => c.confidence_band !== "high"), [visible]);
+  const highConfidence = useMemo(() => visible.filter((c) => c.confidence_band === "high"), [visible]);
+
+  const decided = session.kept + session.edited + session.tossed;
+  const total = decided + visible.length;
+
   useEffect(() => {
     if (current) rowRefs.current.get(current.id)?.scrollIntoView({ block: "nearest" });
   }, [current]);
 
+  /** Offer the decision back for five seconds. The server already has it. */
+  const offerUndo = useCallback((claim: Claim, outcome: Outcome) => {
+    setUndoable({ claim, outcome });
+    if (undoTimer.current) window.clearTimeout(undoTimer.current);
+    undoTimer.current = window.setTimeout(() => setUndoable(null), UNDO_WINDOW_MS);
+  }, []);
+
   const decide = useCallback(
     async (claim: Claim, action: "approve" | "reject", text?: string) => {
       setBusy(claim.id);
+      const outcome: Outcome = action === "reject" ? "tossed" : text !== undefined ? "edited" : "kept";
       try {
         if (action === "approve" && text !== undefined && text !== claim.text) {
           await api.patch(`/claims/${claim.id}`, { text });
         } else {
           await api.post(`/claims/${claim.id}/${action}`);
         }
-        setSettled((s) => ({ ...s, [claim.id]: action }));
+        setSettled((s) => ({ ...s, [claim.id]: outcome }));
+        setSession((s) => ({ ...s, [outcome]: s[outcome] + 1 }));
         setEditing(null);
         setError(null);
+        offerUndo(claim, outcome);
+        void loadAudit();
         // Hold the row briefly so the decision registers, then drop it. Yanking
         // rows out from under a fast reviewer loses their place.
         window.setTimeout(() => {
           setClaims((cs) => (cs ?? []).filter((c) => c.id !== claim.id));
           setCounts((c) => ({ ...c, [claim.type]: Math.max(0, (c[claim.type] ?? 1) - 1) }));
-        }, 380);
+        }, SETTLE_MS);
       } catch (e) {
         setError((e as Error).message);
       } finally {
         setBusy(null);
       }
     },
-    [],
+    [loadAudit, offerUndo],
   );
+
+  /**
+   * Undo issues a compensating decision. It does not delete the first one —
+   * the audit log only grows, so "they kept it, then changed their mind" stays
+   * readable a year from now.
+   */
+  const undo = useCallback(async () => {
+    if (!undoable) return;
+    const { claim, outcome } = undoable;
+    setUndoable(null);
+    if (undoTimer.current) window.clearTimeout(undoTimer.current);
+    try {
+      await api.post(`/claims/${claim.id}/undo`);
+      setSession((s) => ({ ...s, [outcome]: Math.max(0, s[outcome] - 1) }));
+      setSettled((s) => {
+        const next = { ...s };
+        delete next[claim.id];
+        return next;
+      });
+      setError(null);
+      await Promise.all([load(), loadAudit()]);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }, [undoable, load, loadAudit]);
 
   const startEdit = useCallback((claim: Claim) => {
     setEditing(claim.id);
     setDraft(claim.text);
     window.setTimeout(() => editRef.current?.focus(), 0);
   }, []);
+
+  /** Keep every high-confidence proposal at once. The flagged ones stay. */
+  const keepAllHighConfidence = useCallback(async () => {
+    if (highConfidence.length === 0) return;
+    const batch = highConfidence.map((c) => c.id);
+    setBusy("bulk");
+    try {
+      const result = await api.post<BulkApproveResult>("/claims/bulk-approve", { claim_ids: batch });
+      const keptIds = new Set(result.approved.map((c) => c.id));
+      setSession((s) => ({ ...s, kept: s.kept + result.approved_count }));
+      setClaims((cs) => (cs ?? []).filter((c) => !keptIds.has(c.id)));
+      setNotice(
+        result.error_count === 0
+          ? `Kept ${result.approved_count} high-confidence claim${result.approved_count === 1 ? "" : "s"}.`
+          : `Kept ${result.approved_count}. ${result.error_count} held back — ${result.errors[0]?.message ?? "read them individually"}.`,
+      );
+      setError(null);
+      await Promise.all([load(), loadAudit()]);
+    } catch (e) {
+      setNotice(null);
+      setError((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }, [highConfidence, load, loadAudit]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -100,6 +215,8 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
 
       const inField = event.target instanceof HTMLElement && ["INPUT", "TEXTAREA"].includes(event.target.tagName);
       if (inField || event.metaKey || event.ctrlKey || event.altKey) return;
+
+      if (event.key === "u" && undoable) { event.preventDefault(); void undo(); return; }
       if (!current) return;
 
       // A decided card stays on screen for a beat so the outcome registers.
@@ -122,7 +239,7 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [current, visible.length, decide, startEdit, settled, busy]);
+  }, [current, visible.length, decide, startEdit, settled, busy, undoable, undo]);
 
   const merge = async () => {
     setMerging(true);
@@ -138,18 +255,58 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
     }
   };
 
+  const nothingLeft = claims !== null && visible.length === 0;
+
   return (
     <div className="screen">
       <header className="screen-head">
         <h1>Review queue</h1>
         <span className="sub">
-          {claims === null ? "loading…" : `${visible.length} proposal${visible.length === 1 ? "" : "s"} awaiting a decision`}
+          {claims === null
+            ? "loading…"
+            : total === 0
+              ? "nothing awaiting a decision"
+              : `${decided} of ${total} decided`}
         </span>
+        {total > 0 && (
+          <span className="progress" aria-hidden>
+            <i style={{ width: `${Math.round((decided / total) * 100)}%` }} />
+          </span>
+        )}
         <div className="grow" />
         <button className="btn primary" onClick={() => void merge()} disabled={merging}>
           {merging ? "Merging…" : "Merge approved → brief"}
         </button>
       </header>
+
+      {highConfidence.length > 0 && (
+        <div className="bulk-bar">
+          <button
+            className="btn approve"
+            disabled={busy === "bulk"}
+            onClick={() => void keepAllHighConfidence()}
+          >
+            <IconCheck /> {busy === "bulk" ? "Keeping…" : `Keep all ${highConfidence.length} high-confidence`}
+          </button>
+          {flagged.length > 0 && (
+            <>
+              <button className="bulk-flagged-toggle" onClick={() => setShowFlagged((v) => !v)}>
+                {flagged.length} flagged for a read {showFlagged ? "▴" : "▾"}
+              </button>
+              {showFlagged && (
+                <ul className="bulk-flagged">
+                  {flagged.map((claim) => (
+                    <li key={claim.id}>
+                      <span className="pct mono">{Math.round(claim.confidence * 100)}%</span>
+                      <span className="what">{claim.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       <div className="panes">
         <nav className="pane rail-types">
@@ -191,10 +348,17 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
           <div className="pane-body scroll">
             {claims === null && <><div className="skeleton" /><div className="skeleton" /><div className="skeleton" /></>}
 
-            {claims !== null && visible.length === 0 && (
+            {nothingLeft && decided === 0 && (
               <div className="empty">
                 <h3>Nothing waiting</h3>
-                <p>No claims are proposed right now. Add a meeting; once its transcript is extracted, proposals land here.</p>
+                <p>PerfStaq will ping you after your next call.</p>
+              </div>
+            )}
+
+            {nothingLeft && decided > 0 && (
+              <div className="empty">
+                <h3>Queue clear</h3>
+                <p>{session.kept} kept · {session.edited} edited · {session.tossed} tossed.</p>
               </div>
             )}
 
@@ -209,11 +373,14 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
                   <span className="type-tag">{CLAIM_TYPE_LABEL[claim.type]}</span>
                   <span className="grow" />
                   {settled[claim.id] ? (
-                    <span className={`chip ${settled[claim.id] === "approve" ? "ready" : "error"}`}>
-                      <span className="dot" />{settled[claim.id] === "approve" ? "kept" : "dropped"}
+                    <span className={`chip ${settled[claim.id] === "tossed" ? "error" : "ready"}`}>
+                      <span className="dot" />{OUTCOME_LABEL[settled[claim.id]!].toLowerCase()}
                     </span>
                   ) : (
-                    <span className="meter"><i style={{ width: `${Math.round(claim.confidence * 100)}%` }} /></span>
+                    <span className={`conf-chip ${claim.confidence_band}`}>
+                      <span className="meter"><i style={{ width: `${Math.round(claim.confidence * 100)}%` }} /></span>
+                      {claim.confidence_band}
+                    </span>
                   )}
                 </div>
                 <div className="row-text">{claim.text}</div>
@@ -236,34 +403,63 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
           {notice && <div className="banner info">{notice}</div>}
 
           {!current ? (
-            <div className="empty" style={{ marginTop: 40 }}>
-              <h3>No claim selected</h3>
-              <p>Pick a proposal from the queue, or clear the type filter.</p>
+            <div className="pane-body scroll">
+              {nothingLeft && decided > 0 ? (
+                <div className="completion">
+                  <h3>That is the queue.</h3>
+                  <p className="tally">
+                    <b>{session.kept}</b> kept · <b>{session.edited}</b> edited · <b>{session.tossed}</b> tossed
+                  </p>
+                  <p>
+                    Nothing has reached the brief yet. Merging writes a new, immutable version
+                    from everything you kept.
+                  </p>
+                  <button className="btn primary lg" onClick={() => void merge()} disabled={merging}>
+                    {merging ? "Merging…" : "Merge into Brief"}
+                  </button>
+                </div>
+              ) : (
+                <div className="empty" style={{ marginTop: 40 }}>
+                  <h3>{claims === null ? "Loading" : "Nothing waiting"}</h3>
+                  <p>
+                    {claims === null
+                      ? "Fetching the queue."
+                      : filter === "all"
+                        ? "PerfStaq will ping you after your next call."
+                        : "No proposals of this type. Clear the filter to see the rest."}
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             <>
               <div className="pane-body scroll">
                 <div className="detail-body">
                   {editing === current.id ? (
-                    <textarea
-                      ref={editRef}
-                      className="edit-area"
-                      value={draft}
-                      onChange={(e) => setDraft(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                          e.preventDefault();
-                          void decide(current, "approve", draft.trim());
-                        }
-                      }}
-                    />
+                    <>
+                      {/* What the model proposed stays on screen while it is
+                          rewritten. An edit you cannot compare is a retype. */}
+                      <p className="edit-original">{current.text}</p>
+                      <textarea
+                        ref={editRef}
+                        className="edit-area"
+                        value={draft}
+                        onChange={(e) => setDraft(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                            e.preventDefault();
+                            void decide(current, "approve", draft.trim());
+                          }
+                        }}
+                      />
+                    </>
                   ) : (
                     <p className="detail-claim">{current.text}</p>
                   )}
 
                   <div className="evidence">
                     <div className="eyebrow mono"><IconQuote size={13} /> Evidence</div>
-                    <blockquote>“{current.evidence.verbatim_quote}”</blockquote>
+                    <blockquote className="mono">“{current.evidence.verbatim_quote}”</blockquote>
                     <div className="attribution mono">
                       <span className="speaker">{current.evidence.speaker}</span>
                       <span>{current.evidence.timestamp_label}</span>
@@ -298,26 +494,26 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
 
               <div className="actionbar">
                 {settled[current.id] ? (
-                  <span className={`chip ${settled[current.id] === "approve" ? "ready" : "error"}`}>
-                    <span className="dot" />{settled[current.id] === "approve" ? "Approved" : "Rejected"}
+                  <span className={`chip ${settled[current.id] === "tossed" ? "error" : "ready"}`}>
+                    <span className="dot" />{OUTCOME_LABEL[settled[current.id]!]}
                   </span>
                 ) : editing === current.id ? (
                   <>
                     <button className="btn approve" disabled={busy === current.id || draft.trim().length < 3} onClick={() => void decide(current, "approve", draft.trim())}>
-                      <IconCheck /> Save &amp; approve <span className="key">⌘⏎</span>
+                      <IconCheck /> Save &amp; keep <span className="key">⌘⏎</span>
                     </button>
                     <button className="btn" onClick={() => setEditing(null)}>Cancel <span className="key">esc</span></button>
                   </>
                 ) : (
                   <>
                     <button className="btn approve" disabled={busy === current.id} onClick={() => void decide(current, "approve")}>
-                      <IconCheck /> Approve <span className="key">a</span>
-                    </button>
-                    <button className="btn reject" disabled={busy === current.id} onClick={() => void decide(current, "reject")}>
-                      <IconX /> Reject <span className="key">r</span>
+                      <IconCheck /> Keep <span className="key">a</span>
                     </button>
                     <button className="btn" onClick={() => startEdit(current)}>
                       <IconPencil /> Edit <span className="key">e</span>
+                    </button>
+                    <button className="btn reject" disabled={busy === current.id} onClick={() => void decide(current, "reject")}>
+                      <IconX /> Toss <span className="key">r</span>
                     </button>
                   </>
                 )}
@@ -331,18 +527,56 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
 
           <button className="hint mono" onClick={() => setShowHelp(true)}>? shortcuts</button>
         </div>
+
+        {/* The audit log, as it happens. Every row here is a human decision that
+            already reached the server — this is the record, not a preview. */}
+        <aside className="pane rail-audit">
+          <div className="pane-head">
+            <span className="grow">This session</span>
+            <span className="mono">{decisions.length}</span>
+          </div>
+          <div className="pane-body scroll">
+            {decisions.length === 0 ? (
+              <p className="audit-empty">No decisions yet. Every one you make lands here, permanently.</p>
+            ) : (
+              decisions.map((decision) => (
+                <div className={`audit-row ${decision.action}`} key={decision.id}>
+                  <div className="audit-top mono">
+                    <span className="what">{ACTION_LABEL[decision.action]}</span>
+                    <span className="grow" />
+                    <span className="when">{new Date(decision.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                  </div>
+                  <div className="audit-text">{decision.edited_text ?? decision.claim.text}</div>
+                  <div className="audit-who mono">{decision.reviewer}</div>
+                </div>
+              ))
+            )}
+          </div>
+        </aside>
       </div>
+
+      {undoable && (
+        <div className="toast" role="status">
+          <span className="what">
+            {OUTCOME_LABEL[undoable.outcome]} “{truncate(undoable.claim.text)}”
+          </span>
+          <button className="toast-undo" onClick={() => void undo()}>
+            <IconRetry size={14} /> Undo <span className="key">u</span>
+          </button>
+        </div>
+      )}
 
       {showHelp && (
         <div className="scrim" onClick={() => setShowHelp(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h3>Keyboard</h3>
             <dl>
-              <dt>a</dt><dd>Approve the selected claim</dd>
-              <dt>r</dt><dd>Reject it</dd>
-              <dt>e</dt><dd>Edit, then approve in one action</dd>
+              <dt>a</dt><dd>Keep the selected claim</dd>
+              <dt>e</dt><dd>Edit, then keep in one action</dd>
+              <dt>r</dt><dd>Toss it</dd>
+              <dt>u</dt><dd>Undo the last decision, within five seconds</dd>
               <dt>j / k</dt><dd>Move down / up the queue</dd>
-              <dt>⌘⏎</dt><dd>Save an edit and approve</dd>
+              <dt>⌘⏎</dt><dd>Save an edit and keep</dd>
               <dt>esc</dt><dd>Cancel an edit</dd>
               <dt>?</dt><dd>Toggle this panel</dd>
             </dl>
@@ -351,4 +585,8 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
       )}
     </div>
   );
+}
+
+function truncate(text: string, max = 64): string {
+  return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`;
 }
