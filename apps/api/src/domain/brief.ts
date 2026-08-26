@@ -54,6 +54,15 @@ function isWriteConflict(error: unknown): boolean {
   return false;
 }
 
+export type MergeResult = {
+  version: number;
+  added: number;
+  removed: number;
+  edited: number;
+  total: number;
+  sourceMeetingId: string | null;
+};
+
 /**
  * Merge every approved-but-unmerged claim into a new brief version.
  *
@@ -70,17 +79,23 @@ export async function mergeApprovedClaims(args: {
   tenantId: string;
   reviewer: string;
   note?: string | null;
-}): Promise<{ version: number; added: number; removed: number; edited: number; total: number }> {
+  /**
+   * The call the reviewer had just finished. Recorded on the version as the
+   * provenance of the merge action; when omitted it is inferred, below, from
+   * the claims being merged.
+   */
+  sourceMeetingId?: string | null;
+}): Promise<MergeResult> {
   // SERIALIZABLE, because the transaction below reads the pending claims and
-  // then writes a version out of what it read.
+  // then writes a version from what it read.
   //
-  // Under READ COMMITTED an `undo` committing in that gap is invisible to the
-  // merge: it would carry a withdrawn edit's text into a published version, and
-  // no later decision can take it back out, because versions are immutable.
-  // That is invariant 3 broken by a race rather than by anyone's bug.
-  // Serializable makes Postgres refuse the interleaving instead, and the loser
-  // reruns against what the winner committed — the honest outcome, since the
-  // reviewer's undo genuinely did happen first.
+  // Under READ COMMITTED an `undo` committing in that gap is invisible: the
+  // merge would carry a withdrawn edit's text into a published version, and no
+  // later decision can take it back out, because versions are immutable. That
+  // is invariant 3 being broken by a race rather than by a bug in anyone's
+  // code. Serializable makes Postgres refuse the interleaving instead, and the
+  // loser reruns against whatever the winner committed — which is the honest
+  // outcome, since the reviewer's undo genuinely happened first.
   for (let attempt = 1; ; attempt += 1) {
     try {
       return await runMerge(args);
@@ -97,7 +112,8 @@ async function runMerge(args: {
   tenantId: string;
   reviewer: string;
   note?: string | null;
-}): Promise<{ version: number; added: number; removed: number; edited: number; total: number }> {
+  sourceMeetingId?: string | null;
+}): Promise<MergeResult> {
   return prisma.$transaction(async (tx) => {
     const previous = await tx.briefVersion.findFirst({
       orderBy: { version: "desc" },
@@ -176,12 +192,20 @@ async function runMerge(args: {
       (c) => !pendingIds.has(c.claimId) && !rejectedIds.has(c.claimId),
     );
 
+    // Which call this merge came from. The reviewer's own answer wins; failing
+    // that, a merge whose claims all came from one meeting names that meeting,
+    // and a merge spanning several names none — a single id would be a guess
+    // presented as provenance, and provenance is the one thing here that may
+    // never be guessed.
+    const sourceMeetingId = args.sourceMeetingId ?? soleMeetingOf(pending);
+
     const created = await tx.briefVersion.create({
       data: {
         tenantId: args.tenantId,
         version,
         createdBy: args.reviewer,
         note: args.note ?? null,
+        sourceMeetingId,
         addedCount: added,
         removedCount: removed,
         editedCount: edited,
@@ -275,8 +299,21 @@ async function runMerge(args: {
       }
     }
 
-    return { version, added, removed, edited, total: created.totalCount };
+    return {
+      version,
+      added,
+      removed,
+      edited,
+      total: created.totalCount,
+      sourceMeetingId: created.sourceMeetingId,
+    };
   }, SERIALIZABLE);
+}
+
+/** The one meeting every merged claim came from, or null if they disagree. */
+function soleMeetingOf(claims: Array<{ meetingId: string }>): string | null {
+  const ids = new Set(claims.map((c) => c.meetingId));
+  return ids.size === 1 ? [...ids][0]! : null;
 }
 
 export type GroupedClaims = Array<{ type: ClaimType; label: string; claims: BriefClaim[] }>;
