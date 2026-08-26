@@ -2,7 +2,7 @@
   "name": "mcos",
   "private": true,
   "version": "0.1.0",
-  "description": "MCOS — Marketing Context Operating System. Milestone 1: ingestion → review gate → versioned brief.",
+  "description": "MCOS \u2014 Marketing Context Operating System. Milestone 1: ingestion \u2192 review gate \u2192 versioned brief.",
   "workspaces": [
     "apps/api",
     "apps/web"
