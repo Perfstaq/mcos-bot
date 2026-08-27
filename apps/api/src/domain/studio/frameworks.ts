@@ -171,12 +171,16 @@ export function scoreFrameworks(args: {
 /**
  * Which outcome an archetype is generated to move.
  *
- * Not named anywhere in `05_BRIEF_INTEGRATION.md` beyond "`expected_metric`:
+ * UNSPECIFIED — placeholder pending product, same posture as
+ * `generate-content-brief.ts`'s `CONTENT_MIX_EVERY_NTH_IS_ACTIVATION`. Not
+ * named anywhere in `05_BRIEF_INTEGRATION.md` beyond "`expected_metric`:
  * MANDATORY" — no rule ties a specific archetype to a specific metric. This
- * is a v1 default mapping (a judgement call, not a spec requirement); it is
- * consulted by `generate-content-brief.ts` and is the kind of thing product
- * input should be free to revise without a migration, which is exactly why it
- * lives beside the framework catalogue rather than in the schema.
+ * is a v1 default mapping, hoisted into its own named const precisely so
+ * nobody downstream mistakes today's ten guesses for a considered
+ * measurement strategy; it is consulted by `generate-content-brief.ts` and
+ * is the kind of thing product input should be free to revise without a
+ * migration, which is exactly why it lives beside the framework catalogue
+ * rather than in the schema.
  */
 export const ARCHETYPE_EXPECTED_METRIC: Record<ContentArchetype, ExpectedMetric> = {
   objection_killer: "sends_per_reach",

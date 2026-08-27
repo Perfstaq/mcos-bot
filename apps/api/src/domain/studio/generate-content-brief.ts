@@ -78,14 +78,21 @@ function bestFrameworkForArchetype(claimTypes: ClaimType[], archetype: ContentAr
 
 /**
  * Rough v1 brand/activation router (05 §1: "95/5 + 60/40 routing"). Neither
- * ratio is otherwise specified anywhere reachable by this agent, and no
- * upstream signal decides it per-brief, so this is a placeholder: roughly one
- * generated brief in five is routed to `activation`, by the tenant's running
- * count of previously generated ContentBriefs. Flagged in the PR body as a
- * judgement call for product to revisit, not a resolved spec point.
+ * ratio is specified anywhere reachable by this agent — 95/5 and 60/40 are
+ * two different, mutually inconsistent numbers named in the same sentence,
+ * and no upstream signal decides the split per-brief. Rather than invent a
+ * marketing-strategy position inside an architecture doc, `1` (every Nth
+ * brief) is hoisted into its own const, named and commented as UNSPECIFIED,
+ * so changing it later is a one-line edit and nobody mistakes today's ~20%
+ * for a considered ratio. Product should replace this value, not this
+ * function's shape.
  */
+const CONTENT_MIX_EVERY_NTH_IS_ACTIVATION = 5; // UNSPECIFIED — placeholder pending product input (05 §1's "95/5 + 60/40" is two numbers, not one)
+
 function contentMixSlotFor(existingCount: number): "brand" | "activation" {
-  return existingCount % 5 === 4 ? "activation" : "brand";
+  return existingCount % CONTENT_MIX_EVERY_NTH_IS_ACTIVATION === CONTENT_MIX_EVERY_NTH_IS_ACTIVATION - 1
+    ? "activation"
+    : "brand";
 }
 
 export async function generateContentBriefs(args: GenerateContentBriefsArgs): Promise<GenerateContentBriefsResult> {
