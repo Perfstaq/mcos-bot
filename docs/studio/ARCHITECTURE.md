@@ -1419,3 +1419,93 @@ exists); and materialising a `Render` to hold the failure inverts the pipeline's
   is uninstalled and ADR-5 confines Remotion to `packages/render`. Implemented as a named hard
   failure rather than a silent local fallback, which is the right call — but it means the product
   render path is still unbuilt, and that needs an owner before GA.
+
+### 12.27 The calibration script never implemented the rule it calibrated
+
+Agent F found that `measure_reference.py` — the script I wrote at the start of this milestone, whose
+0.821 figure has been the calibration baseline in ADR-8, §4.1, §12.19 and every agent brief since —
+**does not implement the comparison ADR-8 §4.1(c) pins.** The pin is *integer milliseconds, ≤150
+inclusive*; the script compares float seconds. On this input the two agree by luck. Against the
+millisecond-quantised grid the sidecar actually emits, the float rule scores **0.786, not 0.821** —
+one cut sits within a millisecond of the boundary.
+
+A 3.5-point error in the number every later measurement was calibrated against, in a script that
+looked right and produced a plausible answer, surviving four agents and six review rounds. It was
+caught only because F implemented the pinned rule from the specification text rather than copying
+the script. **Where a doc and an implementation disagree, the doc is not automatically wrong — but
+neither is the code, and only re-deriving from the spec settles it.**
+
+F's extractor implements the pinned rule and commits the fixture properly at
+`apps/api/tests/fixtures/studio/reference/reference_measured.json`. It had been living in a session
+scratchpad, which is why `04 §6`'s bands kept being read as absolute rather than calibration-relative.
+
+### 12.28 Corrections to my own §12.16 numbers, and three to `01`
+
+- **The content region is 720×756 (0.952:1, 59.1% of height), not 720×800 (0.9:1, 62.5%).** My
+  §12.16 figures came from a black-row walk that stops at the *banner* — white-on-black text is
+  mostly black per row — so they include the 33-row banner band. The ruling's shape is right and
+  the crop is still correct in kind; the cited constants are ~3% off.
+- **`01 §4`'s handle claim is not supported.** It says the handle alternates upper-right and
+  mid-left; it is static mid-left in every sampled frame. More usefully: **the handle is not
+  detectable without OCR** — probed at its true position it scores 0.44 occupancy while picture
+  frames on the far wall score 0.47. F reports `undetermined` rather than `absent`, so the template
+  default supplies it per `04 §3`. Tuning the threshold until the handle appeared would have fired
+  on the wall too.
+- **`01 §5`'s "100% of shots have micro-motion" measures 26/29.** Two shortfalls are 0.90% and
+  0.98% against a 1% threshold — inside the method's own error — and the third is the merged tail
+  shot from §4.1.
+- **`01 §1`'s 23.976 fps is the nominal rate; decoders report 24.423** (nb_frames/duration). Both
+  are real; recorded as `fps` and `fpsNominal`.
+
+### 12.29 The reference colours whole caption chunks — which weakens one of §12.9's grounds
+
+F observed the reference's karaoke emphasis is **whole-chunk colour** (a fully yellow
+"UNCOMFORTABLE"), not `01 §4`'s "white with per-word emphasis". §12.9 cited `01 §4`'s plain-white
+karaoke as one of three grounds for reserving accent colour to emphasis.
+
+**The ruling stands, on its other two grounds.** The defect §12.9 fixed was that one hue meant two
+different things — active and emphasised — so an un-emphasised stopword rendered identically to an
+approved claim's payload. That is a real defect regardless of what the reference does, and
+`02 §2.1`'s "two coloured words halves the emphasis" argues harder when the two colours differ in
+meaning. But the *provenance* of ground (a) is now known to be wrong, and it raises a genuine
+design question I am NOT ruling on: if the reference has no per-word emphasis at all, our per-word
+emphasis is an addition, and `01 §8` says not to add what the reference lacks. Characterising it
+properly needs OCR (§11.2 R6 defers that), so this is recorded for a v2 decision, not settled now.
+
+### 12.30 Two rulings Agent F asked for
+
+**R7 — fingerprint observations do NOT become `CandidateClaim` rows.** `04 §5` wants strategically
+interesting fingerprint observations entering memory as proposed claims through the review gate.
+But `CandidateClaim` requires `meetingId`, `evidenceSourceId`, `extractionRunId`, `verbatimQuote`,
+`speaker` and `timestampMs`, all NOT NULL — that column set *is* CLAUDE.md invariant 2, evidence-or-
+drop, expressed in the schema. A fingerprint has none of them: no meeting, no segment, and under R6
+no text was ever read. Persisting one would require either fabricated provenance or relaxing the M1
+gate's own table, and both are worse than not having the feature.
+
+**F's approach is correct and is the ruling:** `proposeFingerprintObservations` returns typed
+proposed rows and writes nothing, with a test asserting the module contains no Prisma import and no
+write call. If these observations are wanted in memory later they need their own table with their
+own honest provenance — asset id, frame ranges, method, confidence — routed through a gate of their
+own. **Do not smuggle them into the claim table.** `04 §5` is amended accordingly.
+
+**R8 — F's one out-of-area edit is accepted.** F added an optional `rhythm?: RhythmOptions` to
+`BuildTemplatePlanInput` (Agent T's `scripts/studio/build-template-plan.ts`, +16 lines, defaulted to
+`template.rhythm`, every existing caller unaffected). Without it the re-timed rhythm curve was
+computed and discarded, and "style transfer" would reduce to picking a template — the deliverable
+would be hollow. Additive, defaulted, and flagged rather than assumed. **Agent I's `plan-build.ts`
+wants the same field**; the contract is `mapFingerprintToTemplate` → `{ templateId, retimed.rhythm }`
+plus `assertStyleTransferConstraints(plan, fingerprint)`.
+
+### 12.31 Two findings worth keeping for their reasoning
+
+- **Grade is not mappable, and not for a confidence reason.** The fingerprint measures absolute
+  finished pixels; a template's grade is multipliers over an ungraded source. Assigning one to the
+  other is arithmetic on incompatible units — a category error, not a precision problem. F uses
+  only warmth *order*, in selection. This is the right shape of answer for any
+  "extract X and apply it" feature: ask what the units are before asking how accurate they are.
+- **`04 §4`'s five-term match vector has two live terms.** `caption_style_class` needs OCR;
+  `framing` and `layer_set` are constant across all three templates. F weights them 0 and returns
+  `inertTerms` rather than letting constants contribute noise, and makes framing a *filter* instead
+  — a `fill` fingerprint raises `plan_infeasible`. Independent confirmation that the matcher works:
+  on unrelated footage it picked `statement_serif` at distance 0.191 against 0.403 and 0.420, and
+  F's code never reads the "reference archetype" label in `templates/index.ts`.
