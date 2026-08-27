@@ -1359,3 +1359,63 @@ whether a three-line chunk is safe** — that needs a product view, not an agent
   render's worth of disk. Worth fixing before the next agent renders.
 - **`SPRINGS.punch` is underdamped** (ζ = 0.913), but the composed `attack − settle` peaks at
   1.0599 — just under the 1.06 §12.19 assumed. The worst case stands; no correction needed.
+
+### 12.24 The chain runs — and §12.12a's instruction was insufficient as written
+
+Agent I built `plan.build` and `render.submit` and proved the Definition-of-Done chain by running
+the real surfaces rather than reasoning about them: gate approve over HTTP → `POST /content/plans`
+→ real Redis → real worker → real row. **Plan `0f6c3ed0`, 26 cuts, median 1.49s, 62 caption
+chunks, G1a PASS at 100% (26/26)** against the committed analyzer grid (112.347bpm, 97 beats), and
+a 32.6MB MP4 followed in 137s. All three guards are **mutation-tested** — removing the approval
+re-check fails 3 tests, disabling the §12.13 guard and the G1a rejection fails 4.
+
+**Correction to §12.12a, which I got technically wrong.** I ruled "re-check
+`requireApprovedContentBrief` inside the same transaction as the `RenderPlan` create". That is the
+right *shape* and an insufficient *instruction*: `requireApprovedContentBrief` reads through the
+module-level Prisma client, so calling it lexically inside `$transaction` still runs **on a
+different connection** and buys nothing. What actually makes it atomic is a `SELECT … FOR UPDATE`
+on the brief row, taken *before* the check. Agent I found this by building it; the guard is
+correct in the code and the doc was wrong.
+
+The general form is worth keeping: **"inside the transaction" is a claim about the connection, not
+about where the call sits in the source.** An ORM that hands you a module-level client will let you
+write code that looks transactional and isn't.
+
+### 12.25 `plan_infeasible` has nowhere durable to live — ruling
+
+`03 §7` requires every failure state to be surfaced and retryable, but a failed plan build
+currently vanishes: there is no plan-status row, `RenderPlan` is append-only and a failed build
+creates no row at all, `Render.failedStage` enumerates `"plan"` but no `Render` exists yet, and
+there is no `GET /content/plans/:id`. A user who posts a plan request and hits `plan_infeasible`
+sees nothing, forever.
+
+**Ruling: add a lightweight attempt row, and keep `RenderPlan` pure.** A `plan_build_attempts`
+table keyed on the pre-allocated plan id, carrying tenant, `contentBriefId`, status
+(`queued|built|infeasible|failed`), a reason string, and timestamps. `POST /content/plans` writes
+it at enqueue; the processor updates it; `GET /content/plans/:id` reads it. On success the
+`RenderPlan` row is created with that same id and the attempt marked `built`.
+
+Why not the alternatives: giving `RenderPlan` a status column would mean rows that are not plans,
+which is exactly what append-only purity buys us (a row exists ⇔ a complete, reproducible plan
+exists); and materialising a `Render` to hold the failure inverts the pipeline's own ordering.
+**Owner: the same agent as the follow-ups below.**
+
+### 12.26 Five more findings from Agent I
+
+- **`Reel`'s `footageSrc` is a trap.** A leading-slash path is a *server-root URL*, not a
+  filesystem path; only an http(s) URL or a bare `staticFile()` name work. Undocumented, and it
+  cost a render to discover.
+- **The bare-plan bug typechecked, unit-tested green, and rendered nothing.** `render.submit`
+  passed a bare plan where the composition wants `{ plan, footageSrc }`. Found only by rendering —
+  the fourth defect this milestone invisible to every static check.
+- **`motion_templates` had no seed at all**, so a fresh database 404s on `POST /content/plans`.
+  Closed with a marked fixture, but the table-versus-TS-catalogue duplication is a real smell:
+  §11.2 R4 put the *framework* catalogue in a const for good reasons that apply here too.
+- **A residual race survives in `content-gate`'s undo guard**: it counts plans *before* its update
+  takes the row lock. The sequential case holds (409, verified), but a concurrent undo racing a
+  committing plan can still win. The fix is the same `FOR UPDATE` discipline inside `undo()` —
+  that module's to make, not Agent I's, since it was out of bounds.
+- **ADR-7's Lambda path is not implementable inside any single agent's boundary**: `@remotion/lambda`
+  is uninstalled and ADR-5 confines Remotion to `packages/render`. Implemented as a named hard
+  failure rather than a silent local fallback, which is the right call — but it means the product
+  render path is still unbuilt, and that needs an owner before GA.
