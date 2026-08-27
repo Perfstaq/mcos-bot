@@ -9,9 +9,11 @@ import type { GateResult } from "@mcos/render/gates/types";
 import {
   BANNER_ANCHOR,
   BANNER_TOP_MARGIN_RATIO,
+  FACE_FLOOR_RATIO,
   LINE_HEIGHT,
   TYPE_SCALE,
   blockHeightPx,
+  faceFloorViolationsForBlock,
   g9Violations,
   g9ViolationsForBlock,
   handleAnchor,
@@ -404,12 +406,21 @@ export function gateG7(plan: RenderPlan): GateResult {
  *  3. **Caption wrap.** Up to three words at emphasis size in a serif face
  *     can exceed the text box and wrap, which grows the block downward toward
  *     the 12% bottom bound. Same failure mode as the banner's, one layer down.
+ *  4. **The face floor** (§12.19). Margins bound a block against the frame's
+ *     EDGES; nothing bounded it against the subject. A tall karaoke block
+ *     grows upward as well as downward, and a three-line chunk at `center`
+ *     puts its top at 0.711 — above the chin at 0.717 — while clearing every
+ *     margin, so it passed this gate silently with text across a face. Scored
+ *     here rather than as a new gate id because `07 §1` fixes the gate list at
+ *     G1–G14 and this is the same question G9 already answers for the other
+ *     three edges: is the text allowed to be where it is.
  */
 export function gateG9(plan: RenderPlan): GateResult {
   const id = "G9";
   const name = "Safe margins";
   const target =
-    "0 text blocks within 12% of the left/right/bottom edge; banner top exempt to 8% (ARCHITECTURE §12.7)";
+    "0 text blocks within 12% of the left/right/bottom edge; banner top exempt to 8% (ARCHITECTURE §12.7); " +
+    `0 karaoke blocks whose top is above the face floor at ${FACE_FLOOR_RATIO} (ARCHITECTURE §12.19)`;
 
   const style = plan.templateStyle;
   const sizes = style
@@ -460,7 +471,14 @@ export function gateG9(plan: RenderPlan): GateResult {
       trackingEm: tracking.karaoke,
     });
     const height = blockHeightPx(lines, LINE_HEIGHT);
-    const problems = g9ViolationsForBlock("karaoke", anchor, height, plan.width, plan.height);
+    const problems = [
+      ...g9ViolationsForBlock("karaoke", anchor, height, plan.width, plan.height),
+      // The block's TOP against the subject, not against the frame (§12.19).
+      // Measured on the same wrapped height as the margins are, so a chunk
+      // cannot be judged safe by one bound and unsafe by the other because
+      // they disagreed about how tall it is.
+      ...faceFloorViolationsForBlock(anchor, height, plan.height),
+    ];
     if (problems.length) {
       violations.push({
         layer: "karaoke",
@@ -490,6 +508,7 @@ export function gateG9(plan: RenderPlan): GateResult {
     measured: {
       violations: violations.length,
       bannerTopExemptionRatio: BANNER_TOP_MARGIN_RATIO,
+      faceFloorRatio: FACE_FLOOR_RATIO,
       bannerLines: style?.bannerLines ?? null,
       // Capped: a broken template can produce one violation per chunk, and a
       // qc.json nobody can read is a qc.json nobody reads.

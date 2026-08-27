@@ -224,6 +224,10 @@ const Shot: React.FC<{
     : 0;
   const driftScale = motion ? motion.fromScale + (motion.toScale - motion.fromScale) * progress : 1;
   const scale = driftScale * punch;
+  // `origin` is a percentage of the REGION div below, not of the frame — and
+  // `scale` is drift AND punch composed, which is the product §12.19 found the
+  // caption anchors had never been derived against. `camera.ts` now puts
+  // `originY` on the chin line so this composition cannot displace it.
   const origin = motion ? `${motion.originX * 100}% ${motion.originY * 100}%` : "50% 50%";
 
   const regionHeight = height * content.regionRatio;

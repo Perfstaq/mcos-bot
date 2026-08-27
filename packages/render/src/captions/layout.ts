@@ -23,7 +23,7 @@
  * shadow alone, 01 §4) and the scrim is a static per-template policy.
  *
  * ── Position names ──────────────────────────────────────────────────────────
- * 02 §2.2 names four rotation positions; §12.16 retires `upper_third` because
+ * 02 §2.2 names four rotation positions; §12.20 retires `upper_third` because
  * the corrected geometry has no room for it. See the note on `CaptionPosition`.
  */
 
@@ -88,13 +88,18 @@ export function letterboxVideoBand(width: number = FRAME.width, height: number =
 }
 
 /**
- * §12.16 retires `upper_third`. Under the corrected content region the top
+ * §12.20 retires `upper_third`. Under the corrected content region the top
  * bar spans y ∈ [0, 0.1875] and G9's 12% margin leaves 130px of usable
  * height; a two-line chunk at emphasis size is 229px. It does not fit, and no
  * amount of anchor tuning makes it fit. `01 §4` measures the reference's own
  * karaoke layer at exactly three positions ("center-low, lower-left,
  * center"), so three is both what fits and what the reference does. §12.5
  * preserved 02 §2.2's four names under the OLD geometry; the geometry changed.
+ *
+ * The retirement originally cited §12.16, which rules on the content region
+ * and not on this; §12.20 is the ruling that actually retires the position,
+ * and it also records that `02 §2.2`'s four-position list and §12.5's
+ * resolution of it are stale on this point.
  */
 export type CaptionPosition = "center_low" | "lower_left" | "center";
 
@@ -154,6 +159,36 @@ const ANCHORS: Record<CaptionPosition, Anchor> = {
 /** The measured chin line under the corrected content region — the bound the
  *  caption anchors above are derived from, named so a test can assert it. */
 export const FACE_FLOOR_RATIO = 0.717;
+
+/**
+ * The face floor expressed in the CONTENT REGION's own coordinates — 0..1 of
+ * region height, which is what a CSS `transform-origin` on the region div
+ * takes (ARCHITECTURE §12.19).
+ *
+ * This exists because the anchors above are derived from the chin at scale
+ * 1.0, and the renderer does not compose at scale 1.0. It composes drift ×
+ * punch, up to 1.18 × 1.06 ≈ 1.25. Scaling about the region's CENTRE leaves
+ * the chin 416px below the origin, so the zoom pushes it down — 0.717 static
+ * becomes 0.771 at worst case, against caption tops as high as 0.755. The
+ * anchors were correct; the geometry they were derived under was not the
+ * geometry that renders.
+ *
+ * Scaling about THIS line instead makes the chin the transform's fixed point,
+ * so `FACE_FLOOR_RATIO` is the chin's position at every scale rather than only
+ * at 1.0 — which is what lets the face-floor check below be a bound on one
+ * measured constant instead of a bound that has to track `REFRAME_STEP`,
+ * `MAX_GROW` and `punchScale` and be re-derived whenever any of them moves.
+ *
+ * Cover is preserved: for any scale ≥1 and any origin inside the element, the
+ * scaled box contains the unscaled box, so the region never reveals an edge.
+ */
+export function faceFloorOriginY(
+  faceFloorRatio: number = FACE_FLOOR_RATIO,
+  regionRatio: number = CONTENT_REGION_RATIO,
+): number {
+  const regionTopRatio = (1 - regionRatio) / 2;
+  return (faceFloorRatio - regionTopRatio) / regionRatio;
+}
 
 export function anchorFor(position: CaptionPosition): Anchor {
   return ANCHORS[position];
@@ -282,6 +317,43 @@ export function g9ViolationsForBlock(
   if (top < topLimit * height - eps) problems.push(`top ${(top / height).toFixed(4)} < ${topLimit}`);
 
   return problems;
+}
+
+/**
+ * Whether a karaoke block clears the face, measured on its TOP EDGE
+ * (ARCHITECTURE §12.19). Empty array means clear.
+ *
+ * `g9ViolationsForBlock` bounds a karaoke top at 12% — the frame edge — and
+ * says nothing about the chin at 71.7%, so the two bounds leave a hole between
+ * them that a tall block falls straight through. A three-line chunk at
+ * `center` puts its top at 0.711, eleven pixels ABOVE the chin, while sitting
+ * comfortably inside every margin G9 knows about: it passes, silently, with
+ * text across a face. That is the same failure §12.16 exists to fix, one layer
+ * up, and it stayed invisible because the floor was only ever asserted on
+ * `anchor.y` — the block's CENTRE — which is by construction the half of the
+ * block that is furthest from the face.
+ *
+ * Kept separate from `g9Violations` rather than folded into it because they
+ * bound different things: G9 is about platform chrome at the frame edges, this
+ * is about the subject. A caller that wants both asks for both.
+ *
+ * Only the karaoke layer is scored. The banner and the handle live in the top
+ * bar by construction (§12.16 item 4), where "below the chin" is not a bound
+ * anyone wants — it would demand the hook banner sit on the subject's chest.
+ */
+export function faceFloorViolationsForBlock(
+  anchor: Anchor,
+  blockHeightPx: number,
+  height: number = FRAME.height,
+  faceFloorRatio: number = FACE_FLOOR_RATIO,
+): string[] {
+  const top = anchor.y * height - blockHeightPx / 2;
+  const floor = faceFloorRatio * height;
+  const eps = 1e-6;
+  if (top < floor - eps) {
+    return [`top ${(top / height).toFixed(4)} above the face floor ${faceFloorRatio}`];
+  }
+  return [];
 }
 
 /**

@@ -106,7 +106,7 @@ export type CaptionTrackInput = {
    *
    * A callback rather than a list because the invariant that matters — never
    * the same position twice in a row, ≥3 distinct (G6) — is a property of the
-   * *walk*, and templates express it by ordering the same four names
+   * *walk*, and templates express it by ordering the same three names
    * differently rather than by inventing positions. `templatePositionForShot`
    * is the implementation templates pass in.
    */

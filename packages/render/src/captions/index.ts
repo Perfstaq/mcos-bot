@@ -62,6 +62,8 @@ export {
   anchorFor,
   contentRegion,
   captionWordAppearance,
+  faceFloorOriginY,
+  faceFloorViolationsForBlock,
   fontSizePx,
   g9Violations,
   g9ViolationsForBlock,

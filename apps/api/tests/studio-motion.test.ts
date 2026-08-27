@@ -35,6 +35,9 @@ import {
   isStopword,
   contentRegion,
   FACE_FLOOR_RATIO,
+  LINE_HEIGHT,
+  faceFloorOriginY,
+  faceFloorViolationsForBlock,
   letterboxVideoBand,
   pickEmphasis,
   positionForShot,
@@ -413,7 +416,7 @@ describe("caption layout — letterbox only, no luminance (ARCHITECTURE §11.1 R
     const boxes = [
       ...CAPTION_POSITIONS.map((p) => [p, anchorFor(p)] as const),
       ["handle upper_right", handleAnchor("upper_right")] as const,
-      ["handle mid_left", handleAnchor("upper_left")] as const,
+      ["handle upper_left", handleAnchor("upper_left")] as const,
       ["banner", { x: 0.5, y: 0.09, align: "center" as const }] as const,
     ];
     for (const [label, anchor] of boxes) {
@@ -442,6 +445,75 @@ describe("caption layout — letterbox only, no luminance (ARCHITECTURE §11.1 R
       const twoLine = textBoxVerticalExtent(anchor, emphasisSize, 2);
       expect(anchor.y, `${position} anchor below the face floor`).toBeGreaterThan(FACE_FLOOR_RATIO);
       expect(twoLine.bottom, `${position} bottom margin`).toBeLessThanOrEqual(0.88 * 1920 + 1e-6);
+    }
+  });
+
+  it("bounds the block's TOP against the face, not just its anchor (§12.19)", () => {
+    // The assertion above is on `anchor.y` — the block's CENTRE, which is by
+    // construction the half of the block furthest from the face. A block grows
+    // upward too, and the bound that matters is where its top edge lands.
+    //
+    // The gap between the two is not hypothetical: at 1080×1920 a three-line
+    // chunk is 284.6px, so at `center` its top sits at 0.711 — eleven pixels
+    // ABOVE the chin — while the anchor at 0.785 sails past the check above.
+    const emphasisSize = fontSizePx("emphasis");
+    const floorPx = FACE_FLOOR_RATIO * 1920;
+
+    for (const position of CAPTION_POSITIONS) {
+      const anchor = anchorFor(position);
+      // One and two lines are what real chunks reach, and both must clear.
+      for (const lines of [1, 2]) {
+        const { top } = textBoxVerticalExtent(anchor, emphasisSize, lines);
+        expect(top, `${position} ${lines}-line top vs face floor`).toBeGreaterThanOrEqual(floorPx);
+        expect(
+          faceFloorViolationsForBlock(anchor, emphasisSize * LINE_HEIGHT * lines),
+          `${position} ${lines}-line`,
+        ).toEqual([]);
+      }
+    }
+
+    // And the check has teeth: the case that used to pass silently must fail.
+    const centre = anchorFor("center");
+    const threeLine = faceFloorViolationsForBlock(centre, 284.6);
+    expect(threeLine.length, "a three-line chunk at center must be caught").toBeGreaterThan(0);
+    expect(threeLine.join(" ")).toContain("face floor");
+  });
+
+  it("anchors the zoom on the chin so no composed scale can displace it (§12.19)", () => {
+    // §12.19's finding: the anchors are derived from the chin at scale 1.0,
+    // but the renderer composes drift × punch up to 1.18 × 1.06 ≈ 1.25. About
+    // the region's CENTRE that walked the chin from 0.717 to 0.771, through
+    // one-line emphasis tops at 0.755. `camera.ts` now anchors the zoom on the
+    // chin line itself, which makes it the transform's exact fixed point.
+    const region = contentRegion();
+    const originY = faceFloorOriginY();
+
+    // Where the chin sits in the region's own coordinates.
+    const chinRel = (FACE_FLOOR_RATIO * 1920 - region.top) / region.height;
+    expect(originY).toBeCloseTo(chinRel, 12);
+    expect(originY).toBeCloseTo(0.8472, 4);
+
+    // A point scaled about itself does not move — at ANY scale, which is the
+    // property that makes FACE_FLOOR_RATIO true of the render and not just of
+    // a still. The worst case §12.19 measured is 1.18 × 1.06; 2.0 is included
+    // so this is asserting the invariant rather than one measured number.
+    const composed = (s: number) => (region.top + (originY + s * (chinRel - originY)) * region.height) / 1920;
+    for (const scale of [1, 1.1, 1.18, 1.18 * 1.06, 2]) {
+      expect(composed(scale), `chin at composed scale ${scale}`).toBeCloseTo(FACE_FLOOR_RATIO, 10);
+    }
+
+    // Every shot gets it, not just the reframed odd ones: an even shot still
+    // grows 5–8%, which is enough to move a centre-anchored chin 33px down.
+    for (let shot = 0; shot < 6; shot++) {
+      expect(shotCamera(shot, 45, 42).originY, `shot ${shot}`).toBeCloseTo(originY, 12);
+    }
+
+    // Cover is the one thing about the zoom that must not change: both ends of
+    // every shot's range stay ≥1, and a scale ≥1 about an origin inside the
+    // element always contains the unscaled box, so no source edge is revealed.
+    for (let shot = 0; shot < 6; shot++) {
+      const cam = shotCamera(shot, 45, 42);
+      expect(Math.min(cam.fromScale, cam.toScale), `shot ${shot} cover`).toBeGreaterThanOrEqual(1);
     }
   });
 

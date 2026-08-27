@@ -6,11 +6,13 @@ import {
   BANNER_ANCHOR,
   BANNER_TOP_MARGIN_RATIO,
   CAPTION_POSITIONS,
+  CONTENT_REGION_RATIO,
   LINE_HEIGHT,
   SAFE_MARGIN_RATIO,
   TYPE_SCALE,
   anchorFor,
   blockHeightPx,
+  faceFloorViolationsForBlock,
   g9Violations,
   g9ViolationsForBlock,
   handleAnchor,
@@ -381,6 +383,21 @@ describe("resolved template style (frozen onto the plan)", () => {
       expect(s.punchScale).toBeCloseTo(0.06, 9);
     }
   });
+
+  it("gives every template the content region the zoom origin is derived against", () => {
+    // `camera.ts` puts the zoom's `originY` on the chin line by calling
+    // `faceFloorOriginY()` with the DEFAULT region ratio, because a camera has
+    // no access to the template. That is only sound while every template
+    // actually renders at that ratio — a template that shipped its own
+    // `regionRatio` would move the region under a zoom origin still computed
+    // for 0.625, and the chin would quietly stop being the fixed point
+    // §12.19's whole fix depends on. Pinned here rather than papered over with
+    // an unused parameter on `shotCamera`.
+    for (const id of TEMPLATE_IDS) {
+      const s = resolveTemplateStyle(TEMPLATES[id], { width: WIDTH, height: HEIGHT, hookText: "SHORT HOOK" });
+      expect(s.content.regionRatio, `${id} region ratio`).toBeCloseTo(CONTENT_REGION_RATIO, 12);
+    }
+  });
 });
 
 describe("G9 safety of every template's own geometry", () => {
@@ -422,14 +439,26 @@ describe("G9 safety of every template's own geometry", () => {
     }
   });
 
-  it("DOES NOT fit a three-line chunk anywhere — the limit, asserted rather than hidden", () => {
-    // Three long words with one at emphasis size wrap to three lines (285px).
-    // The caption band under the corrected content region is y ∈ [0.73, 0.88]
-    // — about 288px — so a three-line block cannot both clear the face and
-    // stay inside G9's bottom margin. That is geometry, not a tuning failure,
-    // and the honest thing is to pin it: G9 catches such a chunk, which is
-    // what should happen. Tuning an anchor until this passed would have moved
-    // captions back onto the face, which is the bug §12.16 exists to fix.
+  it("scores a three-line chunk at EVERY position — the limit, asserted rather than hidden", () => {
+    // Three long words with one at emphasis size wrap to three lines (284.6px).
+    // This used to be pinned at `center_low` alone and titled "does not fit
+    // anywhere". Scoring all three positions, as §12.19 required, shows that
+    // claim was never measured — it is true of two positions and false of the
+    // third, and the single-position test could not tell the difference.
+    //
+    // The two bounds catch DIFFERENT positions, which is the whole reason
+    // §12.19 asked for the face floor:
+    //
+    //   center_low  bottom 0.8921 → G9. Clears the chin by 51.6px.
+    //   center      top    0.7109 → face floor. Clears every G9 margin —
+    //                               this is the block that used to pass
+    //                               silently with text across a face.
+    //   lower_left  top    0.7259, bottom 0.8741 → clears both, by 17.0px and
+    //                               5.8px. It genuinely fits.
+    //
+    // The honest thing is to pin what each position does, not to tune an
+    // anchor until a "fits nowhere" headline came true — that is exactly the
+    // move that put a caption on a subject's mouth (§12.16).
     const s = resolveTemplateStyle(TEMPLATES.statement_serif, {
       width: WIDTH,
       height: HEIGHT,
@@ -440,12 +469,47 @@ describe("G9 safety of every template's own geometry", () => {
       { text: "COMPOUNDING", fontSizePx: s.sizes.emphasis },
       { text: "RELENTLESSLY", fontSizePx: s.sizes.karaoke },
     ];
-    const anchor = anchorFor("center_low");
-    const { left, right } = textBoxBounds(anchor, WIDTH);
-    const lines = wrapWords(words, s.fontTokens.karaoke, right - left, { wordGapPx: WIDTH * 0.02 });
-    expect(lines.length).toBe(3);
-    expect(g9ViolationsForBlock("karaoke", anchor, blockHeightPx(lines, LINE_HEIGHT), WIDTH, HEIGHT).length)
-      .toBeGreaterThan(0);
+
+    // Which bound rejects a three-line block, per position. `null` means the
+    // block fits there — recorded as a fact, not smoothed over.
+    const expected: Record<string, "g9" | "faceFloor" | null> = {
+      center_low: "g9",
+      center: "faceFloor",
+      lower_left: null,
+    };
+
+    for (const position of CAPTION_POSITIONS) {
+      const anchor = anchorFor(position);
+      const { left, right } = textBoxBounds(anchor, WIDTH);
+      const lines = wrapWords(words, s.fontTokens.karaoke, right - left, { wordGapPx: WIDTH * 0.02 });
+      expect(lines.length, `${position} line count`).toBe(3);
+
+      const height = blockHeightPx(lines, LINE_HEIGHT);
+      expect(height, `${position} block height`).toBeCloseTo(284.6, 1);
+
+      const g9 = g9ViolationsForBlock("karaoke", anchor, height, WIDTH, HEIGHT);
+      const face = faceFloorViolationsForBlock(anchor, height, HEIGHT);
+
+      if (expected[position] === "g9") {
+        expect(g9.length, `${position} must fail G9`).toBeGreaterThan(0);
+        expect(g9.join(" "), `${position} G9 reason`).toContain("bottom");
+        expect(face, `${position} clears the face`).toEqual([]);
+      } else if (expected[position] === "faceFloor") {
+        // The case §12.19 names: inside every margin, on top of the subject.
+        expect(g9, `${position} clears G9`).toEqual([]);
+        expect(face.length, `${position} must fail the face floor`).toBeGreaterThan(0);
+      } else {
+        expect(g9, `${position} clears G9`).toEqual([]);
+        expect(face, `${position} clears the face`).toEqual([]);
+      }
+    }
+
+    // Three lines therefore survive at exactly one of three positions, so
+    // whether such a chunk is safe is decided by the shot's position rotation.
+    // Nothing in the chunker prevents one (G5 bounds WORDS, not lines), so
+    // this is the gate's job and gateG9 now scores both bounds on every chunk.
+    const survives = CAPTION_POSITIONS.filter((p) => expected[p] === null);
+    expect(survives).toEqual(["lower_left"]);
   });
 });
 

@@ -116,7 +116,7 @@ export const CaptionChunkSchema = z.object({
    * written against the scaffold's examples still validate; the canonical set
    * is exported from `@mcos/render/captions` as `CAPTION_POSITIONS`
    * ("center_low" | "lower_left" | "center"). `upper_third` was retired by
-   * §12.16 — the corrected content region leaves no room for it.
+   * §12.20 — the corrected content region leaves no room for it.
    */
   position: z.string(),
   emphasisWordIndex: z.number().int().nonnegative().nullable(), // G8: ≤1 per chunk
