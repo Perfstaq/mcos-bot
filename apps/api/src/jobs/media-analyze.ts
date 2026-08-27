@@ -4,13 +4,14 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import { MediaAnalysisStatus } from "@prisma/client";
+import { MediaAnalysisStatus, MediaAssetKind } from "@prisma/client";
 import { prisma } from "../db.js";
 import { env } from "../env.js";
 import { logger } from "../logger.js";
 import type { MediaAnalyzeJob } from "../queue.js";
 import { downloadToFile } from "../integrations/studio-r2.js";
 import { assertValidBeatGrid, assertValidWordsResult } from "../domain/studio/media-analysis-schema.js";
+import { assertValidEditFingerprint } from "../domain/studio/fingerprint.js";
 import { withTenantContext } from "./context.js";
 
 const log = logger.child({ job: "media-analyze" });
@@ -92,6 +93,14 @@ export async function runMediaAnalyze(job: MediaAnalyzeJob): Promise<void> {
 
       const versions = JSON.parse(await runAnalyzer(python, [script, "--print-versions"])) as AnalyzerVersions;
 
+      // A `reference` asset is a reel someone uploaded to copy the STYLE of,
+      // so it gets the fingerprint stage too (04_STYLE_TRANSFER §3). Footage
+      // does not: a fingerprint of the user's own clip would describe an edit
+      // that has not happened yet, and the stage is the expensive one here
+      // (optical flow over every shot).
+      const wantsFingerprint = asset.kind === MediaAssetKind.reference;
+      const stages = wantsFingerprint ? "words,beats,fingerprint" : "words,beats";
+
       await runAnalyzer(python, [
         script,
         "--input",
@@ -99,9 +108,11 @@ export async function runMediaAnalyze(job: MediaAnalyzeJob): Promise<void> {
         "--out",
         workDir,
         "--stages",
-        "words,beats",
+        stages,
         "--model",
         modelSize,
+        "--asset-id",
+        asset.id,
       ]);
 
       const words = assertValidWordsResult(
@@ -112,6 +123,12 @@ export async function runMediaAnalyze(job: MediaAnalyzeJob): Promise<void> {
         JSON.parse(readFileSync(path.join(workDir, "beats.json"), "utf8")),
         `${asset.id} beats.json`,
       );
+      const fingerprint = wantsFingerprint
+        ? assertValidEditFingerprint(
+            JSON.parse(readFileSync(path.join(workDir, "fingerprint.json"), "utf8")),
+            `${asset.id} fingerprint.json`,
+          )
+        : null;
 
       await prisma.mediaAnalysis.update({
         where: { id: job.mediaAnalysisId },
@@ -122,13 +139,34 @@ export async function runMediaAnalyze(job: MediaAnalyzeJob): Promise<void> {
           tempoBpm: beats.tempoBpm,
           beatMethod: beats.method,
           analyzerVersion: analyzerVersionString(versions, modelSize),
+          ...(fingerprint
+            ? { fingerprint, fingerprintVersion: fingerprint.fingerprintVersion }
+            : {}),
           finishedAt: new Date(),
         },
       });
 
       const nWords = words.segments.reduce((n, s) => n + s.words.length, 0);
       log.info(
-        { assetId: asset.id, tempoBpm: beats.tempoBpm, nBeats: beats.beatTimesMs.length, nWords },
+        {
+          assetId: asset.id,
+          tempoBpm: beats.tempoBpm,
+          nBeats: beats.beatTimesMs.length,
+          nWords,
+          ...(fingerprint
+            ? {
+                fingerprintVersion: fingerprint.fingerprintVersion,
+                shots: fingerprint.rhythm.shotCount,
+                framing: fingerprint.framing,
+                // Which fields the mapping will have to take from the template
+                // instead (04 §3) — logged so an operator can see the fidelity
+                // of a given fingerprint without opening the JSON.
+                unmeasured: Object.entries(fingerprint.confidence)
+                  .filter(([, v]) => v === 0)
+                  .map(([k]) => k),
+              }
+            : {}),
+        },
         "media analyze succeeded",
       );
     } finally {
