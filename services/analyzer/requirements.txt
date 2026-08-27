@@ -1,0 +1,22 @@
+# Content Studio media sidecar — pinned exact (ARCHITECTURE.md §5: QC and the
+# planner's grid must come from the same librosa; MediaAnalysis.analyzerVersion
+# records these versions so a re-render's inputs are always reproducible).
+#
+# Only what the `words` + `beats` stages need (P's task 4 scope). The
+# `scenes`/`motion`/`faces` stages are NOT implemented yet — see analyzer.py —
+# and their owning agent adds PySceneDetect/OpenCV/mediapipe here when they do.
+#
+# Deliberately faster-whisper directly, not the `whisperx` package founder-journey
+# ported from: faster-whisper's own `word_timestamps=True` + built-in Silero VAD
+# (onnxruntime, no torch) gives the same word-level contract (WordSchema:
+# word/start/end) as whisperx_run.py without whisperx's wav2vec2 forced-alignment
+# stage, which pulls in torch + transformers (~1GB+ installed) for no measured
+# benefit over faster-whisper's native alignment on this milestone's footage
+# (talking-head clips, not overlapping speech needing diarization-grade
+# alignment). Flagged in the PR body as a disk-motivated deviation from the
+# doc's literal "port whisperx_run.py" — same avoidance of pyannote/torchcodec
+# the original runner already committed to, taken one step further.
+faster-whisper==1.2.1
+librosa==0.11.0
+numpy==2.5.2
+soundfile==0.14.0
