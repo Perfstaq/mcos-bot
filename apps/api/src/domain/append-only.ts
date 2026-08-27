@@ -31,8 +31,14 @@
  * `scripts/qc-render.ts` scores G1a against the grid embedded in the exact
  * row a render was built from — a plan that could be edited in place would
  * make that comparison meaningless after the fact. A new plan is a new row,
- * same discipline as a new BriefVersion. */
-export const APPEND_ONLY_MODELS = new Set(["BriefVersion", "BriefClaim", "RenderPlan"]);
+ * same discipline as a new BriefVersion.
+ *
+ * `ContentBriefDecision` joins for the same reason as `ReviewDecision`
+ * conceptually is (though review_decisions itself is not in this set — it
+ * lives under the review gate's own, older discipline): it is ContentBrief's
+ * audit log, and an audit log that could be rewritten in place is not one.
+ * See ADR-6 and domain/content-gate.ts, the only writer. */
+export const APPEND_ONLY_MODELS = new Set(["BriefVersion", "BriefClaim", "RenderPlan", "ContentBriefDecision"]);
 
 /** Operations that add rows. Always fine — growth is the point. */
 const INSERT_OPS = new Set(["create", "createMany", "createManyAndReturn"]);

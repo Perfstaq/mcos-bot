@@ -1057,3 +1057,139 @@ next generation of evidence anyway.
   ~0.5s makes essentially impossible, and the measured-`lockPct` gate backstops it. One-line
   hardening with no downside, since paths with no locked alternative all pay `miss` equally:
   double the floor, or restate the comment to claim only the single-shot bound honestly.
+
+### 12.12 `jobs/plan-build.ts` does not exist — the critical-path gap nobody owns
+
+The Definition of Done (00_MASTER §6) requires "a ContentBrief generated from a real approved
+Brief version renders to MP4 end-to-end". That chain is:
+
+```
+ContentBrief (B, approved via the gate) → plan.build → RenderPlan (M's planner) → render.submit → MP4 → render.qc
+```
+
+**The middle link is missing.** Agent P created the `plan.build` queue but deliberately registered
+no processor (its job body was out of P's scope). Agent M built the planner as a pure library.
+Agent B built the route that enqueues the job and correctly refused to fake a `RenderPlan` — it is
+append-only with no default on `plan: Json`, so it cannot be created empty and filled in later —
+returning a queued handle with a pre-allocated id instead. Every agent behaved correctly at its
+own boundary, and the seam between them fell through: `apps/api/src/jobs/plan-build.ts` does not
+exist and nothing registers a `plan.build` processor.
+
+This is the classic multi-agent failure mode, and worth naming as such: three correct boundaries
+can still leave a hole where they meet. It was caught by Agent B reporting what it could not
+build, rather than stubbing it — which is why "report what you found wrong or infeasible" is in
+every agent brief.
+
+**The work:** a processor that loads an approved ContentBrief (rejecting anything not
+`status='approved'` — B's `requireApprovedContentBrief` already enforces this at the route), loads
+the footage's `MediaAnalysis` (words + RMS + beat grid), calls M's `planBeatLockedCuts`, builds
+captions and emphasis, evaluates **G1a before persisting** (ADR-8: a plan failing the gate is
+rejected at plan-build so it never costs a render), and writes the `RenderPlan` once, complete.
+`render.submit` needs the same treatment.
+
+**Owner: assigned after Agent B merges**, since the processor consumes B's ContentBrief shape.
+Not T — T is already carrying three templates, the evidence harness and possibly footage
+selection.
+
+#### 12.12a Addendum — the approval must be re-checked at materialization, not just at enqueue
+
+Review of Agent B surfaced a timing hole that the missing processor would otherwise inherit.
+`requireApprovedContentBrief` runs at **enqueue** (`routes/content.ts:165`), and undo's safety
+guard counts **materialized** RenderPlans (`content-gate.ts:309,321`) — so a queued-but-unbuilt
+plan is invisible to it. That admits this sequence:
+
+```
+approve brief → POST /content/plans (job queued) → undo the approval → job runs → plan built from a now-'proposed' brief
+```
+
+No code is wrong today, because no processor exists to run the job. But it means the gate is
+enforced against a snapshot of approval that can go stale between enqueue and execution — and a
+plan built from an un-approved brief is an invariant-1 violation regardless of how it happened.
+
+**Requirement on the §12.12 work item:** the processor must re-call `requireApprovedContentBrief`
+**at materialization, inside the same transaction as the `RenderPlan` create**, so the approval
+check and the write cannot be separated by a concurrent undo. Enqueue-time validation stays as a
+fast rejection, not as the guarantee. Also fix `content-gate.ts:370`'s doc comment, which claims
+the helper is "never called by a route directly" while a route calls it.
+
+The general lesson, worth carrying: **a permission checked when work is queued is not a permission
+held when work runs.** Any gate enforced across an async boundary needs re-checking on the far
+side, in the transaction that does the write.
+
+### 12.13 The cutting grid must live in OUTPUT time — ruling on footage selection
+
+Agent T declined to build the `03 §6` selection stage and asked for a ruling instead of silently
+answering it. Correct call, and the question is the sharpest in the milestone.
+
+**The problem.** Removing footage makes output time ≠ source time. Our beat grid is derived from
+the *footage's own audio* but consumed in *output* coordinates. Cut a span out and the grid no
+longer describes what the viewer hears — the plan would be locked to a grid that does not exist in
+the artifact. That is exactly §12.1's failure, one level up: a quantity we measured being treated
+as one we can move.
+
+**Ruling: the grid that cuts are locked to must be defined in output time. In practice that means
+the licensed music bed's grid.** Exactly two configurations are valid:
+
+| Plan | Grid source | Valid? |
+|---|---|---|
+| Continuous playthrough, no removal | footage's own audio | **Yes** — source time *is* output time; this is what ships today |
+| Footage removal (real jump cuts) | the music bed | **Yes** — the bed plays over the finished edit, so its grid is output-time by construction |
+| Footage removal | footage's own audio | **NO** — the invalid quadrant. Reject at plan-build. |
+
+**Why the bed and not T's clever alternative.** T proposed remapping the retained spans' beats and
+embedding that, choosing spans that start on beat-locked word edges so relative phase survives.
+It can be made to work, but it constrains span selection to preserve a property that a bed gives
+for free, and it keeps us deriving a musical grid from speech. Three things settle it:
+
+1. **"Cuts land on musical beats" means musical.** Speech onsets were always a stand-in for a bed
+   we hadn't added. `01 §3` measured the reference at 112.3bpm because the reference *has* a bed
+   (`01 §8`: "the beat grid comes from the speech/room audio and a subtle bed").
+2. **A bed's grid is output-time by construction.** It is laid over the finished edit; removal
+   cannot invalidate it.
+3. **A bed's phase is genuinely ours** — we choose where the track starts. Apply §12.1's test —
+   is this a quantity we choose or one we measured? — and the bed passes where source audio fails.
+
+**Consequence, stated plainly: footage selection and the music bed are coupled. There is no
+"remove footage but keep the speech-derived grid" configuration.** A reel that actually cuts needs
+music, which is true of essentially every reel anyway. `02 §5`'s speech-only fallback survives only
+for the no-removal case, where it is already correct.
+
+This also unblocks G1b: real jump cuts create the content discontinuities a detector can find, and
+the grid they lock to is one that survives into the artifact. **G1a and G1b become jointly
+satisfiable only under this convention** — which is why T was right that G1b was blocked on more
+than the selection stage.
+
+**Owner:** the same work item as §12.12 (`jobs/plan-build.ts`), since both turn on how a plan is
+materialised. Assign together, after B merges.
+
+### 12.14 Correction: `camera.ts`'s REFRAME_STEP comment is falsified by measurement
+
+It claims alternating base framing "restores the discontinuity", implying G1b becomes passable.
+§12.3 records the actual render at 2/29 with the reframe in place. Correct the comment or the next
+agent will trust it.
+
+### 12.15 Every generated brief picked the tier-C fallback — a scoring-weight finding from live output
+
+First live generation against the demo tenant's approved brief produced three ContentBriefs
+(contrarian, myth_bust, listicle), each citing 3/2/5 claims, all `proposed`, none auto-approved —
+invariant 1 and 3 both hold in practice, not just in tests. `listicle` generating at all confirms
+the empty-`favoredClaimTypes` bug is really fixed.
+
+**But all three attributed to `hook_taxonomies`, evidence tier C.** `05 §2` and §11.2 R4 intend
+tier-A frameworks (double jeopardy, ESOV, 60/40) to lead when the signals support them; here the
+tier-C fallback won three out of three. The cause is the weighting: claim-type match scores ×10,
+archetype affinity ×5, and tier only breaks ties at 3/2/1 — so a framework whose favored claim
+types happen to match the tenant's claim mix wins regardless of tier, and `hook_taxonomies` is
+deliberately broad because it is the "no other framework fits" fallback.
+
+This is not a correctness bug — the scoring is deterministic and the model still cannot choose the
+framework, which is the property that mattered. It is a **quality** problem: the card's "Why this
+brief" line exists to justify the angle, and a line that always reads *Short-form Hook Taxonomies
+(C)* justifies nothing. It would also quietly bias the whole product toward its least-evidenced
+framework.
+
+**Not fixed now** — it needs a real product view on how much evidence tier should outrank signal
+match, which is Sathvik's call, not an agent's. Recorded so it is not mistaken for working as
+intended. Candidate fixes when ruled: multiply by tier rather than adding it; exclude the fallback
+from scoring unless every other framework scores zero; or widen the tier-A frameworks'
+`favoredClaimTypes`, which are currently narrow enough to lose to a catch-all.
