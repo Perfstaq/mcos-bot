@@ -1,0 +1,186 @@
+{
+  "analyzerVersion": "qc-render@0.1.0",
+  "mp4": "/Users/sathvik/aix/st-t/docs/studio/evidence/staccato_condensed/staccato_condensed.mp4",
+  "gates": [
+    {
+      "id": "G1a",
+      "name": "Beat lock — musical intent",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": {
+        "ratio": 1,
+        "withinCount": 33,
+        "totalCuts": 33,
+        "gridQuality": 2.2934,
+        "gridQualityOk": true
+      },
+      "target": "≥85% within 150ms of the embedded grid, AND (for beat_track grids) grid_quality present and ≥ 80% of the reference's 2.2003 (guards a degraded/absent grid gaming the gate)"
+    },
+    {
+      "id": "G1b",
+      "name": "Beat lock — render fidelity",
+      "hard": true,
+      "computable": true,
+      "pass": false,
+      "measured": {
+        "matchedRatio": 0.061,
+        "matched": 2,
+        "totalPlanCuts": 33,
+        "detectedCuts": 12,
+        "windowMs": 66,
+        "informationalPixelBeatLockRatio": 0.5,
+        "referenceBaseline": 0.821
+      },
+      "target": "≥90% of the plan's cut times have a detected cut within ±2 frames (66ms). Pixel-derived ratio is informational only, never gated."
+    },
+    {
+      "id": "G2",
+      "name": "Cut density",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": 36.1,
+      "target": "25-40 cuts/minute"
+    },
+    {
+      "id": "G3",
+      "name": "Shot length (median)",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": 1.16,
+      "target": "1.0-2.0s"
+    },
+    {
+      "id": "G4",
+      "name": "Min shot length",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": 0.84,
+      "target": "≥0.6s"
+    },
+    {
+      "id": "G5",
+      "name": "Caption density",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": 3,
+      "target": "≤3 words visible simultaneously"
+    },
+    {
+      "id": "G6",
+      "name": "Caption position variance",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": 4,
+      "target": "≥3 distinct positions"
+    },
+    {
+      "id": "G8",
+      "name": "Emphasis",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": {
+        "chunks": 62,
+        "outOfRangeEmphasis": 0
+      },
+      "target": "≤1 emphasis word per chunk (schema-enforced) and it must index a real word"
+    },
+    {
+      "id": "G10",
+      "name": "Word integrity",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": {
+        "violations": 0,
+        "cutsChecked": 34
+      },
+      "target": "0 cuts landing mid-word (source in/out points)"
+    },
+    {
+      "id": "G11",
+      "name": "Loudness",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": -14,
+      "target": "-14 ±1 LUFS integrated"
+    },
+    {
+      "id": "G12",
+      "name": "Output spec",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": {
+        "width": 1080,
+        "height": 1920,
+        "fps": 30,
+        "vcodec": "h264",
+        "acodec": "aac"
+      },
+      "target": "1080x1920, 30fps, h264+aac"
+    },
+    {
+      "id": "G13",
+      "name": "Reproducibility",
+      "hard": false,
+      "computable": true,
+      "pass": null,
+      "measured": {
+        "checksum": "sha256:8b2961edfc1715fba39f6b819a5499503c2b0edf7aaeff343f0f29f8dc8f3bd8"
+      },
+      "target": "same plan+footage ⇒ identical checksum",
+      "note": "no --prev-checksum given — recorded for a future comparison, not scored this run"
+    },
+    {
+      "id": "G14",
+      "name": "Provenance",
+      "hard": false,
+      "computable": false,
+      "pass": null,
+      "measured": {
+        "contentBriefId": null
+      },
+      "target": "render links to claim_ids + framework_id",
+      "note": "thin placeholder: only checks contentBriefId is non-empty — claim_ids/framework_id live on Agent B's ContentBrief model, not yet built"
+    },
+    {
+      "id": "G7",
+      "name": "Micro-motion",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": {
+        "shots": 34,
+        "staticShots": 0,
+        "minDelta": 0.0509,
+        "maxDelta": 0.0793,
+        "threshold": 0.01
+      },
+      "target": "100% of shots have scale delta >1%"
+    },
+    {
+      "id": "G9",
+      "name": "Safe margins",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": {
+        "violations": 0,
+        "bannerTopExemptionRatio": 0.08,
+        "bannerLines": 1,
+        "examples": []
+      },
+      "target": "0 text blocks within 12% of the left/right/bottom edge; banner top exempt to 8% (ARCHITECTURE §12.7)"
+    }
+  ],
+  "overallPass": false,
+  "fingerprintAcceptanceFloor": 0.8009999999999999
+}

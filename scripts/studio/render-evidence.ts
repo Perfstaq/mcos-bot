@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -131,7 +131,12 @@ function chooseFrames(plan: RenderPlan): FrameSpec[] {
   });
   if (emph && emph.emphasisWordIndex !== null) {
     const w = emph.words[emph.emphasisWordIndex]!;
-    const t = w.startMs + (SPRING_PUNCH_ATTACK_FRAMES / fps) * 1000;
+    // Clamped inside the CHUNK's sequence, not just past the word's onset:
+    // the punch peak is 8 frames (~267ms) after onset, and a short emphasis
+    // word near the end of its chunk would put that peak past the sequence,
+    // rendering an empty frame. Same failure as the `late` chunk below.
+    const chunkEnd = emph.endMs ?? w.endMs;
+    const t = Math.min(w.startMs + (SPRING_PUNCH_ATTACK_FRAMES / fps) * 1000, chunkEnd - 20);
     specs.push({
       frame: Math.round((t / 1000) * fps),
       timeMs: Math.round(t),
@@ -142,16 +147,37 @@ function chooseFrames(plan: RenderPlan): FrameSpec[] {
   // (3) A late shot whose caption sits in a different position and whose
   // handle is in the other corner — proves rotation actually rotates (G6,
   // 02 §2.3) rather than being asserted in a test and static on screen.
+  const firstPosition = firstChunk?.position;
   const late = [...plan.captions].reverse().find((c) => {
     const start = c.startMs ?? 0;
-    return start > plan.durationInFrames / fps / 2 * 1000 && start < ((plan.durationInFrames / fps) - 2) * 1000;
+    const end = c.endMs ?? 0;
+    return (
+      start > ((plan.durationInFrames / fps) / 2) * 1000 &&
+      start < ((plan.durationInFrames / fps) - 2) * 1000 &&
+      // Must actually demonstrate rotation, so: a different position from
+      // frame 1's, and long enough to be worth sampling.
+      c.position !== firstPosition &&
+      end - start >= 250 &&
+      c.words.length >= 2
+    );
   });
   if (late) {
-    const t = (late.startMs ?? 0) + 200;
+    // Sample the MIDPOINT, never `start + 200ms`.
+    //
+    // This is the bug that produced a frame with no caption on it at all,
+    // labelled "caption rotation": chunks are as short as 160ms (the chunker
+    // breaks on punctuation, and "them." is one word), so a fixed +200ms
+    // offset lands PAST the end of the Sequence and renders nothing. A frame
+    // whose caption says one thing and whose pixels say another is precisely
+    // the mislabelled evidence §12.10 exists to prevent — and it got into the
+    // first manifest I generated.
+    const start = late.startMs ?? 0;
+    const end = late.endMs ?? start;
+    const t = start + (end - start) / 2;
     specs.push({
       frame: Math.round((t / 1000) * fps),
       timeMs: Math.round(t),
-      why: `late chunk at position "${late.position}" — caption rotation and the alternating handle corner`,
+      why: `late chunk "${late.words.map((w) => w.word).join(" ")}" at position "${late.position}" — caption rotation and the alternating handle corner`,
     });
   }
 
@@ -184,7 +210,12 @@ function harnessVersions(): Record<string, string> {
   return out;
 }
 
-function renderTemplate(templateId: string, footagePath: string, keepMp4: boolean): Record<string, unknown> {
+function renderTemplate(
+  templateId: string,
+  footagePath: string,
+  keepMp4: boolean,
+  reuseMp4: boolean,
+): Record<string, unknown> {
   const template = getTemplate(templateId);
   const outDir = path.join(evidenceDir, templateId);
   mkdirSync(outDir, { recursive: true });
@@ -204,7 +235,14 @@ function renderTemplate(templateId: string, footagePath: string, keepMp4: boolea
     footage: { assetId: "reference-proxy", r2Key: "demo/reference-16x9-proxy.mp4" },
   });
   const planPath = path.join(outDir, "plan.json");
-  writeFileSync(planPath, JSON.stringify(plan, null, 2));
+  const planJson = JSON.stringify(plan, null, 2);
+  // Captured BEFORE the overwrite — the reuse guard below compares the plan
+  // the existing MP4 was rendered from against the one just built. Reading it
+  // after writing would compare the plan to itself and always say "reuse",
+  // which is the guard failing open: exactly the silent-staleness bug this
+  // whole harness exists to make impossible.
+  const previousPlanJson = existsSync(planPath) ? readFileSync(planPath, "utf8") : null;
+  writeFileSync(planPath, planJson);
 
   // --- render ---------------------------------------------------------------
   // Footage is staged into the render package's `public/` so `staticFile()`
@@ -220,12 +258,30 @@ function renderTemplate(templateId: string, footagePath: string, keepMp4: boolea
   writeFileSync(propsPath, JSON.stringify({ plan, footageSrc: stagedName }));
 
   const mp4Path = path.join(outDir, `${templateId}.mp4`);
-  console.log(`[${templateId}] rendering ${plan.durationInFrames} frames…`);
-  execFileSync(
-    "npx",
-    ["remotion", "render", "src/index.ts", "Reel", mp4Path, `--props=${propsPath}`, "--log=error"],
-    { cwd: renderPkg, stdio: "inherit" },
-  );
+
+  // `--reuse-mp4` exists for one situation: the render succeeded and a step
+  // AFTER it failed (frame extraction, QC), so re-rendering three minutes of
+  // video would only reproduce a file we already have.
+  //
+  // It is guarded, because an unguarded reuse is precisely the failure §12.10
+  // was written about — an MP4 that no longer matches the plan beside it,
+  // still looking authoritative. Reuse is allowed only when the plan on disk
+  // is byte-identical to the plan just built. Any difference and it re-renders.
+  const canReuse = reuseMp4 && existsSync(mp4Path) && previousPlanJson === planJson;
+
+  if (canReuse) {
+    console.log(`[${templateId}] reusing existing MP4 — plan is byte-identical to the one just built`);
+  } else {
+    if (reuseMp4 && existsSync(mp4Path)) {
+      console.log(`[${templateId}] plan changed since that MP4 was rendered — re-rendering rather than reusing`);
+    }
+    console.log(`[${templateId}] rendering ${plan.durationInFrames} frames…`);
+    execFileSync(
+      "npx",
+      ["remotion", "render", "src/index.ts", "Reel", mp4Path, `--props=${propsPath}`, "--log=error"],
+      { cwd: renderPkg, stdio: "inherit" },
+    );
+  }
   rmSync(propsPath, { force: true });
 
   const mp4Sha = sha256(mp4Path);
@@ -236,9 +292,12 @@ function renderTemplate(templateId: string, footagePath: string, keepMp4: boolea
   const frames = frameSpecs.map((spec, i) => {
     const name = `frame${i + 1}.png`;
     const framePath = path.join(outDir, name);
+    // No `-vsync 0`: ffmpeg 9 removed the option outright ("Unrecognized
+    // option 'vsync'"), and `select` + `-frames:v 1` is already exact without
+    // it — the filter emits one frame, so there is no rate to reconcile.
     execFileSync(
       "ffmpeg",
-      ["-y", "-loglevel", "error", "-i", mp4Path, "-vf", `select=eq(n\\,${spec.frame})`, "-vsync", "0", "-frames:v", "1", framePath],
+      ["-y", "-loglevel", "error", "-i", mp4Path, "-vf", `select=eq(n\\,${spec.frame})`, "-frames:v", "1", framePath],
       { stdio: "pipe" },
     );
     return { file: name, sha256: sha256(framePath), bytes: statSync(framePath).size, ...spec };
@@ -246,8 +305,20 @@ function renderTemplate(templateId: string, footagePath: string, keepMp4: boolea
 
   // --- qc -------------------------------------------------------------------
   const qcPath = path.join(outDir, "qc.json");
+  rmSync(qcPath, { force: true });
   console.log(`[${templateId}] scoring gates…`);
-  execFileSync(
+
+  // qc-render.ts exits 1 when a hard gate FAILS — that is a verdict, not a
+  // crash, and recording it is the entire point of evidence. G1b currently
+  // fails by construction (§12.3/§12.13: real jump cuts need footage removal
+  // plus a bed-derived grid, neither of which exists), so treating a non-zero
+  // exit as fatal would make it impossible to produce evidence at all.
+  //
+  // The distinction that matters is the one qc-render.ts documents itself: a
+  // gate FAILING still writes qc.json; a gate function THROWING (broken
+  // ffmpeg, unreadable MP4) writes nothing. So the presence of qc.json is the
+  // signal, not the exit code.
+  const qcRun = spawnSync(
     "npx",
     [
       "tsx",
@@ -259,6 +330,12 @@ function renderTemplate(templateId: string, footagePath: string, keepMp4: boolea
     ],
     { cwd: repoRoot, stdio: "inherit" },
   );
+  if (!existsSync(qcPath)) {
+    throw new Error(
+      `[${templateId}] qc-render produced no qc.json (exit ${qcRun.status}) — that is a crashed QC run, ` +
+        "not a failing gate, so no evidence is written for this template",
+    );
+  }
   const qc = JSON.parse(readFileSync(qcPath, "utf8"));
 
   // --- disk discipline ------------------------------------------------------
@@ -289,6 +366,7 @@ function runRender(): void {
   const footage = path.resolve(arg("footage"));
   if (!existsSync(footage)) throw new Error(`footage not found: ${footage}`);
   const keepMp4 = flag("keep-mp4");
+  const reuseMp4 = flag("reuse-mp4");
   const only = process.argv.includes("--template") ? arg("template") : null;
   const targets = only ? [only] : [...TEMPLATE_IDS];
 
@@ -298,7 +376,7 @@ function runRender(): void {
 
   const templates: Record<string, unknown> = { ...(existing.templates ?? {}) };
   for (const id of targets) {
-    templates[id] = renderTemplate(id, footage, keepMp4);
+    templates[id] = renderTemplate(id, footage, keepMp4, reuseMp4);
   }
 
   const manifest = {
