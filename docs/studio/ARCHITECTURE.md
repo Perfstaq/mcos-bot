@@ -1509,3 +1509,46 @@ plus `assertStyleTransferConstraints(plan, fingerprint)`.
   — a `fill` fingerprint raises `plan_infeasible`. Independent confirmation that the matcher works:
   on unrelated footage it picked `statement_serif` at distance 0.191 against 0.403 and 0.420, and
   F's code never reads the "reference archetype" label in `templates/index.ts`.
+
+### 12.32 `motion_templates` is an FK anchor — ruling
+
+The reviewer escalated the table-versus-const duplication. The code already treats the row as a
+pointer: `name` resolves into the TS catalogue and `resolveRenderTemplateId` is the single bridge.
+That is §11.2 R4's reasoning (product knowledge belongs in a versioned const, not a table that
+needs a migration every time an editorial judgement changes) stopping halfway.
+
+**Ruling: the table is an FK anchor and nothing more.** It exists so `RenderPlan.templateId` has
+referential integrity and so a plan's template identity is stable across deploys — both real
+reasons to keep a row. Its *behavioural* columns (`slots`, `fonts`, `grade`, `framing`) are
+duplicates of the catalogue and will drift; **no code may read them.** Invariant 6 forbids dropping
+columns this milestone, so they are marked deprecated and unread now, with a post-milestone task to
+drop them. The catalogue is the definition; the row is a handle.
+
+Minor within it: the seeder's `update: { active: true }` silently reactivates a deliberately
+deactivated template on reseed. Reseeding should not resurrect.
+
+### 12.33 Open follow-ups after the plan-build merge
+
+Recorded so none of these is lost between agents. None blocks the milestone; two need owners.
+
+- **The undo race in `content-gate.ts:323,335` (Important).** `undo()` counts plans *before*
+  `guardedUpdate` takes the row lock, and the guard is on `status` only — plan-build doesn't change
+  status, so an undo that blocked on the materialisation lock proceeds with a stale zero count.
+  **Invariant 1 is not at risk**: the plan was approved-at-write-time, and review could construct no
+  interleaving producing a plan from an unapproved brief. What breaks is content-gate's own "no undo
+  once a plan exists" promise, leaving a committed plan attached to a re-`proposed` brief in a
+  milliseconds-wide window. Fix: the same `SELECT … FOR UPDATE` on the brief row at the top of
+  `undo()`, before the counts. Agent I reported it rather than reaching into an out-of-bounds file,
+  which was correct.
+- **`plan_infeasible` still has no durable surface** — ruled in §12.25 (an attempt row keyed on the
+  pre-allocated plan id); Agent I's failure logging is honest interim behaviour and was not faulted.
+- **`plan-builder.ts:248` hardcodes `112.3` as a tempo fallback** — the *reference's* tempo, leaking
+  into arbitrary tenants' plans whenever a beat grid is missing. Derive it, or name it a constant
+  with provenance so it cannot be mistaken for a measured value. This is the same class of error as
+  §12.27: a plausible number nobody re-derived.
+- **Minors:** `content-gate.ts:384-385`'s doc comment still says `requireApprovedContentBrief` is
+  "never called by a route directly" while `routes/content.ts:169` calls it (§12.12a asked for this;
+  the boundary blocked it — bundle with the undo fix). `prove-plan-chain.ts:8`'s header claims the
+  proof covers "the worker registration"; it constructs its own Worker around the same processor,
+  so registration is exercised only by the suite. §12.13 has one test at the production call site
+  and three against the guard function directly — adequate but thin.
