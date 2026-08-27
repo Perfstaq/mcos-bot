@@ -38,6 +38,11 @@ function loadState(): E2eState {
 const consoleErrors: string[] = [];
 
 test.beforeEach(({ page }) => {
+  // Cleared here, not just declared once at module scope: this file has one
+  // test today, so it happens not to matter, but a module-level array that
+  // only ever grows would silently fail test 2 on test 1's leftover errors
+  // the moment a second test is added to this file.
+  consoleErrors.length = 0;
   page.on("console", (msg) => {
     if (msg.type() === "error") consoleErrors.push(msg.text());
   });
@@ -73,9 +78,23 @@ async function clearQueueByKeyboard(page: Page): Promise<{ rejected: number }> {
   const rows = () => page.locator(".pane.list .row");
   await expect(rows().first()).toBeVisible({ timeout: 15_000 });
 
+  // Every step below waits for the row COUNT to drop by exactly one, not a
+  // fixed delay: a decided claim's row is held on screen for SETTLE_MS
+  // (ReviewQueue.tsx) after its request resolves, so "wait 500ms" was always
+  // a guess at network-latency-plus-SETTLE_MS, not a fact about either one —
+  // too short and it presses the next shortcut before the previous decision
+  // even round-tripped (this is exactly the class of bug the ⇧A fix above
+  // caught, just via a different symptom); too long and it wastes real time
+  // on every run. `toHaveCount` polls until it's true, so it is exactly as
+  // fast as the app and no faster.
+  let expectedCount = await rows().count();
+  const expectRowsLeft = (n: number) =>
+    expect(rows(), `expected ${n} row(s) left`).toHaveCount(n, { timeout: 5_000 });
+
   // 1. Keep the first claim as proposed.
   await page.keyboard.press("a");
-  await page.waitForTimeout(500);
+  expectedCount -= 1;
+  await expectRowsLeft(expectedCount);
 
   // 2. Edit the next one, then keep the rewrite.
   await page.keyboard.press("e");
@@ -83,11 +102,13 @@ async function clearQueueByKeyboard(page: Page): Promise<{ rejected: number }> {
   await expect(editArea).toBeVisible();
   await editArea.fill("Edited during the e2e ring — this rewrite is what the reviewer approved.");
   await page.keyboard.press("Control+Enter");
-  await page.waitForTimeout(500);
+  expectedCount -= 1;
+  await expectRowsLeft(expectedCount);
 
   // 3. Toss the next one.
   await page.keyboard.press("r");
-  await page.waitForTimeout(500);
+  expectedCount -= 1;
+  await expectRowsLeft(expectedCount);
   let rejected = 1;
 
   // 4. Keep every high-confidence claim left, in one action — by the
@@ -125,7 +146,7 @@ async function clearQueueByKeyboard(page: Page): Promise<{ rejected: number }> {
     const remaining = await rows().count();
     if (remaining === 0) break;
     await page.keyboard.press("a");
-    await page.waitForTimeout(450);
+    await expectRowsLeft(remaining - 1);
   }
 
   await expect(rows()).toHaveCount(0, { timeout: 15_000 });
