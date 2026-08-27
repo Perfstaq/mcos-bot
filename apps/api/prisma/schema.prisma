@@ -1107,6 +1107,25 @@ model MediaAnalysis {
   motion Json? // per-window motion energy
   faces  Json? // per-span face boxes + luminance map
 
+  // The EditFingerprint (04_STYLE_TRANSFER §3), for `reference` assets only.
+  //
+  // Its own column rather than a reuse of `scenes`/`motion`: those are
+  // reserved for per-signal MediaAnalysis payloads about FOOTAGE, while this
+  // is one composite object describing a reference reel's structure, with
+  // per-field confidences that only make sense together.
+  //
+  // This is also what makes 04 §5's retention posture implementable — "store
+  // only the fingerprint long-term; the reference video itself is deleted
+  // after analysis". The bytes go (MediaAsset.purgedAt) and this row is what
+  // survives, which is a deliberate PDPL/GDPR position: we keep a structural
+  // description we derived, never a copy of someone else's video.
+  fingerprint        Json?   @map("fingerprint")
+  // Pins the extractor build that produced `fingerprint`, exactly as
+  // `analyzerVersion` pins the sidecar. A fingerprint measured by a different
+  // extractor is a different measurement, and the acceptance thresholds are
+  // calibrated per-extractor (ADR-8 §4.1(3)).
+  fingerprintVersion String? @map("fingerprint_version")
+
   tempoBpm   Float?  @map("tempo_bpm")
   beatMethod String? @map("beat_method") // 'beat_track' | 'onset_env' | 'constant_grid'
 
