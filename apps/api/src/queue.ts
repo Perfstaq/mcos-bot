@@ -53,8 +53,25 @@ export type MediaAnalyzeJob = { tenantId: string; assetId: string; mediaAnalysis
  *  generation) — builds the beat-snapped rhythm plan + caption chunks +
  *  shot assignment into a `RenderPlan` row. Scores G1a (musical intent)
  *  against the plan's own embedded beat grid before the job is allowed to
- *  succeed (ADR-8): a plan that fails G1a must never reach `render.submit`. */
-export type PlanBuildJob = { tenantId: string; planId: string };
+ *  succeed (ADR-8): a plan that fails G1a must never reach `render.submit`.
+ *
+ *  `planId` is pre-allocated by `routes/content.ts` at enqueue time, before
+ *  the row exists — `RenderPlan` is APPEND_ONLY (no in-place update is even
+ *  possible, see domain/append-only.ts), so the row can only be written once,
+ *  complete, by whichever job processor performs this computation; it cannot
+ *  be created empty by the route and filled in later. `contentBriefId` /
+ *  `templateId` / `footageAssetId` are additive here (nothing consumed this
+ *  type before Agent B's routes/content.ts — no queued job or worker
+ *  registration existed for `plan.build` yet) and are exactly what
+ *  `POST /content/plans` already validated (approved-only content brief,
+ *  existing template, existing footage) before enqueueing. */
+export type PlanBuildJob = {
+  tenantId: string;
+  planId: string;
+  contentBriefId: string;
+  templateId: string;
+  footageAssetId: string;
+};
 /** Deploys/reuses the `packages/render` Lambda site bundle, feeds it
  *  presigned R2 footage URLs, and polls for completion (ADR-7). */
 export type RenderSubmitJob = { tenantId: string; renderId: string };

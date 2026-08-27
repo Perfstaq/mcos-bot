@@ -105,3 +105,12 @@ export const IconUser = ({ size = 18 }: Props) => (
     <path d="M3.8 17c.6-3.1 3.1-5 6.2-5s5.6 1.9 6.2 5" />
   </svg>
 );
+
+/** Content Studio nav entry — a clapperboard, kept in the same one-svg-tag,
+ *  currentColor-stroke style as the eleven glyphs above. */
+export const IconClapper = ({ size = 18 }: Props) => (
+  <svg {...base(size)}>
+    <rect x="2.5" y="7.5" width="15" height="10" rx="1.5" />
+    <path d="M2.5 7.5 4 3.5l11 2-1.5 2M7 5l1.5-2M11 6l1.5-2" />
+  </svg>
+);

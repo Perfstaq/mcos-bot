@@ -61,10 +61,14 @@ model Tenant {
 
   // Content Studio (additive — ARCHITECTURE.md §3). MotionTemplate is a
   // global catalog (no tenant_id) and has no back-relation here.
-  mediaAssets    MediaAsset[]
-  mediaAnalyses  MediaAnalysis[]
-  renderPlans    RenderPlan[]
-  renders        Render[]
+  mediaAssets   MediaAsset[]
+  mediaAnalyses MediaAnalysis[]
+  renderPlans   RenderPlan[]
+  renders       Render[]
+
+  // Content Studio — brief integration (additive — ARCHITECTURE.md §6, ADR-6).
+  contentBriefs         ContentBrief[]
+  contentBriefDecisions ContentBriefDecision[]
 
   @@map("tenants")
 }
@@ -1159,8 +1163,22 @@ model RenderPlan {
   id       String @id @default(uuid())
   tenantId String @map("tenant_id")
 
-  // Plain column until Agent B's ContentBrief model lands, then a relation is
-  // added in B's own additive migration (see §6).
+  // Was a plain column until Agent B's ContentBrief model landed; the relation
+  // below is added in this additive migration (see ARCHITECTURE.md §6).
+  //
+  // CAVEAT for whoever runs this migration against a database that already
+  // has render_plans rows: the new FK constraint (render_plans.content_brief_id
+  // -> content_briefs.id) would fail to apply against any existing row whose
+  // content_brief_id does not resolve to a real ContentBrief — which is every
+  // row created before this migration, since ContentBrief did not exist yet.
+  // Safe on every database this migration has actually been applied to
+  // (mcos_test_b, mcos_test_p) because no job processor creates RenderPlan
+  // rows yet (`plan.build` has no consumer on this branch — see
+  // routes/content.ts's own doc comment), so render_plans is empty
+  // everywhere. Not safe to assume for a future database that already has
+  // real renders in it; a from-scratch reproduction of a populated
+  // environment against this migration would need a backfill or a data
+  // migration first.
   contentBriefId String @map("content_brief_id")
   templateId     String @map("template_id")
   footageAssetId String @map("footage_asset_id")
@@ -1172,10 +1190,11 @@ model RenderPlan {
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  template MotionTemplate @relation(fields: [templateId], references: [id])
-  footage  MediaAsset     @relation(fields: [footageAssetId], references: [id])
-  renders  Render[]
+  tenant       Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contentBrief ContentBrief   @relation(fields: [contentBriefId], references: [id])
+  template     MotionTemplate @relation(fields: [templateId], references: [id])
+  footage      MediaAsset     @relation(fields: [footageAssetId], references: [id])
+  renders      Render[]
 
   @@index([tenantId, contentBriefId])
   @@index([tenantId, createdAt])
@@ -1220,4 +1239,194 @@ model Render {
   @@index([tenantId, status])
   @@index([planId, createdAt])
   @@map("renders")
+}
+
+// ---------------------------------------------------------------------------
+// Content Studio — ContentBrief: the handoff from the Living Positioning
+// Brief into the Studio (05_BRIEF_INTEGRATION.md; ARCHITECTURE.md §6, ADR-6,
+// §11.1 R3, §11.2 R4/R5, §11.3).
+//
+// "Reuse the review gate" (05 §3) does NOT mean the same review_decisions
+// table — review_decisions.claim_id is a required FK to candidate_claims
+// (schema.prisma:453), so a ContentBrief id cannot live there additively.
+// What is actually reused is the DISCIPLINE: one decision table
+// (ContentBriefDecision, append-only) + one gate module
+// (domain/content-gate.ts, the only writer of ContentBrief.status) + a
+// mirrored source-scan guard (tests/content-gate.test.ts). See ADR-6.
+// ---------------------------------------------------------------------------
+
+enum ContentBriefStatus {
+  proposed
+  approved
+  rejected
+  /// Replaced by an edit-approved successor. ARCHITECTURE.md §11.3: follow
+  /// M1's lineage model (successor row + superseded), not 05 §1's "edited" —
+  /// M1 deliberately migrated away from in-place editing.
+  superseded
+
+  @@map("content_brief_status")
+}
+
+enum ContentArchetype {
+  objection_killer
+  contrarian
+  pain_ladder
+  transformation
+  myth_bust
+  bts
+  listicle
+  client_story
+  category_ed
+  founder_pov
+
+  @@map("content_archetype")
+}
+
+// How validated the chosen framework is. Denormalized onto the brief and
+// frozen at generation time — ARCHITECTURE.md §11.2 R4, same rationale as
+// claimSnapshots below (R3): the framework catalogue is a versioned TS const
+// (see domain/studio/frameworks.ts), not a table, because it is editorial
+// judgement that changes without a migration. A later catalogue revision must
+// not retroactively change what an already-generated brief recorded.
+enum EvidenceTier {
+  A
+  B
+  C
+
+  @@map("evidence_tier")
+}
+
+enum ContentChannel {
+  reels
+  shorts
+  tiktok
+  linkedin
+
+  @@map("content_channel")
+}
+
+// 95/5 + 60/40 routing (05 §1).
+enum ContentMixSlot {
+  brand
+  activation
+
+  @@map("content_mix_slot")
+}
+
+enum ExpectedMetric {
+  sends_per_reach
+  saves
+  watch_time
+  profile_visits
+
+  @@map("expected_metric")
+}
+
+model ContentBrief {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  // Which memory version produced this. Deliberately a plain id, not a Prisma
+  // relation: BriefVersion's model block is off-limits to Studio agents
+  // (ARCHITECTURE.md §6 — only Tenant may gain back-relation lines) and so
+  // cannot gain the back-relation array Prisma would require. Same posture as
+  // review_decisions.result_claim_id being deliberately not an FK.
+  briefVersionId String @map("brief_version_id")
+
+  // MANDATORY — provenance (05 §1 invariant, 00_MASTER §4.3 "citation or
+  // refusal"). A brief with an empty array is invalid and must be dropped,
+  // never persisted — enforced in the generation coercion layer, not here,
+  // the same posture as coerceClaims in integrations/openai.ts (strict-mode
+  // schemas cannot express "non-empty array").
+  claimIds String[] @map("claim_ids")
+
+  // Frozen snapshots of exactly those claims — {claim_id, type, text,
+  // verbatim_quote, speaker, timestamp_ms}[] — taken from BriefClaim at
+  // generation time (ARCHITECTURE.md §11.1 R3). Agent M's emphasis scorer
+  // reads claim text from here and never reaches into claim tables (05 §1:
+  // "neither side knows the other's internals"); freezing means a later edit
+  // to the underlying claim cannot retroactively change what an
+  // already-approved brief emphasised.
+  claimSnapshots Json @map("claim_snapshots")
+
+  // Validated at write time against the versioned TS catalogue
+  // (domain/studio/frameworks.ts) — not a table (§11.2 R4).
+  frameworkId           String       @map("framework_id")
+  frameworkEvidenceTier EvidenceTier @map("framework_evidence_tier")
+
+  archetype ContentArchetype
+
+  hookText     String @map("hook_text")
+  emphasisWord String @map("emphasis_word")
+  // [{ role: hook|agitate|resolve|proof|cta, script, target_ms, fills_from }]
+  beats        Json
+
+  channel        ContentChannel
+  contentMixSlot ContentMixSlot @map("content_mix_slot")
+  expectedMetric ExpectedMetric @map("expected_metric")
+
+  status ContentBriefStatus @default(proposed)
+
+  // Lineage, mirroring candidate_claims.edited_from_id (review-gate.ts):
+  // edit-approve writes a NEW row and marks this one superseded. Always the
+  // ORIGINAL of the lineage, never the immediate predecessor.
+  editedFromId String?        @map("edited_from_id")
+  editedFrom   ContentBrief?  @relation("ContentBriefEdits", fields: [editedFromId], references: [id], onDelete: Cascade)
+  edits        ContentBrief[] @relation("ContentBriefEdits")
+
+  // 06_AGENTS_AND_MODELS.md §1: "Tag every generated ContentBrief with
+  // generated_by_model. Never mix models within one brief."
+  generatedByModel String  @map("generated_by_model")
+  // Set when generation refused an archetype ("not in memory") instead of
+  // inventing (05 §2-3) — surfaced for visibility, not itself a decision.
+  generationNote   String? @map("generation_note")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  decidedAt DateTime? @map("decided_at")
+
+  tenant      Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  decisions   ContentBriefDecision[]
+  renderPlans RenderPlan[]
+
+  @@index([tenantId, status, channel])
+  @@index([tenantId, briefVersionId])
+  @@index([tenantId, editedFromId])
+  @@map("content_briefs")
+}
+
+enum ContentBriefAction {
+  approve
+  reject
+  edit_approve
+  undo
+
+  @@map("content_brief_action")
+}
+
+// Append-only (ADR-6) — mirrors review_decisions exactly, one transaction
+// with the ContentBrief.status flip, written only by domain/content-gate.ts.
+model ContentBriefDecision {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  contentBriefId String             @map("content_brief_id")
+  action         ContentBriefAction
+  reviewer       String
+  note           String?
+
+  // The row this decision produced (edit-approve: the successor brief) or
+  // withdrew (undo). Deliberately not a foreign key — same reasoning as
+  // review_decisions.result_claim_id: the audit log must outlive the rows it
+  // describes.
+  resultBriefId String? @map("result_brief_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contentBrief ContentBrief @relation(fields: [contentBriefId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+  @@index([contentBriefId, createdAt])
+  @@index([resultBriefId])
+  @@map("content_brief_decisions")
 }

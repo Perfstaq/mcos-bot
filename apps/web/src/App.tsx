@@ -4,6 +4,7 @@ import { Sidebar } from "./components/Sidebar.js";
 import { RequireAuth } from "./components/RequireAuth.js";
 import { Meetings } from "./pages/Meetings.js";
 import { ReviewQueue } from "./pages/ReviewQueue.js";
+import { ContentReviewQueue } from "./pages/ContentReviewQueue.js";
 import { Brief } from "./pages/Brief.js";
 import { MeetingWorkspace } from "./pages/MeetingWorkspace.js";
 import { CalendarSettings } from "./pages/CalendarSettings.js";
@@ -78,6 +79,9 @@ function Workspace() {
         <Route path="/meetings/:id/workspace" element={<MeetingWorkspace />} />
         <Route path="/review" element={<ReviewQueue onCountChange={setPending} />} />
         <Route path="/brief" element={<Brief />} />
+        {/* Content Studio brief integration — parallel to /review, not a
+            card type inside it (ARCHITECTURE.md §11.3). */}
+        <Route path="/content" element={<ContentReviewQueue />} />
         {/* MyActionItems was folded into ActionItems, which is a superset.
             The old path still resolves so existing links do not rot. */}
         <Route path="/action-items" element={<ActionItems />} />
