@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, OffthreadVideo, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
-import { DROP_SHADOW, HANDLE_OPACITY, TYPE_SCALE, anchorFor, handleAnchor } from "../captions/layout.js";
+import { DROP_SHADOW, TYPE_SCALE, anchorFor, handleAnchor, textBoxBounds } from "../captions/layout.js";
 import { SPRINGS, SPRING_FRAMES } from "../motion/springs.js";
 import type { Anchor, Banner, CaptionChunk, Cut, Handle, RenderPlan, ShotMotion } from "../plan.js";
 
@@ -31,14 +31,19 @@ export type ReelProps = {
 const ACCENT = "#FF7A1A";
 const textShadow = `0 ${DROP_SHADOW.offsetPx}px ${DROP_SHADOW.blurPx}px ${DROP_SHADOW.color}`;
 
+/**
+ * Geometry comes from `textBoxBounds` so that what G9 asserts and what the
+ * browser lays out are the same computation. Centring a fixed-width box on
+ * every anchor is what pushed a left-aligned handle off the frame.
+ */
 function anchorStyle(anchor: Anchor, width: number): React.CSSProperties {
-  const safeWidth = width * 0.76; // the 12% margins, both sides
+  const { left, right } = textBoxBounds(anchor, width);
   return {
     position: "absolute",
-    left: `${anchor.x * 100}%`,
+    left,
     top: `${anchor.y * 100}%`,
-    transform: "translate(-50%, -50%)",
-    width: safeWidth,
+    transform: "translateY(-50%)",
+    width: right - left,
     textAlign: anchor.align === "left" ? "left" : "center",
     textShadow,
   };
@@ -144,7 +149,7 @@ const BannerLayer: React.FC<{ banner: Banner; width: number; fps: number }> = ({
       style={{
         ...anchorStyle(anchor, width),
         opacity: enter,
-        transform: `translate(-50%, -50%) scale(${0.9 + 0.1 * enter})`,
+        transform: `translateY(-50%) scale(${0.9 + 0.1 * enter})`,
         fontFamily: "'Arial Narrow', 'Helvetica Neue', Impact, sans-serif",
         fontWeight: 900,
         textTransform: "uppercase",

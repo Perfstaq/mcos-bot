@@ -30,7 +30,7 @@ export const FRAME = { width: 1080, height: 1920 } as const;
 export const SAFE_MARGIN_RATIO = 0.12;
 
 /** 16:9 inside 9:16, scaled to width: the video band's vertical extent. */
-export function letterboxVideoBand(width = FRAME.width, height = FRAME.height): { top: number; bottom: number } {
+export function letterboxVideoBand(width: number = FRAME.width, height: number = FRAME.height): { top: number; bottom: number } {
   const videoHeight = width * (9 / 16);
   const top = (height - videoHeight) / 2;
   return { top, bottom: top + videoHeight };
@@ -81,6 +81,35 @@ export function withinSafeMargins(anchor: Anchor, marginRatio = SAFE_MARGIN_RATI
 }
 
 /**
+ * The horizontal extent of a text box placed at `anchor`, in pixels.
+ *
+ * G9 is about where the TEXT lands, not where its anchor sits, and those come
+ * apart the moment a box is wider than the distance from its anchor to the
+ * frame edge. Rendering caught it: a left-aligned handle anchored at x=0.2
+ * inside a centred 0.76·W box starts at −194px and loses its first character
+ * off-frame. Centring a fixed-width box is only correct for a centred anchor.
+ *
+ * So a left-aligned box starts AT its anchor and runs to the safe margin; a
+ * centred box is centred and clamped to whichever margin it reaches first.
+ * Returning the geometry (rather than doing it inline in the composition) is
+ * what lets G9 be asserted without rasterising a frame.
+ */
+export function textBoxBounds(
+  anchor: Anchor,
+  width: number = FRAME.width,
+  marginRatio: number = SAFE_MARGIN_RATIO,
+): { left: number; right: number } {
+  const safeLeft = marginRatio * width;
+  const safeRight = (1 - marginRatio) * width;
+  if (anchor.align === "left") {
+    return { left: Math.max(safeLeft, anchor.x * width), right: safeRight };
+  }
+  const centre = anchor.x * width;
+  const halfWidth = Math.min(centre - safeLeft, safeRight - centre);
+  return { left: centre - halfWidth, right: centre + halfWidth };
+}
+
+/**
  * 02 §2.2: "Position rotates per shot … **Never the same position twice in a
  * row**." Deterministic in the shot index so a re-plan reproduces it (G13),
  * and it walks the list rather than sampling so G6's ≥3-distinct is
@@ -98,7 +127,7 @@ export const TYPE_SCALE = {
   handle: 0.028,
 } as const;
 
-export function fontSizePx(token: keyof typeof TYPE_SCALE, width = FRAME.width): number {
+export function fontSizePx(token: keyof typeof TYPE_SCALE, width: number = FRAME.width): number {
   return TYPE_SCALE[token] * width;
 }
 

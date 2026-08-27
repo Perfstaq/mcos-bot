@@ -50,6 +50,7 @@ export {
   handleCornerForShot,
   letterboxVideoBand,
   positionForShot,
+  textBoxBounds,
   withinSafeMargins,
   type Anchor,
   type CaptionPosition,

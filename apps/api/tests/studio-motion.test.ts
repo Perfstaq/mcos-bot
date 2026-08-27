@@ -23,6 +23,7 @@ import {
   buildEmphasisContext,
   chunkWords,
   fontSizePx,
+  handleAnchor,
   handleCornerForShot,
   isContrastWord,
   isNumberOrProperNoun,
@@ -31,6 +32,7 @@ import {
   pickEmphasis,
   positionForShot,
   rmsStats,
+  textBoxBounds,
   withinSafeMargins,
   type ScoredWord,
 } from "@mcos/render/captions";
@@ -303,6 +305,24 @@ describe("caption layout — letterbox only, no luminance (ARCHITECTURE §11.1 R
   it("keeps every caption anchor inside the 12% safe margins (G9)", () => {
     for (const position of CAPTION_POSITIONS) {
       expect(withinSafeMargins(anchorFor(position)), position).toBe(true);
+    }
+  });
+
+  it("keeps the rendered TEXT BOX inside the margins, not just its anchor (G9)", () => {
+    // The anchor being safe does not make the box safe. Rendering caught it:
+    // the left-aligned handle at x=0.2, laid out in a centred 0.76·W box,
+    // started at -194px and lost its first character off-frame.
+    const boxes = [
+      ...CAPTION_POSITIONS.map((p) => [p, anchorFor(p)] as const),
+      ["handle upper_right", handleAnchor("upper_right")] as const,
+      ["handle mid_left", handleAnchor("mid_left")] as const,
+      ["banner", { x: 0.5, y: 0.09, align: "center" as const }] as const,
+    ];
+    for (const [label, anchor] of boxes) {
+      const { left, right } = textBoxBounds(anchor, 1080);
+      expect(left, `${label} left`).toBeGreaterThanOrEqual(0.12 * 1080 - 1e-9);
+      expect(right, `${label} right`).toBeLessThanOrEqual(0.88 * 1080 + 1e-9);
+      expect(right, `${label} width`).toBeGreaterThan(left);
     }
   });
 
