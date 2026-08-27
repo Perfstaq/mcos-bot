@@ -1057,3 +1057,36 @@ next generation of evidence anyway.
   ~0.5s makes essentially impossible, and the measured-`lockPct` gate backstops it. One-line
   hardening with no downside, since paths with no locked alternative all pay `miss` equally:
   double the floor, or restate the comment to claim only the single-shot bound honestly.
+
+### 12.12 `jobs/plan-build.ts` does not exist — the critical-path gap nobody owns
+
+The Definition of Done (00_MASTER §6) requires "a ContentBrief generated from a real approved
+Brief version renders to MP4 end-to-end". That chain is:
+
+```
+ContentBrief (B, approved via the gate) → plan.build → RenderPlan (M's planner) → render.submit → MP4 → render.qc
+```
+
+**The middle link is missing.** Agent P created the `plan.build` queue but deliberately registered
+no processor (its job body was out of P's scope). Agent M built the planner as a pure library.
+Agent B built the route that enqueues the job and correctly refused to fake a `RenderPlan` — it is
+append-only with no default on `plan: Json`, so it cannot be created empty and filled in later —
+returning a queued handle with a pre-allocated id instead. Every agent behaved correctly at its
+own boundary, and the seam between them fell through: `apps/api/src/jobs/plan-build.ts` does not
+exist and nothing registers a `plan.build` processor.
+
+This is the classic multi-agent failure mode, and worth naming as such: three correct boundaries
+can still leave a hole where they meet. It was caught by Agent B reporting what it could not
+build, rather than stubbing it — which is why "report what you found wrong or infeasible" is in
+every agent brief.
+
+**The work:** a processor that loads an approved ContentBrief (rejecting anything not
+`status='approved'` — B's `requireApprovedContentBrief` already enforces this at the route), loads
+the footage's `MediaAnalysis` (words + RMS + beat grid), calls M's `planBeatLockedCuts`, builds
+captions and emphasis, evaluates **G1a before persisting** (ADR-8: a plan failing the gate is
+rejected at plan-build so it never costs a render), and writes the `RenderPlan` once, complete.
+`render.submit` needs the same treatment.
+
+**Owner: assigned after Agent B merges**, since the processor consumes B's ContentBrief shape.
+Not T — T is already carrying three templates, the evidence harness and possibly footage
+selection.
