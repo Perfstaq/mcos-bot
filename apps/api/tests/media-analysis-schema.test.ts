@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   assertValidBeatGrid,
   assertValidWordsResult,
-  BeatGridResultSchema,
+  BeatGridSchema,
   WordsResultSchema,
 } from "../src/domain/studio/media-analysis-schema.js";
 
@@ -24,8 +24,8 @@ const VALID_WORDS = {
       end: 2.56,
       text: "the moment you start working harder than the people around you,",
       words: [
-        { word: "the", start: 0, end: 0.22, score: 0.1312 },
-        { word: "moment", start: 0.22, end: 0.28, score: 0.9725 },
+        { word: "the", start: 0, end: 0.22, score: 0.1312, rms: 0.31 },
+        { word: "moment", start: 0.22, end: 0.28, score: 0.9725, rms: 0.25 },
       ],
     },
   ],
@@ -54,6 +54,14 @@ describe("media analysis schema (words.json)", () => {
     const noScore = { ...VALID_WORDS, segments: [{ ...VALID_WORDS.segments[0], words: [{ word: "x", start: 0, end: 0.1 }] }] };
     expect(() => WordsResultSchema.parse(noScore)).not.toThrow();
   });
+
+  it("accepts per-word RMS (ARCHITECTURE §11.1 R1) and stays backward-compatible when absent", () => {
+    const withRms = assertValidWordsResult(VALID_WORDS);
+    expect(withRms.segments[0]?.words[0]?.rms).toBe(0.31);
+
+    const noRms = { ...VALID_WORDS, segments: [{ ...VALID_WORDS.segments[0], words: [{ word: "x", start: 0, end: 0.1, score: 0.9 }] }] };
+    expect(() => assertValidWordsResult(noRms)).not.toThrow();
+  });
 });
 
 describe("media analysis schema (beats.json)", () => {
@@ -65,7 +73,7 @@ describe("media analysis schema (beats.json)", () => {
 
   it("accepts a null tempo/gridQuality — the honest 'couldn't tell' case, not a fabricated 0", () => {
     const empty = { method: "beat_track", tempoBpm: null, beatTimesMs: [], gridQuality: null };
-    expect(() => BeatGridResultSchema.parse(empty)).not.toThrow();
+    expect(() => BeatGridSchema.parse(empty)).not.toThrow();
   });
 
   it("rejects an unknown beat method", () => {

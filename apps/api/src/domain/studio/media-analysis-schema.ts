@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { BeatGridSchema, type BeatGrid } from "@mcos/render/plan";
 
 /**
  * The Node-side contract for services/analyzer's CLI output.
@@ -10,15 +11,12 @@ import { z } from "zod";
  * silently, and a malformed sidecar output never becomes a silently-wrong
  * database row).
  *
- * Deliberately independent from `packages/render`'s `BeatGridSchema`
- * (plan.ts) rather than importing it: `packages/render` has no build/`dist`
- * step yet (its package.json "exports" point at TS source, fine for
- * tsx/vitest but not for `apps/api`'s compiled production runtime — see the
- * comment there), so nothing in `apps/api/src` imports it. The two schemas
- * describe the same shape on purpose; when `plan.build` copies
- * `MediaAnalysis.beats` into `RenderPlan.plan.beatGrid` verbatim
- * (ARCHITECTURE.md §4.1), both schemas must be kept in sync by hand until
- * that packaging gap is closed.
+ * The beat-grid shape is `@mcos/render`'s `BeatGridSchema` (plan.ts),
+ * imported directly rather than duplicated — `packages/render` now has a
+ * real `tsc` build (dist/ + .d.ts), so it's safe for apps/api's compiled
+ * production runtime to depend on. Only `words.json`'s shape is local to
+ * apps/api: it has no counterpart in the render plan (captions are a
+ * separate, richer contract M owns), so there's nothing to import.
  */
 
 export const WordSchema = z.object({
@@ -26,6 +24,11 @@ export const WordSchema = z.object({
   start: z.number().min(0),
   end: z.number().min(0),
   score: z.number().nullable().optional(),
+  // librosa RMS energy over [start, end) — ARCHITECTURE §11.1 R1:
+  // 02_MOTION_SYSTEM §3's emphasis scorer weights `audio_energy_zscore(word)`
+  // at 1.5, and nothing downstream can compute it without this. Optional
+  // because analyzerVersion < 0.2.0 rows predate it.
+  rms: z.number().nonnegative().nullable().optional(),
 });
 export type Word = z.infer<typeof WordSchema>;
 
@@ -44,16 +47,8 @@ export const WordsResultSchema = z.object({
 });
 export type WordsResult = z.infer<typeof WordsResultSchema>;
 
-export const BeatMethodSchema = z.enum(["beat_track", "onset_env", "constant_grid"]);
-export type BeatMethod = z.infer<typeof BeatMethodSchema>;
-
-export const BeatGridResultSchema = z.object({
-  method: BeatMethodSchema,
-  tempoBpm: z.number().positive().nullable(),
-  beatTimesMs: z.array(z.number().int().nonnegative()),
-  gridQuality: z.number().nonnegative().nullable(),
-});
-export type BeatGridResult = z.infer<typeof BeatGridResultSchema>;
+export { BeatGridSchema };
+export type BeatGridResult = BeatGrid;
 
 function loudParse<T>(schema: z.ZodType<T>, raw: unknown, label: string): T {
   const parsed = schema.safeParse(raw);
@@ -69,5 +64,5 @@ export function assertValidWordsResult(raw: unknown, label = "words.json"): Word
 }
 
 export function assertValidBeatGrid(raw: unknown, label = "beats.json"): BeatGridResult {
-  return loudParse(BeatGridResultSchema, raw, label);
+  return loudParse(BeatGridSchema, raw, label);
 }
