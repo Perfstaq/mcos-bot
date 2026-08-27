@@ -124,6 +124,7 @@ function mockGeneratesOnePerArchetype() {
       refusals: [],
       inputTokens: 100,
       outputTokens: 50,
+      model: "gpt-5.6-sol",
     }),
   );
 }
@@ -203,6 +204,7 @@ describe("POST /content/briefs — generation", () => {
       refusals: [],
       inputTokens: 10,
       outputTokens: 5,
+      model: "gpt-5.6-sol",
     }));
 
     const response = await generate({ brief_version_id: versionId, channel: "reels", count: 1 });

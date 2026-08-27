@@ -1,9 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   ContentBriefRefused,
   HOOK_TEXT_MAX,
   MalformedBriefGenerationError,
   parseBriefResponse,
+  retryOnceOnMalformed,
 } from "../src/integrations/content-brief-model.js";
 
 /**
@@ -141,5 +142,48 @@ describe("parseBriefResponse", () => {
     expect(() => parseBriefResponse(response({ output_text: "not json {" }))).toThrowError(
       MalformedBriefGenerationError,
     );
+  });
+});
+
+/**
+ * The model-downshift retry (§12's minor: CONTENT_BRIEF_FALLBACK was declared
+ * and documented but read by nothing). Mirrors extraction-output.test.ts's
+ * coverage of integrations/openai.ts's retryOnceOnMalformed, extended with
+ * the fallback-model dimension this one adds.
+ */
+describe("retryOnceOnMalformed", () => {
+  it("succeeds on the first attempt using the primary model, without touching the fallback", async () => {
+    const attempt = vi.fn<(model: string) => Promise<string>>().mockResolvedValue("ok");
+    const { result, model } = await retryOnceOnMalformed(attempt, "primary-model", "fallback-model");
+    expect(result).toBe("ok");
+    expect(model).toBe("primary-model");
+    expect(attempt).toHaveBeenCalledTimes(1);
+    expect(attempt).toHaveBeenCalledWith("primary-model");
+  });
+
+  it("downshifts to the fallback model when the primary's output is malformed, and reports which model answered", async () => {
+    const attempt = vi
+      .fn<(model: string) => Promise<string>>()
+      .mockRejectedValueOnce(new MalformedBriefGenerationError("bad JSON"))
+      .mockResolvedValueOnce("ok from fallback");
+    const { result, model } = await retryOnceOnMalformed(attempt, "primary-model", "fallback-model");
+    expect(result).toBe("ok from fallback");
+    expect(model).toBe("fallback-model");
+    expect(attempt).toHaveBeenNthCalledWith(1, "primary-model");
+    expect(attempt).toHaveBeenNthCalledWith(2, "fallback-model");
+  });
+
+  it("fails, naming both models, when the fallback is also malformed", async () => {
+    const attempt = vi.fn<(model: string) => Promise<string>>().mockRejectedValue(new MalformedBriefGenerationError("still bad"));
+    await expect(retryOnceOnMalformed(attempt, "primary-model", "fallback-model")).rejects.toThrowError(
+      /primary-model.*fallback-model/s,
+    );
+    expect(attempt).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not retry, and never touches the fallback, for an error that is not malformed output", async () => {
+    const attempt = vi.fn<(model: string) => Promise<string>>().mockRejectedValue(new Error("ECONNRESET"));
+    await expect(retryOnceOnMalformed(attempt, "primary-model", "fallback-model")).rejects.toThrowError("ECONNRESET");
+    expect(attempt).toHaveBeenCalledTimes(1);
   });
 });

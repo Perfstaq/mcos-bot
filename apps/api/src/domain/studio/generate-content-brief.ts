@@ -167,7 +167,11 @@ export async function generateContentBriefs(args: GenerateContentBriefsArgs): Pr
 
   let generation;
   try {
-    generation = await generateBriefsFromModel({ requests, model: env.CONTENT_BRIEF_MODEL });
+    generation = await generateBriefsFromModel({
+      requests,
+      model: env.CONTENT_BRIEF_MODEL,
+      fallbackModel: env.CONTENT_BRIEF_FALLBACK,
+    });
   } catch (error) {
     if (error instanceof ContentBriefRefused || error instanceof MalformedBriefGenerationError) {
       throw ApiError.unprocessable(`Content brief generation failed: ${error.message}`);
@@ -242,7 +246,11 @@ export async function generateContentBriefs(args: GenerateContentBriefsArgs): Pr
         channel: args.channel,
         contentMixSlot: contentMixSlotFor(mixCounter),
         expectedMetric: ARCHETYPE_EXPECTED_METRIC[item.archetype],
-        generatedByModel: env.CONTENT_BRIEF_MODEL,
+        // The model that actually answered — the primary, or the fallback if
+        // the primary's output was malformed and the retry used it instead
+        // (06 §1: "never mix models within one brief"; generation.model is
+        // recorded per-call, not assumed from the env default).
+        generatedByModel: generation.model,
       },
     });
     mixCounter += 1;

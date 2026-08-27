@@ -79,11 +79,24 @@ export type ProposedBrief = {
 
 export type BriefGenerationRefusal = { archetype: ContentArchetype; reason: string };
 
-export type BriefGenerationResult = {
+/** What `parseBriefResponse` (pure — no model identity to report) hands
+ *  back. `generateBriefsFromModel` adds `model` on top of this, below. */
+export type ParsedBriefGeneration = {
   briefs: ProposedBrief[];
   refusals: BriefGenerationRefusal[];
   inputTokens: number;
   outputTokens: number;
+};
+
+export type BriefGenerationResult = ParsedBriefGeneration & {
+  /** The model that actually produced this result — `args.model`/
+   *  `env.CONTENT_BRIEF_MODEL` normally, or the fallback when the primary's
+   *  output was malformed and the retry used it instead. Recorded so a
+   *  caller writing provenance (`ContentBrief.generatedByModel`) stores what
+   *  really answered — same reasoning as `generateMeetingDigest`'s `model`
+   *  field in `integrations/openai.ts`, and required by 06 §1: "never mix
+   *  models within one brief." */
+  model: string;
 };
 
 /** One archetype the caller wants generated, with the claims it may cite. */
@@ -224,19 +237,29 @@ Rules, in order of importance:
    archetype needs every role); each beat's script is a short spoken line, and fills_from names
    which claim type(s) it draws from.`;
 
-/** Run one attempt; on malformed output only, run exactly one more (same
- *  policy as `integrations/openai.ts`'s `retryOnceOnMalformed`). */
-async function retryOnceOnMalformed<T>(attempt: () => Promise<T>): Promise<T> {
+/**
+ * Run one attempt against `primary`; on malformed output only, run exactly
+ * one more against `fallback` rather than hammering the primary a second
+ * time — 06_AGENTS_AND_MODELS.md §1's fallback ladder ("never skip a rung"),
+ * applied to a single call instead of a whole milestone. Extends
+ * `integrations/openai.ts`'s `retryOnceOnMalformed` policy (same two-strikes
+ * rule) with the model downshift `CONTENT_BRIEF_FALLBACK` exists for.
+ */
+export async function retryOnceOnMalformed<T>(
+  attempt: (model: string) => Promise<T>,
+  primary: string,
+  fallback: string,
+): Promise<{ result: T; model: string }> {
   try {
-    return await attempt();
+    return { result: await attempt(primary), model: primary };
   } catch (error) {
     if (!(error instanceof MalformedBriefGenerationError)) throw error;
     try {
-      return await attempt();
+      return { result: await attempt(fallback), model: fallback };
     } catch (retryError) {
       if (retryError instanceof MalformedBriefGenerationError) {
         throw new MalformedBriefGenerationError(
-          `malformed content-brief generation output twice in a row: ${retryError.message}`,
+          `malformed content-brief generation output twice in a row (${primary}, then fallback ${fallback}): ${retryError.message}`,
         );
       }
       throw retryError;
@@ -247,31 +270,39 @@ async function retryOnceOnMalformed<T>(attempt: () => Promise<T>): Promise<T> {
 export async function generateBriefsFromModel(args: {
   requests: BriefGenerationRequestItem[];
   model?: string;
+  fallbackModel?: string;
 }): Promise<BriefGenerationResult> {
-  const model = args.model ?? env.CONTENT_BRIEF_MODEL;
+  const primary = args.model ?? env.CONTENT_BRIEF_MODEL;
+  const fallback = args.fallbackModel ?? env.CONTENT_BRIEF_FALLBACK;
 
-  return retryOnceOnMalformed(async () => {
-    const response = await client.responses.create({
-      model,
-      input: [
-        { role: "system", content: SYSTEM_PROMPT },
-        {
-          role: "user",
-          content:
-            `Generate one content brief per archetype below.\n\n${renderCandidates(args.requests)}\n\n` +
-            "Return exactly one entry per archetype listed, in the same order.",
-        },
-      ],
-      text: { format: { type: "json_schema", name: "propose_content_briefs", strict: true, schema: BRIEF_SCHEMA } },
-      reasoning: { effort: "medium" },
-      max_output_tokens: 8_000,
-    });
+  const { result, model } = await retryOnceOnMalformed(
+    async (m) => {
+      const response = await client.responses.create({
+        model: m,
+        input: [
+          { role: "system", content: SYSTEM_PROMPT },
+          {
+            role: "user",
+            content:
+              `Generate one content brief per archetype below.\n\n${renderCandidates(args.requests)}\n\n` +
+              "Return exactly one entry per archetype listed, in the same order.",
+          },
+        ],
+        text: { format: { type: "json_schema", name: "propose_content_briefs", strict: true, schema: BRIEF_SCHEMA } },
+        reasoning: { effort: "medium" },
+        max_output_tokens: 8_000,
+      });
 
-    return parseBriefResponse(response);
-  });
+      return parseBriefResponse(response);
+    },
+    primary,
+    fallback,
+  );
+
+  return { ...result, model };
 }
 
-export function parseBriefResponse(response: BriefModelResponse): BriefGenerationResult {
+export function parseBriefResponse(response: BriefModelResponse): ParsedBriefGeneration {
   const refusal = findRefusal(response);
   if (refusal) throw new ContentBriefRefused(refusal);
 
