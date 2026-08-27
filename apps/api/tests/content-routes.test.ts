@@ -54,22 +54,23 @@ beforeEach(async () => {
  *  produces, seeded directly since content-gate's job starts downstream of it. */
 async function seedBriefVersion(
   claims: Array<{ type: ClaimType; text: string; confidence?: number }>,
+  tenant: string = tenantId,
 ): Promise<{ versionId: string; version: number; claimIds: string[] }> {
   const meeting = await db.meeting.create({
-    data: { tenantId, meetingUrl: "https://meet.google.com/seed", status: MeetingStatus.merged },
+    data: { tenantId: tenant, meetingUrl: "https://meet.google.com/seed", status: MeetingStatus.merged },
   });
   const evidence = await db.evidenceSource.create({
-    data: { tenantId, kind: EvidenceKind.meeting_transcript, meetingId: meeting.id, capturedAt: new Date() },
+    data: { tenantId: tenant, kind: EvidenceKind.meeting_transcript, meetingId: meeting.id, capturedAt: new Date() },
   });
   const run = await db.extractionRun.create({
-    data: { tenantId, meetingId: meeting.id, model: "test-model", promptVersion: "v1", status: "succeeded", chunkCount: 1 },
+    data: { tenantId: tenant, meetingId: meeting.id, model: "test-model", promptVersion: "v1", status: "succeeded", chunkCount: 1 },
   });
 
   const created = [];
   for (const [i, c] of claims.entries()) {
     const claim = await db.candidateClaim.create({
       data: {
-        tenantId,
+        tenantId: tenant,
         meetingId: meeting.id,
         evidenceSourceId: evidence.id,
         extractionRunId: run.id,
@@ -87,12 +88,12 @@ async function seedBriefVersion(
   }
 
   const version = await db.briefVersion.create({
-    data: { tenantId, version: 1, createdBy: "seed@test.example", addedCount: created.length, totalCount: created.length },
+    data: { tenantId: tenant, version: 1, createdBy: "seed@test.example", addedCount: created.length, totalCount: created.length },
   });
   for (const claim of created) {
     await db.briefClaim.create({
       data: {
-        tenantId,
+        tenantId: tenant,
         briefVersionId: version.id,
         claimId: claim.id,
         meetingId: meeting.id,
@@ -327,6 +328,46 @@ describe("content-brief gate — approve / reject / edit / undo", () => {
     const response = await app.inject({ method: "GET", url: "/api/v1/content/briefs", headers: HOME });
     expect(response.statusCode).toBe(200);
     expect(response.json().briefs.length).toBe(1);
+  });
+
+  /** Mirrors review-gate.test.ts's "404s on another tenant's claim instead
+   *  of deciding it" — the same tenancy discipline (db.ts's extension
+   *  injects tenantId into every query) applies to content_briefs. */
+  it("404s on another tenant's content brief instead of deciding it", async () => {
+    const away = await seedTenant("rival-corp");
+    const AWAY = { "x-tenant-slug": "rival-corp", "x-reviewer-email": "spy@rival.example" };
+    const { versionId } = await seedBriefVersion(
+      [{ type: ClaimType.pain_point, text: "Their pain point, not ours." }],
+      away.id,
+    );
+    mockGeneratesOnePerArchetype();
+    const gen = await app.inject({
+      method: "POST",
+      url: "/api/v1/content/briefs",
+      headers: AWAY,
+      payload: { brief_version_id: versionId, channel: "reels", count: 1 },
+    });
+    const theirsId = gen.json().briefs[0].id as string;
+
+    for (const url of [
+      `/api/v1/content/briefs/${theirsId}/approve`,
+      `/api/v1/content/briefs/${theirsId}/reject`,
+      `/api/v1/content/briefs/${theirsId}/undo`,
+    ]) {
+      const response = await app.inject({ method: "POST", url, headers: HOME, payload: {} });
+      expect(response.statusCode).toBe(404);
+    }
+
+    const patched = await app.inject({
+      method: "PATCH",
+      url: `/api/v1/content/briefs/${theirsId}`,
+      headers: HOME,
+      payload: { hook_text: "Rewritten by someone who should not see this." },
+    });
+    expect(patched.statusCode).toBe(404);
+
+    const stored = await db.contentBrief.findUniqueOrThrow({ where: { id: theirsId } });
+    expect(stored.status).toBe(ContentBriefStatus.proposed);
   });
 });
 
