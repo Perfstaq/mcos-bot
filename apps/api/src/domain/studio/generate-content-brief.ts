@@ -41,7 +41,13 @@ import {
 
 export type GenerateContentBriefsArgs = {
   tenantId: string;
-  briefVersionId: string;
+  /** Omit to use the tenant's current (highest-numbered) brief version — the
+   *  primary UI flow ("generate from the current brief"). `GET /brief/versions`
+   *  and `GET /brief/current` (routes/brief.ts, off-limits to this agent) only
+   *  ever expose the integer `version`, never the row's uuid `id`, so an
+   *  explicit `brief_version_id` is an escape hatch for a caller that already
+   *  has one (e.g. a stored ContentBrief), not the expected common case. */
+  briefVersionId?: string;
   channel: ContentChannel;
   count: number;
 };
@@ -85,11 +91,14 @@ function contentMixSlotFor(existingCount: number): "brand" | "activation" {
 export async function generateContentBriefs(args: GenerateContentBriefsArgs): Promise<GenerateContentBriefsResult> {
   if (args.count < 1) throw ApiError.badRequest("count must be at least 1");
 
-  const version = await prisma.briefVersion.findUnique({
-    where: { id: args.briefVersionId },
-    include: { claims: true },
-  });
-  if (!version) throw ApiError.notFound(`Brief version ${args.briefVersionId} not found`);
+  const version = args.briefVersionId
+    ? await prisma.briefVersion.findUnique({ where: { id: args.briefVersionId }, include: { claims: true } })
+    : await prisma.briefVersion.findFirst({ orderBy: { version: "desc" }, include: { claims: true } });
+  if (!version) {
+    throw ApiError.notFound(
+      args.briefVersionId ? `Brief version ${args.briefVersionId} not found` : "No brief version exists yet",
+    );
+  }
 
   const allArchetypes = Object.values(ContentArchetype);
 

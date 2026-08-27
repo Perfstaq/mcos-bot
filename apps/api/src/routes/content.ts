@@ -25,7 +25,10 @@ import { planBuildQueue, renderSubmitQueue } from "../queue.js";
  */
 export async function contentRoutes(app: FastifyInstance): Promise<void> {
   const generateSchema = z.object({
-    brief_version_id: z.string().uuid(),
+    // Optional: omitted means "the tenant's current brief version" — see
+    // GenerateContentBriefsArgs's doc comment for why this is the expected
+    // common case, not id-required.
+    brief_version_id: z.string().uuid().optional(),
     channel: z.nativeEnum(ContentChannel),
     count: z.coerce.number().int().min(1).max(10),
   });

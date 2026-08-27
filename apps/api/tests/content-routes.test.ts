@@ -228,6 +228,18 @@ describe("POST /content/briefs — generation", () => {
     const response = await generate({ brief_version_id: crypto.randomUUID(), channel: "reels", count: 1 });
     expect(response.statusCode).toBe(404);
   });
+
+  it("resolves the tenant's current brief version when brief_version_id is omitted", async () => {
+    await seedBriefVersion([{ type: ClaimType.pain_point, text: "Older version's claim." }]);
+    // A second version, higher-numbered and empty, is the one omission should
+    // resolve to — proven by the returned brief_version number, independent
+    // of whether it has claims to generate from.
+    await db.briefVersion.create({ data: { tenantId, version: 2, createdBy: "seed@test.example", totalCount: 0 } });
+
+    const response = await generate({ channel: "reels", count: 1 });
+    expect(response.statusCode).toBe(200);
+    expect(response.json().brief_version).toBe(2);
+  });
 });
 
 /* ------------------------------------------------------------------- the gate */
