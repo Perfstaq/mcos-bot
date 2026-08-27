@@ -473,7 +473,23 @@ candidate cut points:
   word edge and a beat fail to coincide; the rhythm curve bends to accommodate instead.
 - **Phase** (where the licensed bed starts) stays an optimization variable, as does **tempo**:
   search 2–3 candidate beds within the mood-appropriate band and keep the best-scoring plan.
-  Bias upward within that band when feasibility is tight — that is what the 130bpm figure buys.
+
+  But tempo alone does **not** rescue this, and P's full sweep is why (seed=42, 6 clips, perfect
+  phase-optimized grid):
+
+  | Tempo | Mean lock% | Min (worst clip) |
+  |---|---|---|
+  | 90 bpm | 84.5% | 74.4% |
+  | 100 bpm | 85.3% | 76.3% |
+  | 112.3 bpm (reference) | 89.4% | 82.1% |
+  | 120 bpm | 92.0% | **79.0%** |
+  | 130 bpm | 93.5% | 86.7% |
+
+  The mean rises monotonically with tempo; **the minimum does not** — 120bpm posts a better mean
+  than 112.3 but a *worse* worst case. Only 130bpm lifts the minimum clear of the gate, and 130bpm
+  is a driving tempo that is musically wrong for a reflective or authoritative piece. So biasing
+  tempo upward is a useful secondary lever, not the fix: **the DP is load-bearing**, because what
+  fails the gate is a specific clip's word-edge geometry, not the average clip's.
 - **Honest failure**: if the best plan still cannot clear G1a, emit `plan_infeasible` with the
   measured lock % (03 §7) rather than rendering something that will fail QC. G1a is evaluated at
   `plan.build` precisely so this costs a plan, not a render.
@@ -482,7 +498,10 @@ Consequence for ADR-8: G1a's "expected ≈100%" was optimistic. Expect high-but-
 treat a plan that clears 85% only barely as a signal to re-search tempo/phase, not as a pass.
 
 M iterates against P's committed M-3 fixture and must demonstrate improvement by re-running that
-same simulation — a number in a PR body is not runnable evidence.
+same simulation — a number in a PR body is not runnable evidence. **M's acceptance bar is the
+naive baseline at the reference tempo: mean 89.4%, worst clip 82.1%. Beating the mean is easy and
+not the point; the deliverable is lifting the WORST CLIP above 85% at a musically appropriate
+tempo.** Report both figures, at 112.3bpm, via `npx tsx scripts/measurements/m3-report.ts`.
 
 ---
 
