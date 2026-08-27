@@ -8,42 +8,42 @@
       "durationSec": 54.87,
       "wordsFile": "reference/words.json",
       "description": "The Content Studio reference reel — Raj Shamani podcast clip, 'THE POWER OF OBSESSION' (01_REFERENCE_ANALYSIS.md's source). Talking-head podcast interview.",
-      "sourceFileNote": "Not committed (96MB). Lives at /Users/sathvik/Downloads/08f77252a39a4dec9296f15ba4d17865.MP4 on the machine that produced this fixture; also referenced by measure_reference.py / reference_measured.json."
+      "sourceFileNote": "Not committed (96MB), filename 08f77252a39a4dec9296f15ba4d17865.MP4 — a Downloads-folder file on the machine that produced this fixture, not tracked anywhere else in the repo. Also referenced by measure_reference.py / reference_measured.json."
     },
     {
       "id": "clip2",
       "durationSec": 68.47,
       "wordsFile": "clip2/words.json",
       "description": "Talking-head clip, same naming convention as the reference (hash-named download) — a second podcast/interview-style sample for variety.",
-      "sourceFileNote": "Not committed (93MB). Lives at /Users/sathvik/Downloads/8bbccd99470f433ebb7c63c8279aa773.MP4."
+      "sourceFileNote": "Not committed (93MB), filename 8bbccd99470f433ebb7c63c8279aa773.MP4 — a Downloads-folder file on the machine that produced this fixture."
     },
     {
       "id": "clip3",
       "durationSec": 72.89,
       "wordsFile": "clip3/words.json",
       "description": "Business narration/talking-head video ('How Metawurks Automates Enterprise AI Workflows') — the clip that failed the 85% gate outright at seed=42 (82.05%).",
-      "sourceFileNote": "Not committed (3.5MB, small enough it could be added later if useful). Lives at /Users/sathvik/Downloads/How_Metawurks_Automates_Enterprise_AI_Workflows.mp4."
+      "sourceFileNote": "Not committed (3.5MB, small enough it could be added later if useful), filename How_Metawurks_Automates_Enterprise_AI_Workflows.mp4 — a Downloads-folder file on the machine that produced this fixture."
     },
     {
       "id": "clip4",
       "durationSec": 58.32,
       "wordsFile": "clip4/words.json",
       "description": "Shorter personal talking-head recording, fewer/sparser words (59 total) — deliberately included for pause-heavy-speech diversity.",
-      "sourceFileNote": "Not committed (10MB). Lives at /Users/sathvik/Downloads/VIDEO-2026-06-23-19-27-51.mp4."
+      "sourceFileNote": "Not committed (10MB), filename VIDEO-2026-06-23-19-27-51.mp4 — a Downloads-folder file on the machine that produced this fixture."
     },
     {
       "id": "clip5",
       "durationSec": 70,
       "wordsFile": "clip5/words.json",
       "description": "First 70s of a Metawurks business narration video (trimmed from a 450s source with ffmpeg -t 70 -c copy).",
-      "sourceFileNote": "Not committed (26MB full source). Lives at /Users/sathvik/Downloads/MetaWurks_Master_Service.mp4; the exact 70s trim used here was not persisted, regenerate with: ffmpeg -y -i MetaWurks_Master_Service.mp4 -t 70 -c copy metawurks-master-70s.mp4"
+      "sourceFileNote": "Not committed (26MB full source), filename MetaWurks_Master_Service.mp4 — a Downloads-folder file on the machine that produced this fixture. The exact 70s trim used here was not persisted; regenerate with: ffmpeg -y -i MetaWurks_Master_Service.mp4 -t 70 -c copy metawurks-master-70s.mp4"
     },
     {
       "id": "clip6",
       "durationSec": 70,
       "wordsFile": "clip6/words.json",
       "description": "First 70s of a second Metawurks business narration video (trimmed from a 471s source with ffmpeg -t 70 -c copy).",
-      "sourceFileNote": "Not committed (32MB full source). Lives at /Users/sathvik/Downloads/Metawurks_v1.mp4; regenerate the trim with: ffmpeg -y -i Metawurks_v1.mp4 -t 70 -c copy metawurks-v1-70s.mp4"
+      "sourceFileNote": "Not committed (32MB full source), filename Metawurks_v1.mp4 — a Downloads-folder file on the machine that produced this fixture. Regenerate the trim with: ffmpeg -y -i Metawurks_v1.mp4 -t 70 -c copy metawurks-v1-70s.mp4"
     }
   ]
 }
