@@ -973,3 +973,197 @@ higher in the video band, it must first justify how it avoids the face without f
 
 M added `ShotMotionSchema` per cut and `anchor` per caption, so micro-motion and safe margins are
 decidable from the plan without pixels. Wiring them into `qc-render.ts` is P/T's boundary.
+
+### 12.7 G9 vs the banner — ruling (the reference violates the gate as written)
+
+The demo plan pins the banner at `y: 0.09`, wholly inside G9's 12% top margin. This is a genuine
+conflict, not an oversight: `01 §4` measures the reference's banner at ~9% and `02 §2.1` puts it
+in the top letterbox bar, while `07 §1` G9 demands zero text within 12% of ANY edge. Agent M
+resolved it silently in the reference's favour, and the G9 test asserts horizontal bounds only,
+so nothing caught it.
+
+**Ruling: G9's 12% bound applies strictly to the LEFT, RIGHT and BOTTOM edges. The top edge is
+exempt for the persistent banner only, which may sit as high as 8%.** Reasoning: G9 exists to
+avoid platform UI, and on Reels/Shorts/TikTok that UI is concentrated at the bottom (caption,
+CTA) and the right (action rail) — the top is comparatively clear. The banner is the
+scroll-stopper hook (`01 §4`: "persistent for the entire clip"), it sits in the letterbox bar
+where it occludes nothing, and pushing it to 14% would bury the hook to satisfy a margin
+protecting against UI that isn't there. Every other text layer — karaoke, handle, anything a
+template adds — stays bound on all four edges.
+
+**Required with this ruling:** the G9 test must assert VERTICAL box extents too (it currently
+checks horizontal only, which is exactly why the violation shipped), with the banner exemption
+written as an explicit named carve-out rather than an absent assertion. An exemption that nothing
+tests is indistinguishable from a bug.
+
+### 12.8 The planner soft-penalises a missed beat; §4.2 said hard-reject
+
+§4.2 specifies "hard-reject beyond 150ms". M implemented a large soft penalty instead: a hard
+reject makes the problem infeasible wherever no locked path exists, returning `plan_infeasible` on
+clips a slightly-bent rhythm would serve. The penalty is derived at runtime (`missWeightFloor`) to
+exceed the worst rhythm cost any in-bounds shot can incur, so a miss is never the cheaper option —
+the ordering §4.2 wanted, without the cliff. 100% lock on all six M-3 clips is therefore an
+outcome of the optimisation, not an artefact of arithmetic.
+
+### 12.9 Accent colour means EMPHASIS only — ruling on the 02 §2.2 / §3 collision
+
+`02 §2.2` says the *active* (currently spoken) karaoke word is accent-coloured; `02 §3` says the
+*emphasis* word is accent-coloured. Same hue, two meanings — and on a one-word chunk the active
+word is accent for its entire life on screen, so a deliberately UN-emphasised stopword becomes
+indistinguishable from the payload of an approved claim. Caught by looking at a rendered frame
+(the word "IT" in accent orange), not by any test.
+
+Worth recording how the diagnosis went, because it generalises: the visible symptom was a
+stopword rendered as if emphasised, and the obvious suspect was the emphasis scorer bypassing its
+threshold on a single-candidate chunk. That was wrong. The scorer had correctly scored "it" at
+−0.77 against a 1.0 bar and recorded `isEmphasis: false`; the plan was right and the renderer was
+wrong. **A frame is evidence about the renderer, not about the thing the renderer drew from** —
+check the plan before blaming the planner.
+
+**Ruling: accent colour is reserved for emphasis. The active word is carried by opacity.** Agent
+M's resolution stands, on its grounds: `01 §4` measures the reference's karaoke layer as plain
+white with only the *banner* two-tone; `01 §8` forbids adding effects the reference does not have;
+and `02 §2.1`'s own argument — "two coloured words halves the emphasis" — applies with more force
+to two coloured words that mean different things. `02 §2.2`'s active-word colouring is superseded.
+
+### 12.10 Render evidence lives in-repo with a manifest — ruling
+
+Render artifacts have been living in `/Users/sathvik/aix/studio-renders/`, outside the repo. That
+has now produced the same failure twice in one day: frames written three minutes before a fix were
+forwarded to the user as evidence of the fixed behaviour, and the demo MP4 went stale against
+`c0dc1a6` while still sitting there looking authoritative. Evidence that cannot be checked against
+the code it claims to demonstrate is worse than no evidence, because it is trusted.
+
+**Ruling:** commit `demo-plan.json`, `qc.json`, and 2–3 PNG frames (~500KB each) under
+`docs/studio/evidence/`, written by a regeneration script that also emits a manifest recording the
+MP4's sha256 and the commit it was rendered from. The 22MB MP4 itself stays out of git. Staleness
+then becomes a detectable manifest-vs-HEAD mismatch rather than a silent lie, and a PR reviewer
+can tell at a glance whether the pictures describe the code in front of them.
+
+**Owner: Agent T**, as part of the template work — T renders three templates and will produce the
+next generation of evidence anyway.
+
+### 12.11 Two open follow-ups from M's review (not blocking, do not lose)
+
+- **Banner wrap is unbounded (Minor A).** The G9 carve-out is asserted at one line only. A hook
+  long enough to wrap at `0.062·W` puts ink at ~6.3%, breaching the 8% exemption, and nothing caps
+  hook length — `buildBanner` accepts any text and the composition wraps. **Fix when Agent B's
+  ContentBrief lands:** cap `hook_text` length in the schema, or assert wrap count at plan-build
+  from measured text width. Owner: B, with T asserting it in the template.
+- **`missWeightFloor` bounds single-shot degradation, not the real exchange (Minor B).** Swapping
+  an unlocked cut for a locked one changes TWO adjacent shots, since they share the boundary.
+  Reachable worst case with today's constants gives a combined penalty ≈7.2 against a floor of
+  4.56. Practically inert — it needs a ~3.9s stretch with no locked candidate, which a beat every
+  ~0.5s makes essentially impossible, and the measured-`lockPct` gate backstops it. One-line
+  hardening with no downside, since paths with no locked alternative all pay `miss` equally:
+  double the floor, or restate the comment to claim only the single-shot bound honestly.
+
+### 12.12 `jobs/plan-build.ts` does not exist — the critical-path gap nobody owns
+
+The Definition of Done (00_MASTER §6) requires "a ContentBrief generated from a real approved
+Brief version renders to MP4 end-to-end". That chain is:
+
+```
+ContentBrief (B, approved via the gate) → plan.build → RenderPlan (M's planner) → render.submit → MP4 → render.qc
+```
+
+**The middle link is missing.** Agent P created the `plan.build` queue but deliberately registered
+no processor (its job body was out of P's scope). Agent M built the planner as a pure library.
+Agent B built the route that enqueues the job and correctly refused to fake a `RenderPlan` — it is
+append-only with no default on `plan: Json`, so it cannot be created empty and filled in later —
+returning a queued handle with a pre-allocated id instead. Every agent behaved correctly at its
+own boundary, and the seam between them fell through: `apps/api/src/jobs/plan-build.ts` does not
+exist and nothing registers a `plan.build` processor.
+
+This is the classic multi-agent failure mode, and worth naming as such: three correct boundaries
+can still leave a hole where they meet. It was caught by Agent B reporting what it could not
+build, rather than stubbing it — which is why "report what you found wrong or infeasible" is in
+every agent brief.
+
+**The work:** a processor that loads an approved ContentBrief (rejecting anything not
+`status='approved'` — B's `requireApprovedContentBrief` already enforces this at the route), loads
+the footage's `MediaAnalysis` (words + RMS + beat grid), calls M's `planBeatLockedCuts`, builds
+captions and emphasis, evaluates **G1a before persisting** (ADR-8: a plan failing the gate is
+rejected at plan-build so it never costs a render), and writes the `RenderPlan` once, complete.
+`render.submit` needs the same treatment.
+
+**Owner: assigned after Agent B merges**, since the processor consumes B's ContentBrief shape.
+Not T — T is already carrying three templates, the evidence harness and possibly footage
+selection.
+
+#### 12.12a Addendum — the approval must be re-checked at materialization, not just at enqueue
+
+Review of Agent B surfaced a timing hole that the missing processor would otherwise inherit.
+`requireApprovedContentBrief` runs at **enqueue** (`routes/content.ts:165`), and undo's safety
+guard counts **materialized** RenderPlans (`content-gate.ts:309,321`) — so a queued-but-unbuilt
+plan is invisible to it. That admits this sequence:
+
+```
+approve brief → POST /content/plans (job queued) → undo the approval → job runs → plan built from a now-'proposed' brief
+```
+
+No code is wrong today, because no processor exists to run the job. But it means the gate is
+enforced against a snapshot of approval that can go stale between enqueue and execution — and a
+plan built from an un-approved brief is an invariant-1 violation regardless of how it happened.
+
+**Requirement on the §12.12 work item:** the processor must re-call `requireApprovedContentBrief`
+**at materialization, inside the same transaction as the `RenderPlan` create**, so the approval
+check and the write cannot be separated by a concurrent undo. Enqueue-time validation stays as a
+fast rejection, not as the guarantee. Also fix `content-gate.ts:370`'s doc comment, which claims
+the helper is "never called by a route directly" while a route calls it.
+
+The general lesson, worth carrying: **a permission checked when work is queued is not a permission
+held when work runs.** Any gate enforced across an async boundary needs re-checking on the far
+side, in the transaction that does the write.
+
+### 12.13 The cutting grid must live in OUTPUT time — ruling on footage selection
+
+Agent T declined to build the `03 §6` selection stage and asked for a ruling instead of silently
+answering it. Correct call, and the question is the sharpest in the milestone.
+
+**The problem.** Removing footage makes output time ≠ source time. Our beat grid is derived from
+the *footage's own audio* but consumed in *output* coordinates. Cut a span out and the grid no
+longer describes what the viewer hears — the plan would be locked to a grid that does not exist in
+the artifact. That is exactly §12.1's failure, one level up: a quantity we measured being treated
+as one we can move.
+
+**Ruling: the grid that cuts are locked to must be defined in output time. In practice that means
+the licensed music bed's grid.** Exactly two configurations are valid:
+
+| Plan | Grid source | Valid? |
+|---|---|---|
+| Continuous playthrough, no removal | footage's own audio | **Yes** — source time *is* output time; this is what ships today |
+| Footage removal (real jump cuts) | the music bed | **Yes** — the bed plays over the finished edit, so its grid is output-time by construction |
+| Footage removal | footage's own audio | **NO** — the invalid quadrant. Reject at plan-build. |
+
+**Why the bed and not T's clever alternative.** T proposed remapping the retained spans' beats and
+embedding that, choosing spans that start on beat-locked word edges so relative phase survives.
+It can be made to work, but it constrains span selection to preserve a property that a bed gives
+for free, and it keeps us deriving a musical grid from speech. Three things settle it:
+
+1. **"Cuts land on musical beats" means musical.** Speech onsets were always a stand-in for a bed
+   we hadn't added. `01 §3` measured the reference at 112.3bpm because the reference *has* a bed
+   (`01 §8`: "the beat grid comes from the speech/room audio and a subtle bed").
+2. **A bed's grid is output-time by construction.** It is laid over the finished edit; removal
+   cannot invalidate it.
+3. **A bed's phase is genuinely ours** — we choose where the track starts. Apply §12.1's test —
+   is this a quantity we choose or one we measured? — and the bed passes where source audio fails.
+
+**Consequence, stated plainly: footage selection and the music bed are coupled. There is no
+"remove footage but keep the speech-derived grid" configuration.** A reel that actually cuts needs
+music, which is true of essentially every reel anyway. `02 §5`'s speech-only fallback survives only
+for the no-removal case, where it is already correct.
+
+This also unblocks G1b: real jump cuts create the content discontinuities a detector can find, and
+the grid they lock to is one that survives into the artifact. **G1a and G1b become jointly
+satisfiable only under this convention** — which is why T was right that G1b was blocked on more
+than the selection stage.
+
+**Owner:** the same work item as §12.12 (`jobs/plan-build.ts`), since both turn on how a plan is
+materialised. Assign together, after B merges.
+
+### 12.14 Correction: `camera.ts`'s REFRAME_STEP comment is falsified by measurement
+
+It claims alternating base framing "restores the discontinuity", implying G1b becomes passable.
+§12.3 records the actual render at 2/29 with the reframe in place. Correct the comment or the next
+agent will trust it.

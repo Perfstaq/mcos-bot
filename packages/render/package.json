@@ -9,6 +9,11 @@
   "exports": {
     ".": "./dist/index.js",
     "./plan": "./dist/plan.js",
+    "./edl": "./dist/edl.js",
+    "./rng": "./dist/rng.js",
+    "./planner": "./dist/planner/index.js",
+    "./motion": "./dist/motion/index.js",
+    "./captions": "./dist/captions/index.js",
     "./gates/types": "./dist/gates/types.js",
     "./gates/g1a": "./dist/gates/g1a.js",
     "./compositions/Reel": "./dist/compositions/Reel.js"

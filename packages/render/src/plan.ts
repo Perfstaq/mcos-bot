@@ -47,12 +47,41 @@ export type BeatGrid = z.infer<typeof BeatGridSchema>;
 // `outputStartMs` is always 0 and is not itself scored as a "cut" (07
 // §1/ADR-8: "the t=0 boundary is not a cut").
 // ---------------------------------------------------------------------------
+/**
+ * Per-shot camera declaration (Agent M, 02 §4.1 + ARCHITECTURE §11.3).
+ *
+ * The composition calls `spring(config, durationInFrames)` and lerps
+ * `fromScale → toScale`; it computes nothing itself. `durationInFrames` is
+ * NOT optional and is always the shot's own frame count for drift — at its
+ * natural speed the overdamped drift spring moves a 0.6s shot ~0.57%, which
+ * fails G7's "scale delta >1% on 100% of shots", and 0.7–1.2s accelerate
+ * shots are the common case.
+ *
+ * Carrying it on the plan is also what makes G7 machine-checkable *before*
+ * a render: `|toScale - fromScale| > 0.01` is decidable from this object, no
+ * pixels required. `scripts/qc-render.ts` currently reports G7 and G9 as
+ * `computable: false` because the schema had no motion or caption geometry —
+ * these two blocks close that gap (wiring them up is P's, per the boundary).
+ */
+export const ShotMotionSchema = z.object({
+  motion: z.enum(["push", "pull"]),
+  fromScale: z.number().positive(),
+  toScale: z.number().positive(),
+  spring: z.enum(["pop", "punch", "drift", "out"]),
+  durationInFrames: z.number().int().positive(),
+  originX: z.number(),
+  originY: z.number(),
+});
+export type ShotMotion = z.infer<typeof ShotMotionSchema>;
+
 export const CutSchema = z.object({
   id: z.string().min(1),
   sourceInMs: z.number().int().nonnegative(),
   sourceOutMs: z.number().int().nonnegative(),
   outputStartMs: z.number().int().nonnegative(),
   outputEndMs: z.number().int().nonnegative(),
+  /** Optional so plans written against the scaffold shape still validate. */
+  motion: ShotMotionSchema.optional(),
 });
 export type Cut = z.infer<typeof CutSchema>;
 
@@ -66,15 +95,65 @@ export const CaptionWordSchema = z.object({
   word: z.string(),
   startMs: z.number().int().nonnegative(),
   endMs: z.number().int().nonnegative(),
+  /** Mirrors the chunk's `emphasisWordIndex` for the renderer's convenience. */
+  isEmphasis: z.boolean().optional(),
 });
 export type CaptionWord = z.infer<typeof CaptionWordSchema>;
 
+/** 0..1 of the frame. G9 (nothing within 12% of an edge) is decidable from
+ *  this without rasterising, which is why it is on the plan at all. */
+export const AnchorSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+  align: z.enum(["center", "left"]),
+});
+export type Anchor = z.infer<typeof AnchorSchema>;
+
 export const CaptionChunkSchema = z.object({
   words: z.array(CaptionWordSchema).min(1).max(3), // G5: ≤3 words visible at once
-  position: z.string(), // e.g. "center-low" | "lower-left" | "center" — G6 wants ≥3 distinct
+  /**
+   * G6 wants ≥3 distinct. Left as a free string rather than an enum so plans
+   * written against the scaffold's examples still validate; the canonical set
+   * is 02 §2.2's rotation list, exported from `@mcos/render/captions` as
+   * `CAPTION_POSITIONS` ("center_low" | "lower_left" | "center" |
+   * "upper_third"). New plans should use those.
+   */
+  position: z.string(),
   emphasisWordIndex: z.number().int().nonnegative().nullable(), // G8: ≤1 per chunk
+  startMs: z.number().int().nonnegative().optional(),
+  endMs: z.number().int().nonnegative().optional(),
+  /** Resolved geometry for `position` — see AnchorSchema. */
+  anchor: AnchorSchema.optional(),
 });
 export type CaptionChunk = z.infer<typeof CaptionChunkSchema>;
+
+// ---------------------------------------------------------------------------
+// The other two caption layers (01 §4 / 02 §2 — "three separate composition
+// layers with independent timing"). Both optional: a plan may legitimately
+// carry neither (a reel with no hook banner and no tenant handle still
+// renders), and making them required would invalidate every plan written
+// against the scaffold shape.
+// ---------------------------------------------------------------------------
+
+/** 02 §2.1 — persistent hook banner. Text and emphasis word both come from
+ *  the approved ContentBrief; nothing is chosen at render time. */
+export const BannerSchema = z.object({
+  text: z.string(),
+  /** Index into `text.split(/\s+/)`. Exactly one word is coloured — "two
+   *  coloured words halves the emphasis" (02 §2.1). */
+  emphasisWordIndex: z.number().int().nonnegative().nullable(),
+  anchor: AnchorSchema.optional(),
+});
+export type Banner = z.infer<typeof BannerSchema>;
+
+/** 02 §2.3 — handle / brand bug. `cornerByShot` alternates across shots;
+ *  a static bug reads as a watermark, an alternating one reads as design. */
+export const HandleSchema = z.object({
+  text: z.string(),
+  opacity: z.number().min(0).max(1),
+  cornerByShot: z.array(z.enum(["upper_right", "mid_left"])),
+});
+export type Handle = z.infer<typeof HandleSchema>;
 
 // ---------------------------------------------------------------------------
 // Grade + music — thin refs; the actual grade math (motion.ts port) and the
@@ -118,9 +197,15 @@ export const RenderPlanSchema = z.object({
 
   cuts: z.array(CutSchema).min(1),
   captions: z.array(CaptionChunkSchema),
+  banner: BannerSchema.optional(),
+  handle: HandleSchema.optional(),
   beatGrid: BeatGridSchema,
   music: MusicRefSchema.nullable(),
   grade: GradeSchema,
+  /** Static per-template legibility policy — ARCHITECTURE §11.1 R2 descopes
+   *  the per-frame luminance decision 02 §2.2 asked for. Drop shadow is
+   *  always on and is not a policy. */
+  scrim: z.enum(["never", "always"]).optional(),
 });
 export type RenderPlan = z.infer<typeof RenderPlanSchema>;
 
