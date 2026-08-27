@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ContentBriefRefused,
+  HOOK_TEXT_MAX,
   MalformedBriefGenerationError,
   parseBriefResponse,
 } from "../src/integrations/content-brief-model.js";
@@ -60,6 +61,22 @@ describe("parseBriefResponse", () => {
     const parsed = parseBriefResponse(response({ output_text: JSON.stringify({ briefs: [generated({ claim_ids: [] })] }) }));
     expect(parsed.briefs).toHaveLength(0);
     expect(parsed.refusals).toHaveLength(1);
+  });
+
+  it("drops a 'generated' entry whose hook_text is longer than the one-line cap (G9)", () => {
+    const overLong = "x".repeat(HOOK_TEXT_MAX + 1);
+    const parsed = parseBriefResponse(response({ output_text: JSON.stringify({ briefs: [generated({ hook_text: overLong })] }) }));
+    expect(parsed.briefs).toHaveLength(0);
+    expect(parsed.refusals).toHaveLength(1);
+    expect(parsed.refusals[0]!.reason).toMatch(/one-line limit/);
+  });
+
+  it("keeps a hook_text exactly at the cap", () => {
+    const atCap = "x".repeat(HOOK_TEXT_MAX);
+    const parsed = parseBriefResponse(
+      response({ output_text: JSON.stringify({ briefs: [generated({ hook_text: atCap, emphasis_word: "x" })] }) }),
+    );
+    expect(parsed.briefs).toHaveLength(1);
   });
 
   it("drops a 'generated' entry with an empty hook_text, emphasis_word, or beats array", () => {

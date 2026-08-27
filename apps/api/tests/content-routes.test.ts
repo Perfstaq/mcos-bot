@@ -3,6 +3,7 @@ import { ClaimType, ContentBriefStatus, EvidenceKind, MeetingStatus } from "@pri
 import type { FastifyInstance } from "fastify";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { db, resetDb, seedTenant } from "./helpers.js";
+import { HOOK_TEXT_MAX } from "../src/integrations/content-brief-model.js";
 
 /**
  * The content-brief surface, tested as a contract — same posture as
@@ -288,6 +289,18 @@ describe("content-brief gate — approve / reject / edit / undo", () => {
     const successor = await db.contentBrief.findUniqueOrThrow({ where: { id: body.result_brief.id } });
     expect(successor.hookText).toBe("A rewritten, sharper hook");
     expect(successor.claimIds).toEqual(original.claimIds);
+  });
+
+  it("refuses an edit that would reintroduce a hook longer than the one-line cap (G9)", async () => {
+    const id = await generateOne();
+    const response = await app.inject({
+      method: "PATCH",
+      url: `/api/v1/content/briefs/${id}`,
+      headers: HOME,
+      payload: { hook_text: "x".repeat(HOOK_TEXT_MAX + 1) },
+    });
+    expect(response.statusCode).toBe(400);
+    expect(await db.contentBrief.count({ where: { status: ContentBriefStatus.superseded } })).toBe(0);
   });
 
   it("undo reverses an approve back to proposed", async () => {

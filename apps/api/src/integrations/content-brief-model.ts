@@ -50,6 +50,25 @@ export type ProposedBeat = {
   fillsFrom: ClaimType[];
 };
 
+/**
+ * The hook banner's hard length cap — G9's carve-out, not a text-field
+ * sanity bound. Strict mode's schema subset has no `maxLength`, so a hook
+ * that fits the model's own idea of "short" can still wrap to two lines at
+ * render time, breaching the ~6.3%-ink banner allowance in every frame of
+ * the reel it's placed in — a gate violation baked into the output rather
+ * than caught before it. Enforced here (over-long → refused, same posture
+ * as every other citation/non-empty drop below) and again in
+ * `routes/content.ts`'s edit schema, so a reviewer's rewrite can't
+ * reintroduce it.
+ *
+ * PLACEHOLDER pending Agent T's measurement: the real constraint is "fits
+ * one line at 0.062·W" against the template's actual font metrics, which
+ * only T's template work can measure. 60 is a conservative guess (most
+ * short-form hook copy runs 30-50 characters); replace with T's number once
+ * it exists, in this one place.
+ */
+export const HOOK_TEXT_MAX = 60;
+
 export type ProposedBrief = {
   archetype: ContentArchetype;
   claimIds: string[];
@@ -339,6 +358,17 @@ function coerceBriefs(input: unknown): { briefs: ProposedBrief[]; refusals: Brie
       refusals.push({
         archetype: typedArchetype,
         reason: "Generated output failed the citation/non-empty check and was dropped.",
+      });
+      continue;
+    }
+
+    // G9's banner carve-out (see HOOK_TEXT_MAX's doc comment): a hook that
+    // does not fit one line renders a gate violation into every frame, so it
+    // is dropped exactly like a missing citation, not truncated and shipped.
+    if (hookText.length > HOOK_TEXT_MAX) {
+      refusals.push({
+        archetype: typedArchetype,
+        reason: `Hook text is ${hookText.length} characters, over the ${HOOK_TEXT_MAX}-character one-line limit.`,
       });
       continue;
     }

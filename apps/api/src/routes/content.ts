@@ -11,6 +11,7 @@ import {
 } from "../domain/content-gate.js";
 import { generateContentBriefs } from "../domain/studio/generate-content-brief.js";
 import { frameworkById } from "../domain/studio/frameworks.js";
+import { HOOK_TEXT_MAX } from "../integrations/content-brief-model.js";
 import { planBuildQueue, renderSubmitQueue } from "../queue.js";
 
 /**
@@ -80,7 +81,10 @@ export async function contentRoutes(app: FastifyInstance): Promise<void> {
 
   const noteSchema = z.object({ note: z.string().trim().max(1000).optional() }).default({});
   const editSchema = z.object({
-    hook_text: z.string().trim().min(3).max(500).optional(),
+    // Same one-line banner cap generation enforces (HOOK_TEXT_MAX's doc
+    // comment) — an edit must not be able to reintroduce the G9 violation
+    // the coercion layer exists to keep out.
+    hook_text: z.string().trim().min(3).max(HOOK_TEXT_MAX).optional(),
     emphasis_word: z.string().trim().min(1).max(80).optional(),
     beats: z.array(z.record(z.unknown())).optional(),
     framework_id: z.string().optional(),
