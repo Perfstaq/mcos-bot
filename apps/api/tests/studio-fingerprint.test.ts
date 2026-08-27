@@ -25,6 +25,7 @@ import {
   StyleTransferInfeasible,
   assertNoReferenceAudioLeak,
   assertOutputTimeGrid,
+  assertStyleTransferConstraints,
   mapFingerprintToTemplate,
   proposeFingerprintObservations,
   referenceRhythm,
@@ -32,6 +33,7 @@ import {
   selectTemplate,
   templateRhythmProfile,
 } from "../src/domain/studio/style-transfer.js";
+import { buildStyleTransferPlan } from "../../../scripts/studio/build-style-transfer-plan.js";
 
 /**
  * Agent F — the EditFingerprint extractor and its mapping (04_STYLE_TRANSFER).
@@ -550,6 +552,115 @@ describe("04 §5 / invariant 1 — observations are proposed, never written", ()
     );
     expect(source).not.toMatch(/\bprisma\b/);
     expect(source).not.toMatch(/\.create\(|\.update\(|\.upsert\(|\.delete\(/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 04 §4 step 5 — "Emit a normal RenderPlan. Everything downstream is unchanged."
+// ---------------------------------------------------------------------------
+
+describe("04 §4 step 5 — the mapping emits an ordinary RenderPlan", () => {
+  // The USER's footage: a different talking-head clip entirely (Agent P's M-3
+  // fixture set). Its words are anonymised placeholders with real timings,
+  // which incidentally makes the point 04 §5 cares about — the reference's
+  // text cannot reach the output because it was never read and is not here.
+  const userWords = JSON.parse(
+    readFileSync(path.join(here, "fixtures/studio/m3-clips/clip2/words.json"), "utf8"),
+  ) as { durationSec: number; segments: { words: { word: string; start: number; end: number }[] }[] };
+  const flatWords = userWords.segments.flatMap((s) => s.words);
+
+  // A bed for the user's footage at the tempo the fingerprint measured, with
+  // a phase that is emphatically NOT the reference's. This is exactly what
+  // 04 §4 step 4 asks for: tempo travels, beat times do not.
+  const periodMs = 60_000 / fingerprint.audio.tempoBpm!;
+  const userBeats = {
+    method: "beat_track" as const,
+    tempoBpm: fingerprint.audio.tempoBpm,
+    beatTimesMs: Array.from({ length: 130 }, (_, i) => Math.round(311 + i * periodMs)),
+    gridQuality: 2.4,
+  };
+
+  const built = buildStyleTransferPlan({
+    fingerprint,
+    words: flatWords,
+    durationSec: userWords.durationSec,
+    beats: userBeats,
+    seed: 42,
+    hook: "THE POWER OF OBSESSION",
+    emphasisWord: "OBSESSION",
+    handleText: "@PERFSTAQ",
+    footage: { assetId: "user-footage", r2Key: "demo/user-footage.mp4" },
+  });
+
+  it("produces a plan that validates against the ordinary RenderPlan schema", () => {
+    // No style-transfer-shaped field anywhere: everything downstream —
+    // qc-render.ts, the gates, the compositions — is unchanged.
+    expect(() => RenderPlanSchema.parse(built.plan)).not.toThrow();
+    expect(built.plan.planVersion).toBe("1");
+    expect(built.plan.cuts.length).toBeGreaterThan(1);
+  });
+
+  it("locks to the USER's grid, not the reference's", () => {
+    expect(built.plan.beatGrid.beatTimesMs).not.toEqual(fingerprint.audio.beatTimesMs);
+    const refSet = new Set(fingerprint.audio.beatTimesMs);
+    const shared = built.plan.beatGrid.beatTimesMs.filter((t) => refSet.has(t)).length;
+    expect(shared / built.plan.beatGrid.beatTimesMs.length).toBeLessThan(0.5);
+  });
+
+  it("carries the reference's tempo across", () => {
+    expect(built.plan.beatGrid.tempoBpm).toBeCloseTo(fingerprint.audio.tempoBpm!, 1);
+  });
+
+  it("satisfies every 04 §5 hard constraint", () => {
+    expect(() => assertStyleTransferConstraints(built.plan, fingerprint)).not.toThrow();
+  });
+
+  it("actually applies the re-timed rhythm rather than the template's own", () => {
+    // The failure this guards against is the quiet one: computing a re-timed
+    // curve, never threading it to the planner, and shipping a plan that is
+    // just "the template" while the mapping object claims otherwise.
+    const template = getTemplate(built.mapping.templateId);
+    const retimed = built.mapping.retimed;
+    if (Math.abs(retimed.rescale - 1) > 0.02) {
+      expect(retimed.rhythm.accelerateSec).not.toEqual(template.rhythm.accelerateSec);
+    }
+    const replan = buildStyleTransferPlan({
+      fingerprint,
+      words: flatWords,
+      durationSec: userWords.durationSec,
+      beats: userBeats,
+      seed: 42,
+      hook: "THE POWER OF OBSESSION",
+      emphasisWord: "OBSESSION",
+      handleText: "@PERFSTAQ",
+      footage: { assetId: "user-footage", r2Key: "demo/user-footage.mp4" },
+    });
+    // Same inputs, same seed, same plan — G13/invariant 6 reproducibility.
+    expect(replan.plan.cuts.map((c) => c.outputStartMs)).toEqual(
+      built.plan.cuts.map((c) => c.outputStartMs),
+    );
+  });
+
+  it("re-times to the user's footage rather than the reference's length", () => {
+    // 04 §4 step 3: the fingerprint's shot count rarely matches the footage.
+    const last = built.plan.cuts[built.plan.cuts.length - 1]!;
+    expect(last.outputEndMs).toBeCloseTo(Math.round(userWords.durationSec * 1000), -3);
+    expect(built.plan.cuts.length).not.toBe(fingerprint.rhythm.shotCount);
+  });
+
+  it("keeps every shot at or above the 0.6s floor", () => {
+    for (const cut of built.plan.cuts) {
+      expect(cut.outputEndMs - cut.outputStartMs).toBeGreaterThanOrEqual(MIN_SHOT_SEC * 1000 - 1);
+    }
+  });
+
+  it("takes no text from the reference", () => {
+    // Structural, not policed: R6 means no OCR ran, so there is no reference
+    // text in the fingerprint to copy. The banner comes from the caller (the
+    // ContentBrief in production), and the captions from the user's own words.
+    const captionWords = built.plan.captions.flatMap((c) => c.words.map((w) => w.word));
+    expect(captionWords.every((w) => /^w\d+$/.test(w))).toBe(true);
+    expect(JSON.stringify(fingerprint.captions)).not.toContain("OBSESSION");
   });
 });
 

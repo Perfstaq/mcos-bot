@@ -3,7 +3,7 @@ import path from "node:path";
 import { BANNER_ANCHOR, HANDLE_OPACITY, anchorFor, buildBanner, buildCaptionTrack } from "@mcos/render/captions";
 import { shotCamera } from "@mcos/render/motion";
 import { assertValidRenderPlan, PLAN_VERSION, type Cut, type RenderPlan } from "@mcos/render/plan";
-import { planBeatLockedCuts, type Bed, type WordInterval } from "@mcos/render/planner";
+import { planBeatLockedCuts, type Bed, type RhythmOptions, type WordInterval } from "@mcos/render/planner";
 import {
   getTemplate,
   templateHandleCornerForShot,
@@ -69,6 +69,16 @@ export type BuildTemplatePlanInput = {
   fps?: number;
   width?: number;
   height?: number;
+  /**
+   * Overrides the template's own rhythm curve.
+   *
+   * Added for style transfer (04_STYLE_TRANSFER §4 step 2, Agent F): the
+   * whole point of a fingerprint is to pace a template like the reference
+   * reel, and without this the re-timed curve would be computed and then
+   * discarded. Optional and defaulted to `template.rhythm`, so every existing
+   * caller — and every plan already committed as evidence — is unaffected.
+   */
+  rhythm?: RhythmOptions;
 };
 
 export function buildTemplatePlan(input: BuildTemplatePlanInput): RenderPlan {
@@ -106,7 +116,9 @@ export function buildTemplatePlan(input: BuildTemplatePlanInput): RenderPlan {
     seed: input.seed,
     // The template's rhythm character — the one planner input that differs
     // between the three (01 §2's "rhythmic breathing, not uniform pacing").
-    rhythm: template.rhythm,
+    // Style transfer replaces it with the reference's pace, re-timed onto
+    // this template's shape (04 §4 step 2).
+    rhythm: input.rhythm ?? template.rhythm,
     gatePct: 0,
   });
   if (!planned.cutTimesSec.length) {
