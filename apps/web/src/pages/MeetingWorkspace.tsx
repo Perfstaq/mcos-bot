@@ -154,6 +154,14 @@ export function MeetingWorkspace() {
 
       {error && <div className="banner error">{error}</div>}
 
+      {/* Same one-line failure surface the meetings list shows: which stage
+          died, and the reason the worker recorded. */}
+      {meeting?.status === "failed" && meeting.failure_reason && (
+        <div className="banner error">
+          <strong>{meeting.failed_stage ?? "failed"}</strong> — {meeting.failure_reason}
+        </div>
+      )}
+
       <div className="panes">
         <div className="pane doc">
           {/* Hidden rather than unmounted, so that switching to the recording

@@ -222,6 +222,7 @@ async function main(): Promise<void> {
             meetingId: meeting.id,
             evidenceSourceId: evidence.id,
             extractionRunId: run.id,
+            extractedByModel: "seed",
             type: claim.type,
             text: claim.text,
             confidence: claim.confidence,

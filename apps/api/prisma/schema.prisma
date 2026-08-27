@@ -370,6 +370,11 @@ model CandidateClaim {
 
   dedupeKey String @map("dedupe_key")
 
+  // Which model proposed this claim. The run's model is the run-level record;
+  // this pins it to the row so provenance survives even a re-run with a
+  // different model. Nullable: claims extracted before the column existed.
+  extractedByModel String? @map("extracted_by_model")
+
   // The claim this one was edited from — always the ORIGINAL of the lineage,
   // never the immediate predecessor, so a claim rewritten five times still has
   // one stable identity. The brief keys its rows off that identity, which is
