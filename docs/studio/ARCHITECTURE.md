@@ -973,3 +973,25 @@ higher in the video band, it must first justify how it avoids the face without f
 
 M added `ShotMotionSchema` per cut and `anchor` per caption, so micro-motion and safe margins are
 decidable from the plan without pixels. Wiring them into `qc-render.ts` is P/T's boundary.
+
+### 12.7 G9 vs the banner — ruling (the reference violates the gate as written)
+
+The demo plan pins the banner at `y: 0.09`, wholly inside G9's 12% top margin. This is a genuine
+conflict, not an oversight: `01 §4` measures the reference's banner at ~9% and `02 §2.1` puts it
+in the top letterbox bar, while `07 §1` G9 demands zero text within 12% of ANY edge. Agent M
+resolved it silently in the reference's favour, and the G9 test asserts horizontal bounds only,
+so nothing caught it.
+
+**Ruling: G9's 12% bound applies strictly to the LEFT, RIGHT and BOTTOM edges. The top edge is
+exempt for the persistent banner only, which may sit as high as 8%.** Reasoning: G9 exists to
+avoid platform UI, and on Reels/Shorts/TikTok that UI is concentrated at the bottom (caption,
+CTA) and the right (action rail) — the top is comparatively clear. The banner is the
+scroll-stopper hook (`01 §4`: "persistent for the entire clip"), it sits in the letterbox bar
+where it occludes nothing, and pushing it to 14% would bury the hook to satisfy a margin
+protecting against UI that isn't there. Every other text layer — karaoke, handle, anything a
+template adds — stays bound on all four edges.
+
+**Required with this ruling:** the G9 test must assert VERTICAL box extents too (it currently
+checks horizontal only, which is exactly why the violation shipped), with the banner exemption
+written as an explicit named carve-out rather than an absent assertion. An exemption that nothing
+tests is indistinguishable from a bug.
