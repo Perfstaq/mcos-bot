@@ -24,8 +24,15 @@
  * a write touching anything else is refused however it is dressed up.
  */
 
-/** The tables that only ever grow. */
-export const APPEND_ONLY_MODELS = new Set(["BriefVersion", "BriefClaim"]);
+/** The tables that only ever grow.
+ *
+ * `RenderPlan` joins this set for G13 (reproducibility): a plan embeds
+ * everything its render consumes (cuts, captions, beat grid, seed), and
+ * `scripts/qc-render.ts` scores G1a against the grid embedded in the exact
+ * row a render was built from — a plan that could be edited in place would
+ * make that comparison meaningless after the fact. A new plan is a new row,
+ * same discipline as a new BriefVersion. */
+export const APPEND_ONLY_MODELS = new Set(["BriefVersion", "BriefClaim", "RenderPlan"]);
 
 /** Operations that add rows. Always fine — growth is the point. */
 const INSERT_OPS = new Set(["create", "createMany", "createManyAndReturn"]);
