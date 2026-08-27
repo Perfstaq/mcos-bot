@@ -59,6 +59,13 @@ model Tenant {
   transitions     StateTransition[]
   webhookEvents   WebhookEvent[]
 
+  // Content Studio (additive — ARCHITECTURE.md §3). MotionTemplate is a
+  // global catalog (no tenant_id) and has no back-relation here.
+  mediaAssets    MediaAsset[]
+  mediaAnalyses  MediaAnalysis[]
+  renderPlans    RenderPlan[]
+  renders        Render[]
+
   @@map("tenants")
 }
 
@@ -1024,4 +1031,193 @@ model MeetingShare {
 
   @@index([meetingId])
   @@map("meeting_shares")
+}
+
+// ---------------------------------------------------------------------------
+// Content Studio — media, analysis, templates, plans, renders.
+// (Additive migration — ARCHITECTURE.md §3. Invariant 6: no destructive
+// changes, no renames of existing columns/models above this line.)
+// ---------------------------------------------------------------------------
+
+enum MediaAssetKind {
+  footage
+  reference
+  render
+  music
+
+  @@map("media_asset_kind")
+}
+
+model MediaAsset {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  kind         MediaAssetKind
+  r2Key        String         @unique @map("r2_key")
+  contentType  String         @map("content_type")
+  bytes        BigInt
+  checksum     String?
+  originalName String?        @map("original_name")
+
+  durationMs Int?   @map("duration_ms")
+  width      Int?
+  height     Int?
+  fps        Float?
+
+  uploadedByUserId String? @map("uploaded_by_user_id")
+
+  // Reference reels are purged after fingerprinting (04 §5) — same posture as
+  // artifacts.purged_at: the row survives, the bytes do not.
+  purgedAt  DateTime? @map("purged_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  analysis MediaAnalysis?
+  plans    RenderPlan[]
+
+  @@index([tenantId, kind, createdAt])
+  @@map("media_assets")
+}
+
+enum MediaAnalysisStatus {
+  running
+  succeeded
+  failed
+
+  @@map("media_analysis_status")
+}
+
+model MediaAnalysis {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  assetId String @unique @map("asset_id")
+
+  status MediaAnalysisStatus @default(running)
+  error  String?
+
+  // Signal payloads (03 §1); each null until its stage lands.
+  words  Json? // word-level timings (faster-whisper), ms
+  beats  Json? // { method, tempo_bpm, beat_times_ms[], grid_quality } — THE canonical grid (§4)
+  scenes Json? // PySceneDetect shot list (reference assets only)
+  motion Json? // per-window motion energy
+  faces  Json? // per-span face boxes + luminance map
+
+  tempoBpm   Float?  @map("tempo_bpm")
+  beatMethod String? @map("beat_method") // 'beat_track' | 'onset_env' | 'constant_grid'
+
+  // Pins the sidecar (and its librosa version) that produced this row —
+  // same reasoning as extraction_runs.prompt_version.
+  analyzerVersion String @map("analyzer_version")
+
+  startedAt  DateTime  @default(now()) @map("started_at")
+  finishedAt DateTime? @map("finished_at")
+
+  tenant Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  asset  MediaAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+  @@map("media_analyses")
+}
+
+enum TemplateFraming {
+  letterbox
+  fill
+
+  @@map("template_framing")
+}
+
+// Global catalog — NO tenant_id; must be listed in db.ts UNSCOPED. Rows are
+// seeded by fixture (explicitly marked; templates are not memory, so the gate
+// invariant does not apply to them).
+model MotionTemplate {
+  id        String @id @default(uuid())
+  name      String
+  archetype String
+
+  framing TemplateFraming
+  slots   Json // rhythm-slot spec: establish/accelerate/hold pattern
+  fonts   Json // 02 §7 typography tokens
+  grade   Json // 02 §6 grade parameters
+
+  version Int     @default(1)
+  active  Boolean @default(true)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  plans RenderPlan[]
+
+  @@unique([name, version])
+  @@map("motion_templates")
+}
+
+// Immutable once written (APPEND_ONLY_MODELS): the reproducible artifact.
+// plan embeds EVERYTHING the render consumes — cut list, caption chunks with
+// word timings, emphasis flags, motion curves, grade, music asset id, beat
+// grid, seed — so a re-render never recomputes analysis or re-runs an LLM.
+model RenderPlan {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  // Plain column until Agent B's ContentBrief model lands, then a relation is
+  // added in B's own additive migration (see §6).
+  contentBriefId String @map("content_brief_id")
+  templateId     String @map("template_id")
+  footageAssetId String @map("footage_asset_id")
+
+  plan        Json
+  seed        Int
+  planVersion String @map("plan_version") // schema version of the plan payload
+  createdBy   String @map("created_by")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  template MotionTemplate @relation(fields: [templateId], references: [id])
+  footage  MediaAsset     @relation(fields: [footageAssetId], references: [id])
+  renders  Render[]
+
+  @@index([tenantId, contentBriefId])
+  @@index([tenantId, createdAt])
+  @@map("render_plans")
+}
+
+enum RenderStatus {
+  queued
+  rendering
+  qc
+  succeeded
+  failed
+
+  @@map("render_status")
+}
+
+model Render {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  planId String @map("plan_id")
+
+  status         RenderStatus @default(queued)
+  r2Key          String?      @unique @map("r2_key")
+  durationMs     Int?         @map("duration_ms")
+  bytes          BigInt?
+  checksum       String? // G13: same plan+footage ⇒ same checksum
+  qc             Json? // full gate-by-gate report from render.qc
+  qcPassed       Boolean?     @map("qc_passed")
+  lambdaRenderId String?      @map("lambda_render_id")
+
+  // Mirrors meetings.failure_reason/failed_stage: failures are surfaced, never silent.
+  error       String?
+  failedStage String? @map("failed_stage") // analyze | plan | render | qc
+
+  createdAt  DateTime  @default(now()) @map("created_at")
+  finishedAt DateTime? @map("finished_at")
+
+  tenant Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  plan   RenderPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+  @@index([planId, createdAt])
+  @@map("renders")
 }

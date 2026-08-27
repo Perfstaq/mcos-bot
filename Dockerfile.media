@@ -1,0 +1,104 @@
+# Content Studio media sidecar image (ARCHITECTURE.md §5/ADR-3).
+#
+# Runs `worker-media.ts`, which consumes ONLY `media.analyze` and `render.qc`
+# — the two queues needing ffmpeg + the Python sidecar (services/analyzer:
+# faster-whisper + librosa). `plan.build` (pure TS) and `render.submit`
+# (Remotion Lambda API calls) stay on the existing lean worker/image
+# (Dockerfile, worker.ts) — this image never runs them.
+#
+# Also carries `packages/render` + its node_modules: local @remotion/renderer
+# rendering is the dev/CI path (ADR-7), so tests and `scripts/qc-render.ts`
+# never need AWS. Remotion bundles straight from TS source at render time
+# (its own webpack pipeline) — no separate build step for packages/render.
+#
+# Debian, not node:20-alpine like the main Dockerfile: librosa's numba/
+# llvmlite dependency has no musl/Alpine wheels, so an Alpine build would mean
+# compiling LLVM from source — multi-hour and failure-prone. This is the one
+# deliberate deviation from the existing image's base.
+
+FROM node:20-bookworm-slim AS build
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ffmpeg python3 python3-venv python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY package.json package-lock.json ./
+COPY apps/api/package.json apps/api/
+COPY apps/web/package.json apps/web/
+COPY packages/render/package.json packages/render/
+RUN npm ci
+
+COPY apps/api/prisma apps/api/prisma
+RUN npx prisma generate --schema apps/api/prisma/schema.prisma
+
+COPY . .
+
+# Build order matters: @mcos/render first (apps/api's tsc build resolves
+# its .d.ts/dist at compile AND run time — the packaging gap this used to
+# have, and the root cause of C1/I5, is closed by giving it a real build
+# step), then apps/api, then scripts/qc-render.ts's own compile (it also
+# imports @mcos/render — same reason). qc-render.ts is compiled to plain JS
+# and run with `node`, not `tsx`: tsx is an apps/api devDependency that
+# `npm prune --omit=dev` strips below, so invoking a .ts file via tsx at
+# runtime threw in every render.qc job (C1) — this is the actual fix, not
+# just "don't prune tsx".
+RUN npm run build -w @mcos/render \
+    && npm run build -w @mcos/api \
+    && npx tsc -p scripts/tsconfig.build.json
+
+# Drop dev dependencies (including tsx) but keep the generated Prisma client
+# + workspace deps (remotion, react, zod — packages/render's node_modules).
+RUN npm prune --omit=dev
+
+# Python venv for services/analyzer, isolated from node_modules. Exact pins
+# in requirements.txt are recorded into MediaAnalysis.analyzerVersion so a
+# grid/transcript is always traceable to what produced it. Runs on
+# bookworm's native python3 (3.11) — requirements.txt's numpy pin is chosen
+# to support 3.11 explicitly (see its header comment); the pinned LIBRARY
+# versions, not the interpreter minor version, are what calibration
+# reproducibility actually depends on (already verified: librosa 0.11.0 and
+# 1.0.0 gave bit-identical beat_track output on the reference — the
+# algorithm's numerics don't move between CPython minor versions either).
+RUN python3 -m venv /opt/analyzer-venv \
+    && /opt/analyzer-venv/bin/pip install --no-cache-dir --upgrade pip \
+    && /opt/analyzer-venv/bin/pip install --no-cache-dir -r services/analyzer/requirements.txt
+
+FROM node:20-bookworm-slim AS runtime
+WORKDIR /app
+ENV NODE_ENV=production
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ffmpeg python3 dumb-init \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd -r mcos && useradd -r -g mcos mcos
+
+COPY --from=build --chown=mcos:mcos /app/node_modules ./node_modules
+COPY --from=build --chown=mcos:mcos /app/package.json ./package.json
+# qc-render.ts's findRepoRoot() marker-checks for this file alongside
+# services/analyzer/ — cheap to include, and the alternative (a marker that
+# only ever existed in the build stage) is exactly the kind of "works in
+# one stage, breaks in the other" gap this whole fix round is about.
+COPY --from=build --chown=mcos:mcos /app/package-lock.json ./package-lock.json
+COPY --from=build --chown=mcos:mcos /app/apps/api/dist ./apps/api/dist
+COPY --from=build --chown=mcos:mcos /app/apps/api/prisma ./apps/api/prisma
+COPY --from=build --chown=mcos:mcos /app/apps/api/package.json ./apps/api/package.json
+COPY --from=build --chown=mcos:mcos /app/packages/render ./packages/render
+COPY --from=build --chown=mcos:mcos /app/scripts/package.json ./scripts/package.json
+COPY --from=build --chown=mcos:mcos /app/scripts/dist ./scripts/dist
+COPY --from=build --chown=mcos:mcos /app/services/analyzer ./services/analyzer
+COPY --from=build --chown=mcos:mcos /opt/analyzer-venv /opt/analyzer-venv
+
+# Consumed by jobs/media-analyze.ts and jobs/render-qc.ts to locate the
+# sidecar and the compiled QC script (same execFile-to-venv shape as
+# founder-journey's transcribe.ts; dev defaults to the repo-relative
+# services/analyzer/.venv and scripts/dist instead).
+ENV ANALYZER_PYTHON=/opt/analyzer-venv/bin/python
+ENV ANALYZER_SCRIPT=/app/services/analyzer/analyzer.py
+ENV QC_RENDER_SCRIPT=/app/scripts/dist/qc-render.js
+ENV QC_SCENE_DETECT_SCRIPT=/app/services/analyzer/qc_scene_detect.py
+
+USER mcos
+
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "apps/api/dist/worker-media.js"]

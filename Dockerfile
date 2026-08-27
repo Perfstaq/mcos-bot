@@ -9,6 +9,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
+COPY packages/render/package.json packages/render/
 RUN npm ci
 
 COPY apps/api/prisma apps/api/prisma
@@ -32,6 +33,15 @@ COPY --from=build --chown=mcos:mcos /app/apps/api/dist ./apps/api/dist
 COPY --from=build --chown=mcos:mcos /app/apps/api/prisma ./apps/api/prisma
 COPY --from=build --chown=mcos:mcos /app/apps/api/package.json ./apps/api/package.json
 COPY --from=build --chown=mcos:mcos /app/apps/web/dist ./apps/web/dist
+# node_modules above already contains node_modules/@mcos/render, a symlink
+# to this directory (npm workspaces) — without the directory itself present,
+# that symlink dangles. apps/api's src doesn't import @mcos/render today,
+# but plan.build (queue.ts: it runs on THIS lean worker, not worker-media)
+# is obliged by ADR-8 to import @mcos/render/gates/g1a once Agent M writes
+# it, and a dangling workspace symlink is exactly the kind of thing that
+# only breaks in a deploy, with no obvious cause, months from now.
+COPY --from=build --chown=mcos:mcos /app/packages/render/package.json ./packages/render/package.json
+COPY --from=build --chown=mcos:mcos /app/packages/render/dist ./packages/render/dist
 
 USER mcos
 EXPOSE 8787

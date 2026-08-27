@@ -20,6 +20,14 @@ export const QUEUE = {
   calendarSync: "calendar-sync",
   suggestActions: "suggest-actions",
   digest: "digest",
+  // Content Studio (additive — ARCHITECTURE.md §2/§8). `mediaAnalyze` and
+  // `renderQc` are consumed by `worker-media.ts` (the ffmpeg/Python-sidecar
+  // image); `planBuild` and `renderSubmit` stay on the existing lean
+  // `worker.ts` — see queue.ts's own doc comment on each below for why.
+  mediaAnalyze: "media.analyze",
+  planBuild: "plan.build",
+  renderSubmit: "render.submit",
+  renderQc: "render.qc",
 } as const;
 
 export type WebhookJob = { webhookEventId: string };
@@ -35,6 +43,24 @@ export type DigestJob = { meetingId: string; tenantId: string };
 export type CalendarSyncJob = { connectionId?: string; tenantId?: string };
 
 export type SuggestActionsJob = { meetingId: string; tenantId: string };
+
+/** Runs the Python sidecar's `words`+`beats` stages (and, later, scenes/
+ *  motion/faces) over a `MediaAsset`, writing the result into its
+ *  `MediaAnalysis` row (03_RENDER_PIPELINE §1/§3: ffmpeg-optional, GPU-
+ *  optional, faster-whisper on CPU acceptable at this scale). */
+export type MediaAnalyzeJob = { tenantId: string; assetId: string; mediaAnalysisId: string };
+/** Pure computation, no LLM call (the LLM already ran at ContentBrief
+ *  generation) — builds the beat-snapped rhythm plan + caption chunks +
+ *  shot assignment into a `RenderPlan` row. Scores G1a (musical intent)
+ *  against the plan's own embedded beat grid before the job is allowed to
+ *  succeed (ADR-8): a plan that fails G1a must never reach `render.submit`. */
+export type PlanBuildJob = { tenantId: string; planId: string };
+/** Deploys/reuses the `packages/render` Lambda site bundle, feeds it
+ *  presigned R2 footage URLs, and polls for completion (ADR-7). */
+export type RenderSubmitJob = { tenantId: string; renderId: string };
+/** Runs `scripts/qc-render.ts` (07_QUALITY_GATES §1) against a finished
+ *  render: G1b (render fidelity) plus G2-G14, writing `Render.qc`. */
+export type RenderQcJob = { tenantId: string; renderId: string };
 
 /**
  * Retries are generous and backed off: every job in this pipeline talks to a
@@ -93,6 +119,48 @@ export const digestQueue = new Queue<DigestJob>(QUEUE.digest, {
   defaultJobOptions: { ...defaultJobOptions, attempts: 2 },
 });
 
+/**
+ * Content Studio queues (additive). Per 03_RENDER_PIPELINE §3:
+ *
+ * | Queue          | Concurrency | Timeout | Notes                              |
+ * |----------------|-------------|---------|-------------------------------------|
+ * | media.analyze  | 2           | 15m     | worker-media.ts; ffmpeg + sidecar   |
+ * | plan.build     | 4           | 60s     | worker.ts; pure computation         |
+ * | render.submit  | 4           | 20m     | worker.ts; Remotion Lambda API calls|
+ * | render.qc      | 4           | 5m      | worker-media.ts; PySceneDetect+ffmpeg|
+ *
+ * Concurrency is set on each `Worker` (worker.ts/worker-media.ts), not here.
+ * "Timeout" has no first-class BullMQ primitive; it is enforced two ways —
+ * `lockDuration` on the consuming Worker (a stalled/crashed job is reclaimed
+ * rather than held forever) and, where a stage shells out to a subprocess
+ * (media.analyze's `execFileSync` into services/analyzer), the processor's
+ * own timeout on that call. 03 §7's failure states — `analyze_failed`,
+ * `plan_infeasible`, `render_failed`, `qc_failed(metric, value)` — are always
+ * surfaced on the `Render`/`MediaAnalysis` row, never silent.
+ *
+ * Retries: 2 with exponential backoff (03 §3), same posture as
+ * suggestActionsQueue/digestQueue — a third automatic retry on a render job
+ * just delays the honest failure the UI already knows how to show.
+ */
+const studioJobOptions = { ...defaultJobOptions, attempts: 2 };
+
+export const mediaAnalyzeQueue = new Queue<MediaAnalyzeJob>(QUEUE.mediaAnalyze, {
+  connection,
+  defaultJobOptions: studioJobOptions,
+});
+export const planBuildQueue = new Queue<PlanBuildJob>(QUEUE.planBuild, {
+  connection,
+  defaultJobOptions: studioJobOptions,
+});
+export const renderSubmitQueue = new Queue<RenderSubmitJob>(QUEUE.renderSubmit, {
+  connection,
+  defaultJobOptions: studioJobOptions,
+});
+export const renderQcQueue = new Queue<RenderQcJob>(QUEUE.renderQc, {
+  connection,
+  defaultJobOptions: studioJobOptions,
+});
+
 export const allQueues = [
   webhookQueue,
   ingestRecordingQueue,
@@ -101,6 +169,10 @@ export const allQueues = [
   calendarSyncQueue,
   suggestActionsQueue,
   digestQueue,
+  mediaAnalyzeQueue,
+  planBuildQueue,
+  renderSubmitQueue,
+  renderQcQueue,
 ];
 
 export async function closeQueues(): Promise<void> {

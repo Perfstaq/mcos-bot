@@ -1,0 +1,384 @@
+{
+  "language": "mr",
+  "durationSec": 58.329,
+  "segments": [
+    {
+      "start": 0,
+      "end": 6.24,
+      "words": [
+        {
+          "word": "w0",
+          "start": 0,
+          "end": 0.26,
+          "score": 0.393
+        },
+        {
+          "word": "w1",
+          "start": 0.26,
+          "end": 0.68,
+          "score": 0.3477
+        },
+        {
+          "word": "w2",
+          "start": 0.68,
+          "end": 1.26,
+          "score": 0.3803
+        },
+        {
+          "word": "w3",
+          "start": 1.26,
+          "end": 1.32,
+          "score": 0.3964
+        },
+        {
+          "word": "w4",
+          "start": 1.32,
+          "end": 1.84,
+          "score": 0.7658
+        },
+        {
+          "word": "w5",
+          "start": 1.84,
+          "end": 2.06,
+          "score": 0.5492
+        },
+        {
+          "word": "w6",
+          "start": 2.06,
+          "end": 2.5,
+          "score": 0.7165
+        },
+        {
+          "word": "w7",
+          "start": 2.5,
+          "end": 2.72,
+          "score": 0.2091
+        },
+        {
+          "word": "w8",
+          "start": 2.72,
+          "end": 2.92,
+          "score": 0.5155
+        },
+        {
+          "word": "w9",
+          "start": 3,
+          "end": 3.26,
+          "score": 0.5393
+        },
+        {
+          "word": "w10",
+          "start": 3.26,
+          "end": 3.76,
+          "score": 0.7501
+        },
+        {
+          "word": "w11",
+          "start": 3.76,
+          "end": 4.5,
+          "score": 0.5801
+        },
+        {
+          "word": "w12",
+          "start": 4.5,
+          "end": 4.92,
+          "score": 0.1947
+        },
+        {
+          "word": "w13",
+          "start": 4.92,
+          "end": 5.3,
+          "score": 0.3501
+        },
+        {
+          "word": "w14",
+          "start": 5.3,
+          "end": 5.94,
+          "score": 0.5394
+        },
+        {
+          "word": "w15",
+          "start": 5.94,
+          "end": 6.24,
+          "score": 0.3167
+        }
+      ]
+    },
+    {
+      "start": 6.54,
+      "end": 9.86,
+      "words": [
+        {
+          "word": "w16",
+          "start": 6.54,
+          "end": 7.1,
+          "score": 0.2513
+        },
+        {
+          "word": "w17",
+          "start": 7.1,
+          "end": 8.04,
+          "score": 0.4152
+        },
+        {
+          "word": "w18",
+          "start": 8.04,
+          "end": 8.2,
+          "score": 0.2387
+        },
+        {
+          "word": "w19",
+          "start": 8.2,
+          "end": 8.72,
+          "score": 0.5824
+        },
+        {
+          "word": "w20",
+          "start": 8.72,
+          "end": 9.42,
+          "score": 0.4096
+        },
+        {
+          "word": "w21",
+          "start": 9.42,
+          "end": 9.86,
+          "score": 0.7569
+        }
+      ]
+    },
+    {
+      "start": 10.22,
+      "end": 16.78,
+      "words": [
+        {
+          "word": "w22",
+          "start": 10.22,
+          "end": 10.68,
+          "score": 0.9787
+        },
+        {
+          "word": "w23",
+          "start": 10.68,
+          "end": 11.34,
+          "score": 0.883
+        },
+        {
+          "word": "w24",
+          "start": 11.34,
+          "end": 11.8,
+          "score": 0.5053
+        },
+        {
+          "word": "w25",
+          "start": 11.8,
+          "end": 12.34,
+          "score": 0.729
+        },
+        {
+          "word": "w26",
+          "start": 12.34,
+          "end": 13.1,
+          "score": 0.5675
+        },
+        {
+          "word": "w27",
+          "start": 13.1,
+          "end": 13.78,
+          "score": 0.6533
+        },
+        {
+          "word": "w28",
+          "start": 14,
+          "end": 14.24,
+          "score": 0.7639
+        },
+        {
+          "word": "w29",
+          "start": 14.24,
+          "end": 14.44,
+          "score": 0.7151
+        },
+        {
+          "word": "w30",
+          "start": 14.44,
+          "end": 14.64,
+          "score": 0.9976
+        },
+        {
+          "word": "w31",
+          "start": 14.64,
+          "end": 14.86,
+          "score": 0.8199
+        },
+        {
+          "word": "w32",
+          "start": 14.86,
+          "end": 15.06,
+          "score": 0.7146
+        },
+        {
+          "word": "w33",
+          "start": 15.16,
+          "end": 15.62,
+          "score": 0.7282
+        },
+        {
+          "word": "w34",
+          "start": 15.62,
+          "end": 16,
+          "score": 0.5326
+        },
+        {
+          "word": "w35",
+          "start": 16,
+          "end": 16.38,
+          "score": 0.8207
+        },
+        {
+          "word": "w36",
+          "start": 16.38,
+          "end": 16.78,
+          "score": 0.6307
+        }
+      ]
+    },
+    {
+      "start": 17.14,
+      "end": 26.06,
+      "words": [
+        {
+          "word": "w37",
+          "start": 17.14,
+          "end": 17.16,
+          "score": 0.5214
+        },
+        {
+          "word": "w38",
+          "start": 17.16,
+          "end": 17.36,
+          "score": 0.9763
+        },
+        {
+          "word": "w39",
+          "start": 17.36,
+          "end": 17.56,
+          "score": 0.9554
+        },
+        {
+          "word": "w40",
+          "start": 17.56,
+          "end": 17.9,
+          "score": 0.7027
+        },
+        {
+          "word": "w41",
+          "start": 17.9,
+          "end": 18.48,
+          "score": 0.7515
+        },
+        {
+          "word": "w42",
+          "start": 18.7,
+          "end": 18.8,
+          "score": 0.3915
+        },
+        {
+          "word": "w43",
+          "start": 18.8,
+          "end": 19,
+          "score": 0.9896
+        },
+        {
+          "word": "w44",
+          "start": 19,
+          "end": 19.2,
+          "score": 0.9597
+        },
+        {
+          "word": "w45",
+          "start": 19.32,
+          "end": 19.8,
+          "score": 0.8832
+        },
+        {
+          "word": "w46",
+          "start": 20.22,
+          "end": 20.32,
+          "score": 0.6684
+        },
+        {
+          "word": "w47",
+          "start": 20.32,
+          "end": 20.56,
+          "score": 0.9109
+        },
+        {
+          "word": "w48",
+          "start": 20.66,
+          "end": 21.14,
+          "score": 0.6214
+        },
+        {
+          "word": "w49",
+          "start": 21.14,
+          "end": 21.5,
+          "score": 0.2813
+        },
+        {
+          "word": "w50",
+          "start": 21.5,
+          "end": 21.74,
+          "score": 0.2833
+        },
+        {
+          "word": "w51",
+          "start": 21.74,
+          "end": 22.26,
+          "score": 0.7359
+        },
+        {
+          "word": "w52",
+          "start": 22.26,
+          "end": 22.98,
+          "score": 0.6821
+        },
+        {
+          "word": "w53",
+          "start": 22.98,
+          "end": 23.2,
+          "score": 0.5937
+        },
+        {
+          "word": "w54",
+          "start": 23.2,
+          "end": 24.12,
+          "score": 0.6305
+        },
+        {
+          "word": "w55",
+          "start": 24.12,
+          "end": 24.46,
+          "score": 0.7936
+        },
+        {
+          "word": "w56",
+          "start": 24.46,
+          "end": 25.06,
+          "score": 0.9807
+        },
+        {
+          "word": "w57",
+          "start": 25.06,
+          "end": 25.52,
+          "score": 0.7005
+        },
+        {
+          "word": "w58",
+          "start": 25.52,
+          "end": 26.06,
+          "score": 0.7581
+        }
+      ]
+    }
+  ]
+}

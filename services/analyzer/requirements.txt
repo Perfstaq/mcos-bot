@@ -1,0 +1,45 @@
+# Content Studio media sidecar — pinned exact (ARCHITECTURE.md §5: QC and the
+# planner's grid must come from the same librosa; MediaAnalysis.analyzerVersion
+# records these versions so a re-render's inputs are always reproducible).
+#
+# Only what the `words` + `beats` stages need (P's task 4 scope). The
+# `scenes`/`motion`/`faces` stages are NOT implemented yet — see analyzer.py —
+# and their owning agent adds PySceneDetect/OpenCV/mediapipe here when they do.
+#
+# Deliberately faster-whisper directly, not the `whisperx` package founder-journey
+# ported from: faster-whisper's own `word_timestamps=True` + built-in Silero VAD
+# (onnxruntime, no torch) gives the same word-level contract (WordSchema:
+# word/start/end) as whisperx_run.py without whisperx's wav2vec2 forced-alignment
+# stage, which pulls in torch + transformers (~1GB+ installed) for no measured
+# benefit over faster-whisper's native alignment on this milestone's footage
+# (talking-head clips, not overlapping speech needing diarization-grade
+# alignment). Flagged in the PR body as a disk-motivated deviation from the
+# doc's literal "port whisperx_run.py" — same avoidance of pyannote/torchcodec
+# the original runner already committed to, taken one step further.
+# numpy pinned to 2.3.5, not the newer 2.5.x this venv originally resolved
+# to locally: 2.4.0+ requires Python>=3.12, and Dockerfile.media's base
+# image (node:20-bookworm-slim) ships Python 3.11 as its native `python3`
+# — getting 3.12 onto Debian bookworm needs either a backports package that
+# doesn't actually exist (tried, confirmed absent) or copying a second
+# Python installation from a different base image, both worse trades than
+# a numpy pin one minor version back. Re-verified after the rebuild: same
+# tempo/beat-count/beat-lock numbers on the reference (see PR body).
+faster-whisper==1.2.1
+librosa==0.11.0
+numpy==2.3.5
+soundfile==0.14.0
+
+# QC harness only (ADR-8 §4.1(c) — the pinned methodology, normative for
+# G1b): PySceneDetect ContentDetector(threshold=27) on rendered output.
+# Used by qc_scene_detect.py, not by analyzer.py's own stages.
+scenedetect==0.7.1
+# Pinned explicitly (as "opencv-python", matching the name scenedetect's own
+# unpinned dependency resolves to — NOT "opencv-python-headless", a
+# different PyPI package pip has no notion of as interchangeable, so
+# pinning the headless variant installs BOTH, ~48MB each, wastefully).
+# Left unpinned, this resolved to 5.0.0.93, which SIGILLs on `import cv2`
+# under Dockerfile.media's linux/arm64 build (confirmed: 132 = 128+SIGILL,
+# reproduced in an isolated python:3.11-slim-bookworm container, and
+# confirmed gone with this exact 4.10.0.84 pin in the same container) — a
+# real ARM64 wheel bug in that release, not anything about this codebase.
+opencv-python==4.10.0.84

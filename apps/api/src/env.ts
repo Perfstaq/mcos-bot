@@ -95,6 +95,23 @@ const schema = z.object({
 
   DEFAULT_TENANT_SLUG: z.string().default("freshworks-demo"),
   DEFAULT_REVIEWER_EMAIL: z.string().default("demo@freshworks.example"),
+
+  // --- Content Studio media sidecar (additive) ------------------------------
+  // Unset in dev: jobs/media-analyze.ts and scripts/qc-render.ts fall back to
+  // the repo-relative services/analyzer/.venv. Dockerfile.media sets both to
+  // the baked-in venv (ARCHITECTURE.md §5/ADR-3).
+  ANALYZER_PYTHON: optional(z.string()),
+  ANALYZER_SCRIPT: optional(z.string()),
+  // Compiled scripts/qc-render.ts (tsc -p scripts/tsconfig.build.json — run
+  // with `node`, never `tsx`; tsx is stripped from the production image by
+  // `npm prune --omit=dev`, see Dockerfile.media/render-qc.ts). Unset in
+  // dev: jobs/render-qc.ts falls back to the repo-relative scripts/dist.
+  QC_RENDER_SCRIPT: optional(z.string()),
+  // faster-whisper model size for the `words` stage — in an env var, not
+  // hardcoded (CLAUDE.md convention, same as OPENAI_MODEL above), because
+  // MediaAnalysis.analyzerVersion's calibration provenance depends on
+  // knowing exactly which model produced a given row's word timings.
+  WHISPER_MODEL_SIZE: z.string().default("base"),
 });
 
 export type Env = z.infer<typeof schema>;

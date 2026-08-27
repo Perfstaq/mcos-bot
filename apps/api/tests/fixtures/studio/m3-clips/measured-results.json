@@ -1,0 +1,138 @@
+{
+  "fixtureSet": "apps/api/tests/fixtures/studio/m3-clips",
+  "clips": [
+    "reference",
+    "clip2",
+    "clip3",
+    "clip4",
+    "clip5",
+    "clip6"
+  ],
+  "seedSensitivity": {
+    "fixedBpm": 112.3,
+    "rows": [
+      {
+        "seedOrBpm": 1,
+        "perClip": {
+          "reference": 92.59,
+          "clip2": 83.33,
+          "clip3": 78.95,
+          "clip4": 90.32,
+          "clip5": 97.37,
+          "clip6": 78.95
+        },
+        "mean": 86.92,
+        "min": 78.95
+      },
+      {
+        "seedOrBpm": 7,
+        "perClip": {
+          "reference": 96.43,
+          "clip2": 83.78,
+          "clip3": 89.47,
+          "clip4": 96.77,
+          "clip5": 92.11,
+          "clip6": 94.74
+        },
+        "mean": 92.22,
+        "min": 83.78
+      },
+      {
+        "seedOrBpm": 42,
+        "perClip": {
+          "reference": 86.67,
+          "clip2": 92.11,
+          "clip3": 82.05,
+          "clip4": 93.75,
+          "clip5": 94.87,
+          "clip6": 87.18
+        },
+        "mean": 89.44,
+        "min": 82.05
+      },
+      {
+        "seedOrBpm": 99,
+        "perClip": {
+          "reference": 90.32,
+          "clip2": 92.31,
+          "clip3": 87.8,
+          "clip4": 90.63,
+          "clip5": 92.31,
+          "clip6": 87.18
+        },
+        "mean": 90.09,
+        "min": 87.18
+      }
+    ]
+  },
+  "tempoSensitivity": {
+    "fixedSeed": 42,
+    "rows": [
+      {
+        "seedOrBpm": 90,
+        "perClip": {
+          "reference": 86.67,
+          "clip2": 86.84,
+          "clip3": 87.18,
+          "clip4": 87.5,
+          "clip5": 84.62,
+          "clip6": 74.36
+        },
+        "mean": 84.53,
+        "min": 74.36
+      },
+      {
+        "seedOrBpm": 100,
+        "perClip": {
+          "reference": 90,
+          "clip2": 76.32,
+          "clip3": 84.62,
+          "clip4": 96.88,
+          "clip5": 79.49,
+          "clip6": 84.62
+        },
+        "mean": 85.32,
+        "min": 76.32
+      },
+      {
+        "seedOrBpm": 112.3,
+        "perClip": {
+          "reference": 86.67,
+          "clip2": 92.11,
+          "clip3": 82.05,
+          "clip4": 93.75,
+          "clip5": 94.87,
+          "clip6": 87.18
+        },
+        "mean": 89.44,
+        "min": 82.05
+      },
+      {
+        "seedOrBpm": 120,
+        "perClip": {
+          "reference": 93.33,
+          "clip2": 78.95,
+          "clip3": 94.87,
+          "clip4": 100,
+          "clip5": 92.31,
+          "clip6": 92.31
+        },
+        "mean": 91.96,
+        "min": 78.95
+      },
+      {
+        "seedOrBpm": 130,
+        "perClip": {
+          "reference": 86.67,
+          "clip2": 92.11,
+          "clip3": 94.87,
+          "clip4": 100,
+          "clip5": 92.31,
+          "clip6": 94.87
+        },
+        "mean": 93.47,
+        "min": 86.67
+      }
+    ]
+  }
+}
