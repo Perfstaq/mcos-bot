@@ -895,3 +895,81 @@ bad v1 trade. Revisit in v2 alongside `fill` framing.
   bit-identical `beat_track` output on the reference (P verified), so no published number is
   wrong — but **qcvenv is for exploratory measurement only; never produce a normative gate number
   with it.**
+
+---
+
+## 12. Corrections from Agent M's first real render (27 Aug 2026)
+
+Agent M built the planner, rendered a real MP4 end-to-end, and in doing so falsified four things
+— including one of my own rulings. Recorded here because each was invisible until something ran.
+
+### 12.1 §4.2's "phase is a search variable" was DANGEROUSLY under-qualified (my error)
+
+§4.2 lists bed **phase** as an optimization variable. That is true **only of the licensed music
+bed's start offset**, which we choose. It is NOT true of a grid derived from the footage's own
+audio: that grid is a physical property of a recording that already exists and cannot be slid.
+
+M's planner swept phase regardless and the result was a silent, total failure — **the demo scored
+100% in the planner and 29.2% in QC**, perfectly locked to a grid that does not exist. Nothing
+errored. Every intermediate artifact looked correct.
+
+**Ruling: the bed carries a `phaseLocked` flag (M implemented this). A grid derived from source
+audio is phase-locked and its offset must never be searched.** Treat any future "optimize X"
+instruction in these docs with the same suspicion: ask whether X is something we choose or
+something we measured.
+
+### 12.2 §4.2's legality model was wrong — and the baseline it was measured against was invalid
+
+§4.2 mandated a DP over "candidate word-edge cut points" but inherited P's simulation's legality
+model, which merged abutting words into speech runs and so permitted cuts only at real silences.
+**Under that model the problem is not marginal, it is infeasible** — M's DP finds no legal shot
+list on 5 of 6 clips, because real silences in speech are further apart than the 5.0s maximum shot.
+
+Worse, P's 82.05% baseline was never a valid cut list. Its `nearestLegal()` gives up after 2s and
+returns the illegal target unchanged, so those cut lists contain **1–4 mid-word cuts (G10 must be
+0) and 7–16 sub-0.6s shots (G4)** per clip. The number we treated as "the bar to beat" was
+measured on output that fails two other hard gates.
+
+**Ruling: candidates are word EDGES, not silences.** G10 and the ported `wordEdges()` both define
+illegal as *strictly inside a word*, so a boundary between two abutting words is legal — that is
+the jump cut the reference is built from. `01 §8` says the reference is "cut on itself (jump
+cuts)" and `01 §2` measures 30 shots in 54.87s; a podcast contains nowhere near 30 real silences
+in 55 seconds, so the reference itself proves the stricter reading wrong.
+
+Result under the corrected model: **100% lock on all six clips, at every seed (1/7/42/99) and
+every tempo (90–130bpm)** — the tempo sensitivity in §4.2's table disappears entirely — with
+G2/G3/G4 all inside band, so the lock rate is not bought by cutting less.
+
+### 12.3 G1b is unreachable for any plan that does not REMOVE footage
+
+`ADR-8`'s G1b matches plan cut times against pixel-detected cuts. A scene detector finds content
+*discontinuities*; a plan that plays footage continuously and only changes framing has none to
+find. M's render scores **2/29** on G1b for this reason, and correctly did not chase it — inflating
+framing changes until a detector trips is gaming the gate, not passing it.
+
+**Real jump cuts require footage removal — the selection stage of `03 §6`, which does not exist
+yet.** G1b therefore cannot pass until that lands, and it is P/T's boundary, not M's. State this
+in 07 rather than letting each agent rediscover it by rendering. G1a (29/29 = 100% against a real
+librosa grid: tempo 112.347bpm, 97 beats, reproducing `01 §3` exactly) is the gate that means
+something today — note the human editor who cut the reference scores 82.1% on that same grid.
+
+### 12.4 `01 §7` is wrong about the reference's framing
+
+`01 §7` says the reference is "16:9 podcast footage scaled to fit width". Measured: the content
+region is **720×800 (≈0.9:1)**, not the 405px height a 16:9 fit would give. The operative point
+survives — bars exist and carry the captions — but M had to build a 16:9 proxy to exercise
+letterbox at all. Anyone reasoning from that sentence about aspect ratios will be wrong.
+
+### 12.5 Caption positions — ruling on the 02 §2.2 vs §11.1 R2 conflict
+
+`02 §2.2` names four rotating positions (`center_low`, `lower_left`, `center`, `upper_third`);
+`§11.1 R2` says captions live in the letterbox bars, which is what makes face detection
+unnecessary. These genuinely conflict. **M's resolution stands: keep 02's four names, resolve three
+into the bars, and place `center` in the video band's bottom sixth** — below a seated subject's
+face, which needs no detector. Documented in `layout.ts`. If a future template needs a caption
+higher in the video band, it must first justify how it avoids the face without face detection.
+
+### 12.6 G7/G9 are now closeable
+
+M added `ShotMotionSchema` per cut and `anchor` per caption, so micro-motion and safe margins are
+decidable from the plan without pixels. Wiring them into `qc-render.ts` is P/T's boundary.
