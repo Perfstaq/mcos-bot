@@ -785,3 +785,113 @@ prompt that cites the affected sections.
 | 01 §3 / §9, 07 G1 | Reference achieves 86% beat-lock; gate is a plain "≥85% within 150ms" | Methodology-sensitive: re-measurement with the spec's own tools yields **82.1%** (29 shots, not 30) — the exemplar straddles its own gate. 86% is not a reproducible constant; G1 is only well-defined under the pinned harness + plan-based measurement of §4.1/ADR-8. Trust 01's tempo/shot-list numbers (they reproduce exactly); do not trust the headline ratio as a stable target. |
 | 06 §4 packet list | Agent packet = 00 + 01 + own doc + CLAUDE.md | Add ARCHITECTURE.md (this file) to every packet — ledger and off-limits list are load-bearing. |
 | `/Users/sathvik/aix/PRODUCT_STATUS.md` | (root status doc) | 5 weeks stale, understates the source repo ~20×. Ignore entirely; `founder-journey/docs/PERFSTAQ-STATUS.md` is the definitive self-audit. |
+
+---
+
+## 11. Orchestrator rulings — spec reality audit (27 Aug 2026)
+
+A second audit of `02`, `04`, `05` and `07` against the real code found six blocking gaps beyond
+§10's. The pattern behind most of them: **the specs name analyzer outputs and catalogue objects
+that no stage produces and no agent owns** — they assumed a richer pipeline than the one being
+built. These rulings are binding; where they contradict a spec doc, they win.
+
+### 11.1 Agent M — the three data seams
+
+**R1 — RMS-per-word: BUILD IT.** `02 §3`'s emphasis scorer weights `audio_energy_zscore(word)`
+at 1.5, and `03 §1` promised "RMS/word" from librosa, but no stage produces it (`analyzer.py:34`
+implements `words` and `beats` only). Do not drop the term — audio stress is genuinely how a
+speaker marks emphasis, and "one word per phrase gets emphasis treatment" is in the mission
+statement. **Owner: Agent P** (sidecar owner): add RMS over each word's span to the `words` stage
+output, extend the zod schema, bump `analyzerVersion`. ~20 lines of librosa.
+
+**R2 — luminance, motion and faces: DESCOPED for v1, by shipping exactly what the reference
+does.** These three stages are unimplemented and unowned. Rather than assign them, remove the
+need:
+- **Scrim/luminance — descoped.** `02 §2.2` makes the scrim optional; the reference achieves
+  legibility with a 2px drop shadow alone (`01 §4`). Ship drop-shadow always, scrim as a static
+  per-template policy. No luminance analysis in v1.
+- **Motion energy — descoped.** `03 §6` scores footage segments partly on motion energy, but the
+  reference is a locked-off podcast where motion energy is near-constant, and our target footage
+  is the same genre. Score segments on pause quality + word-RMS (R1) + duration fit.
+- **Faces — descoped, with framing.** **v1 ships `letterbox` framing only.** This is what the
+  reference does (`01 §7`), and it dissolves the problem: captions live in the black bars and
+  structurally cannot occlude a face, so no face detection is needed. `fill` framing and
+  MediaPipe face boxes are deferred to v2 and must be added together.
+
+**R3 — claim text reaches the plan by denormalization.** `02 §3`'s `appears_in_claim_text` needs
+claim text, ContentBrief carries only `claim_ids`, and `05 §1`'s "neither side knows the other's
+internals" forbids M reaching into claim tables. **Ruling: ContentBrief stores the claim texts
+alongside the ids, frozen at generation time.** This mirrors `BriefClaim`'s existing freeze
+rationale (`schema.prisma:497-498`) and is required for reproducibility (invariant 6): a later
+edit to a claim must not retroactively change what an already-approved brief emphasised.
+
+### 11.2 Agent B — catalogue and provider
+
+**R4 — the framework catalogue is a versioned TS const, not a table.** `05 §1` makes
+`framework_id` MANDATORY; nothing named "framework" exists in the schema or source. It is product
+knowledge that changes with our thinking, not tenant data — a table would mean a migration every
+time an editorial judgement changes. Ship a versioned const (id, name, evidence tier, when-to-use,
+the claim signals that favour it), validated at write time, starting with the tier-A frameworks
+`05 §2` already names. **`framework_evidence_tier` is denormalized onto the brief**, frozen, for
+the same reason as R3.
+
+**R5 — OpenAI structured outputs. CLAUDE.md wins.** `05 §2` says "Anthropic tool-calling schema"
+and `06 §1` lists `claude-*` runtime models; CLAUDE.md says "Do NOT switch LLM provider in this
+milestone" and the only client is OpenAI. **CLAUDE.md is binding: ContentBrief generation uses the
+Responses API with strict Structured Outputs**, the proven house pattern (`openai.ts:175-177`),
+model id in a new env var. `06 §1`'s runtime-model block is superseded. Two consequences the audit
+surfaced, both real: strict mode's schema subset excludes validation keywords (`openai.ts:74-83`),
+so `05 §3`'s "empty `claim_ids` ⇒ dropped" must be enforced in a coercion layer exactly like
+`coerceClaims`; and no vision-capable client is wired, which gates F's style classification (see
+R6).
+
+**R6 — no OCR in v1; low-confidence fields fall back to template defaults.** `04 §2` rates three
+signals Med-high to High on per-frame OCR, but no OCR tooling exists on the machine, in any venv,
+or in the port source. `04 §3` already specifies the correct behaviour: *"Every low-confidence
+field falls back to the template default rather than guessing."* Apply it from day one — caption
+timing, position pattern and emphasis treatment ship at confidence 0. What survives is genuinely
+high fidelity and is what "recreate in this style" actually promises: rhythm (PySceneDetect),
+tempo and beat grid (librosa), framing (black-bar detection, trivial in cv2), grade (histogram
+fit), zoom (optical flow). Adding tesseract to a production image for medium-fidelity signals is a
+bad v1 trade. Revisit in v2 alongside `fill` framing.
+
+### 11.3 Corrections (buildable, but the doc misleads)
+
+- **Springs must be duration-rescaled, or G7 fails.** `02 §1`'s `drift` config
+  (`damping 200, mass 3, stiffness 40`) is heavily overdamped: at natural speed a 0.6s shot
+  traverses ~11% of its range → ~0.57% scale delta → **fails G7's "scale delta >1% on 100% of
+  shots"**, and the reference's accelerate bursts are 0.7–1.2s. Remotion's `durationInFrames`
+  rescaling is the mechanism and `02` never mentions it, though the port source uses it on every
+  spring call. **M's contract: `durationInFrames = shot frames` for drift, stated frame counts for
+  pop/punch.** Restate "exits ~40% faster" as a duration rule, not a config rule.
+- **G13 is unscoreable as written.** "Same plan+footage → identical checksum" cannot hold across
+  render paths — Lambda and the local renderer use different encoder builds, and on Lambda byte
+  output depends on chunk concurrency. **Amend to: paired re-render on the identical pinned path ⇒
+  identical checksum; otherwise record the checksum.** P's harness already implements this honest
+  version. Determinism preconditions (seeded plan, no `Date.now`/`Math.random` in compositions,
+  embedded fonts, pinned Remotion version) move into M/T's contract.
+- **`04 §6`'s rhythm bands sit on their own floors.** Under the pinned harness the reference gives
+  30.6 cuts/min against a 30–36 band and a 1.34s median against a 1300–1600ms band — both within
+  one merged shot of failing. Same disease ADR-8 diagnosed. **Make them calibration-relative to
+  `reference_measured.json`, and pin the cuts-vs-shots convention** (N shots ⇒ N−1 cuts; t=0 is not
+  a cut) in the fingerprint schema. Tempo 110–115 and beat-lock ≥0.80 survive as written.
+- **G3 band contradiction:** `07` says median shot 1.0–2.0s, `01 §9` says 1.2–1.8s. **`07`'s wider
+  band is the gate**; `01`'s is descriptive of the reference.
+- **"Build no new approval UI" understates the cost.** `ReviewQueue.tsx` is claim-typed end to end
+  — response shape, filters, decide/undo/bulk endpoints, counts, and an audit rail that per ADR-6
+  will never contain ContentBrief decisions. Reusable: visual components, card styling, the
+  key-handling pattern (which is lowercase `a/e/r` + `u` + `Shift+A`, not "A/E/R"). **Budget B for
+  a parallel queue section sharing components, not a card-type drop-in.**
+- **ContentBrief edit semantics mirror M1 lineage.** `05 §1`'s status enum has `edited`;
+  ADR-6 has `superseded`. M1 deliberately migrated away from in-place editing to successor-row
+  lineage. **Follow M1: successor row + `superseded`, with a `resultBriefId` analog of
+  `review_decisions.result_claim_id`.**
+- **Render provenance is derived, not denormalized.** `05 §5` says store `claim_ids +
+  framework_id + expected_metric` on each `Render`; the landed migration has no such columns and
+  ARCHITECTURE §3 has none. **G14 is scored by traversal** (Render → plan → contentBriefId →
+  ContentBrief), which P's `gateG14` already assumes. Amend `05 §5`.
+- **The scratchpad `qcvenv` is off-harness.** It carries librosa 1.0.0; the pinned harness is
+  0.11.0 (`requirements.txt:20`, and `st-p/services/analyzer/.venv` is correct). The two produce
+  bit-identical `beat_track` output on the reference (P verified), so no published number is
+  wrong — but **qcvenv is for exploratory measurement only; never produce a normative gate number
+  with it.**
