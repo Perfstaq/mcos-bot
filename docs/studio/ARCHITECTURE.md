@@ -1090,3 +1090,28 @@ rejected at plan-build so it never costs a render), and writes the `RenderPlan` 
 **Owner: assigned after Agent B merges**, since the processor consumes B's ContentBrief shape.
 Not T — T is already carrying three templates, the evidence harness and possibly footage
 selection.
+
+#### 12.12a Addendum — the approval must be re-checked at materialization, not just at enqueue
+
+Review of Agent B surfaced a timing hole that the missing processor would otherwise inherit.
+`requireApprovedContentBrief` runs at **enqueue** (`routes/content.ts:165`), and undo's safety
+guard counts **materialized** RenderPlans (`content-gate.ts:309,321`) — so a queued-but-unbuilt
+plan is invisible to it. That admits this sequence:
+
+```
+approve brief → POST /content/plans (job queued) → undo the approval → job runs → plan built from a now-'proposed' brief
+```
+
+No code is wrong today, because no processor exists to run the job. But it means the gate is
+enforced against a snapshot of approval that can go stale between enqueue and execution — and a
+plan built from an un-approved brief is an invariant-1 violation regardless of how it happened.
+
+**Requirement on the §12.12 work item:** the processor must re-call `requireApprovedContentBrief`
+**at materialization, inside the same transaction as the `RenderPlan` create**, so the approval
+check and the write cannot be separated by a concurrent undo. Enqueue-time validation stays as a
+fast rejection, not as the guarantee. Also fix `content-gate.ts:370`'s doc comment, which claims
+the helper is "never called by a route directly" while a route calls it.
+
+The general lesson, worth carrying: **a permission checked when work is queued is not a permission
+held when work runs.** Any gate enforced across an async boundary needs re-checking on the far
+side, in the transaction that does the write.
