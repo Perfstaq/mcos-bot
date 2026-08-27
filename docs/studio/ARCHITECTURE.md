@@ -1167,3 +1167,29 @@ materialised. Assign together, after B merges.
 It claims alternating base framing "restores the discontinuity", implying G1b becomes passable.
 §12.3 records the actual render at 2/29 with the reframe in place. Correct the comment or the next
 agent will trust it.
+
+### 12.15 Every generated brief picked the tier-C fallback — a scoring-weight finding from live output
+
+First live generation against the demo tenant's approved brief produced three ContentBriefs
+(contrarian, myth_bust, listicle), each citing 3/2/5 claims, all `proposed`, none auto-approved —
+invariant 1 and 3 both hold in practice, not just in tests. `listicle` generating at all confirms
+the empty-`favoredClaimTypes` bug is really fixed.
+
+**But all three attributed to `hook_taxonomies`, evidence tier C.** `05 §2` and §11.2 R4 intend
+tier-A frameworks (double jeopardy, ESOV, 60/40) to lead when the signals support them; here the
+tier-C fallback won three out of three. The cause is the weighting: claim-type match scores ×10,
+archetype affinity ×5, and tier only breaks ties at 3/2/1 — so a framework whose favored claim
+types happen to match the tenant's claim mix wins regardless of tier, and `hook_taxonomies` is
+deliberately broad because it is the "no other framework fits" fallback.
+
+This is not a correctness bug — the scoring is deterministic and the model still cannot choose the
+framework, which is the property that mattered. It is a **quality** problem: the card's "Why this
+brief" line exists to justify the angle, and a line that always reads *Short-form Hook Taxonomies
+(C)* justifies nothing. It would also quietly bias the whole product toward its least-evidenced
+framework.
+
+**Not fixed now** — it needs a real product view on how much evidence tier should outrank signal
+match, which is Sathvik's call, not an agent's. Recorded so it is not mistaken for working as
+intended. Candidate fixes when ruled: multiply by tier rather than adding it; exclude the fallback
+from scoring unless every other framework scores zero; or widen the tier-A frameworks'
+`favoredClaimTypes`, which are currently narrow enough to lose to a catch-all.
