@@ -1115,3 +1115,55 @@ the helper is "never called by a route directly" while a route calls it.
 The general lesson, worth carrying: **a permission checked when work is queued is not a permission
 held when work runs.** Any gate enforced across an async boundary needs re-checking on the far
 side, in the transaction that does the write.
+
+### 12.13 The cutting grid must live in OUTPUT time — ruling on footage selection
+
+Agent T declined to build the `03 §6` selection stage and asked for a ruling instead of silently
+answering it. Correct call, and the question is the sharpest in the milestone.
+
+**The problem.** Removing footage makes output time ≠ source time. Our beat grid is derived from
+the *footage's own audio* but consumed in *output* coordinates. Cut a span out and the grid no
+longer describes what the viewer hears — the plan would be locked to a grid that does not exist in
+the artifact. That is exactly §12.1's failure, one level up: a quantity we measured being treated
+as one we can move.
+
+**Ruling: the grid that cuts are locked to must be defined in output time. In practice that means
+the licensed music bed's grid.** Exactly two configurations are valid:
+
+| Plan | Grid source | Valid? |
+|---|---|---|
+| Continuous playthrough, no removal | footage's own audio | **Yes** — source time *is* output time; this is what ships today |
+| Footage removal (real jump cuts) | the music bed | **Yes** — the bed plays over the finished edit, so its grid is output-time by construction |
+| Footage removal | footage's own audio | **NO** — the invalid quadrant. Reject at plan-build. |
+
+**Why the bed and not T's clever alternative.** T proposed remapping the retained spans' beats and
+embedding that, choosing spans that start on beat-locked word edges so relative phase survives.
+It can be made to work, but it constrains span selection to preserve a property that a bed gives
+for free, and it keeps us deriving a musical grid from speech. Three things settle it:
+
+1. **"Cuts land on musical beats" means musical.** Speech onsets were always a stand-in for a bed
+   we hadn't added. `01 §3` measured the reference at 112.3bpm because the reference *has* a bed
+   (`01 §8`: "the beat grid comes from the speech/room audio and a subtle bed").
+2. **A bed's grid is output-time by construction.** It is laid over the finished edit; removal
+   cannot invalidate it.
+3. **A bed's phase is genuinely ours** — we choose where the track starts. Apply §12.1's test —
+   is this a quantity we choose or one we measured? — and the bed passes where source audio fails.
+
+**Consequence, stated plainly: footage selection and the music bed are coupled. There is no
+"remove footage but keep the speech-derived grid" configuration.** A reel that actually cuts needs
+music, which is true of essentially every reel anyway. `02 §5`'s speech-only fallback survives only
+for the no-removal case, where it is already correct.
+
+This also unblocks G1b: real jump cuts create the content discontinuities a detector can find, and
+the grid they lock to is one that survives into the artifact. **G1a and G1b become jointly
+satisfiable only under this convention** — which is why T was right that G1b was blocked on more
+than the selection stage.
+
+**Owner:** the same work item as §12.12 (`jobs/plan-build.ts`), since both turn on how a plan is
+materialised. Assign together, after B merges.
+
+### 12.14 Correction: `camera.ts`'s REFRAME_STEP comment is falsified by measurement
+
+It claims alternating base framing "restores the discontinuity", implying G1b becomes passable.
+§12.3 records the actual render at 2/29 with the reframe in place. Correct the comment or the next
+agent will trust it.
