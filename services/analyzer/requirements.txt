@@ -31,7 +31,15 @@ soundfile==0.14.0
 
 # QC harness only (ADR-8 §4.1(c) — the pinned methodology, normative for
 # G1b): PySceneDetect ContentDetector(threshold=27) on rendered output.
-# Used by qc_scene_detect.py, not by analyzer.py's own stages. scenedetect
-# pulls in opencv-python itself (not pinned separately here — requesting
-# opencv-python-headless alongside it installs BOTH, ~48MB each, wastefully).
+# Used by qc_scene_detect.py, not by analyzer.py's own stages.
 scenedetect==0.7.1
+# Pinned explicitly (as "opencv-python", matching the name scenedetect's own
+# unpinned dependency resolves to — NOT "opencv-python-headless", a
+# different PyPI package pip has no notion of as interchangeable, so
+# pinning the headless variant installs BOTH, ~48MB each, wastefully).
+# Left unpinned, this resolved to 5.0.0.93, which SIGILLs on `import cv2`
+# under Dockerfile.media's linux/arm64 build (confirmed: 132 = 128+SIGILL,
+# reproduced in an isolated python:3.11-slim-bookworm container, and
+# confirmed gone with this exact 4.10.0.84 pin in the same container) — a
+# real ARM64 wheel bug in that release, not anything about this codebase.
+opencv-python==4.10.0.84

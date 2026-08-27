@@ -32,10 +32,15 @@ import type { GateResult } from "@mcos/render/gates/types";
  *         alongside as informational only, next to the calibrated 0.821
  *         reference baseline — never gated on.
  *
- * Usage:
+ * Usage (dev, via tsx — transpiles on the fly, no build step needed):
  *   npx tsx scripts/qc-render.ts --mp4 <rendered.mp4> --plan <plan.json>
  *     [--words <words.json>] [--content-brief-id <id>]
  *     [--prev-checksum <sha256>] [--out <qc.json>]
+ *
+ * Usage (production — compiled by `npx tsc -p scripts/tsconfig.build.json`,
+ * this is what jobs/render-qc.ts and Dockerfile.media actually run; no tsx
+ * in the production image, see C1 in the code-review history):
+ *   node scripts/dist/qc-render.js --mp4 <rendered.mp4> --plan <plan.json> [...same flags]
  */
 
 // REFERENCE_BEAT_LOCK_RATIO/REFERENCE_GRID_QUALITY/FINGERPRINT_ACCEPTANCE_FLOOR
@@ -401,7 +406,10 @@ async function main(): Promise<void> {
   const mp4Path = arg("--mp4");
   const planPath = arg("--plan");
   if (!mp4Path || !planPath) {
-    console.error("usage: npx tsx scripts/qc-render.ts --mp4 <rendered.mp4> --plan <plan.json> [--words <words.json>] [--content-brief-id <id>] [--prev-checksum <sha256>] [--out <qc.json>]");
+    console.error(
+      "usage: node scripts/dist/qc-render.js --mp4 <rendered.mp4> --plan <plan.json> [--words <words.json>] [--content-brief-id <id>] [--prev-checksum <sha256>] [--out <qc.json>]\n" +
+        "   (dev, from TS source: npx tsx scripts/qc-render.ts ...same flags)",
+    );
     process.exit(1);
   }
 
