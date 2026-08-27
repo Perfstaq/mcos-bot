@@ -1165,6 +1165,20 @@ model RenderPlan {
 
   // Was a plain column until Agent B's ContentBrief model landed; the relation
   // below is added in this additive migration (see ARCHITECTURE.md §6).
+  //
+  // CAVEAT for whoever runs this migration against a database that already
+  // has render_plans rows: the new FK constraint (render_plans.content_brief_id
+  // -> content_briefs.id) would fail to apply against any existing row whose
+  // content_brief_id does not resolve to a real ContentBrief — which is every
+  // row created before this migration, since ContentBrief did not exist yet.
+  // Safe on every database this migration has actually been applied to
+  // (mcos_test_b, mcos_test_p) because no job processor creates RenderPlan
+  // rows yet (`plan.build` has no consumer on this branch — see
+  // routes/content.ts's own doc comment), so render_plans is empty
+  // everywhere. Not safe to assume for a future database that already has
+  // real renders in it; a from-scratch reproduction of a populated
+  // environment against this migration would need a backfill or a data
+  // migration first.
   contentBriefId String @map("content_brief_id")
   templateId     String @map("template_id")
   footageAssetId String @map("footage_asset_id")
