@@ -117,9 +117,13 @@ export function ContentReviewQueue() {
   const decide = useCallback(
     async (brief: ContentBrief, action: "approve" | "reject", editedHook?: string) => {
       setBusy(brief.id);
-      const outcome: Outcome = action === "reject" ? "tossed" : editedHook !== undefined ? "edited" : "kept";
+      // Actually changed, not merely "the edit box was open" — pressing
+      // "Save & approve" without touching the text is a keep, not an edit,
+      // and must match the branch below that decides whether to PATCH at all.
+      const hookChanged = editedHook !== undefined && editedHook !== brief.hook_text;
+      const outcome: Outcome = action === "reject" ? "tossed" : hookChanged ? "edited" : "kept";
       try {
-        if (action === "approve" && editedHook !== undefined && editedHook !== brief.hook_text) {
+        if (action === "approve" && hookChanged) {
           await api.patch(`/content/briefs/${brief.id}`, { hook_text: editedHook });
         } else {
           await api.post(`/content/briefs/${brief.id}/${action}`);
