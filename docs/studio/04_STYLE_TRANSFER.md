@@ -8,6 +8,15 @@ You cannot extract an edit as a program. Video is flattened pixels; the decision
 
 ## 2. What is extractable
 
+> **v1 scope (ARCHITECTURE §11.2 R6, §12.31).** This table describes the ceiling, not what ships.
+> **v1 transfers pace, cut rhythm, tempo and framing; typography, captions and grade come from the
+> template.** The three OCR-dependent rows below (caption timing, position pattern, emphasis
+> treatment) ship at confidence 0 and fall through to template defaults per §3 — there is no OCR
+> tooling in the stack and adding it for medium-fidelity signals was judged a bad v1 trade. Grade is
+> not mapped at all, and not for a confidence reason: the fingerprint measures absolute finished
+> pixels while a template's grade is multipliers over an ungraded source, so assigning one to the
+> other is arithmetic on incompatible units. Only warmth *order* is used, in template selection.
+
 | Signal | Method | Fidelity |
 |---|---|---|
 | Cut points, shot rhythm | PySceneDetect ContentDetector(27) | High |
@@ -57,7 +66,7 @@ Every low-confidence field falls back to the template default rather than guessi
 - **Never carry reference audio into output.** Tempo only.
 - **Never copy the reference's text content.** Copy the *cadence* (words per chunk, timing pattern); the words come from the ContentBrief.
 - Store only the fingerprint long-term; the reference video itself is deleted after analysis (or retained ≤30 days with tenant consent) — PDPL/GDPR posture and it keeps you out of "we're storing other people's content" territory.
-- Fingerprint-derived observations that are *strategically* interesting (hook type, angle, format) enter the Brain as **proposed claims through the review gate** — never auto-written (invariant 1).
+- Fingerprint-derived observations that are *strategically* interesting (hook type, angle, format) are returned as typed **proposals that are never persisted**. ~~enter the Brain as proposed claims through the review gate~~ — **amended by ARCHITECTURE §12.30 R7**: they do NOT become `CandidateClaim` rows. That table requires `meetingId`, `evidenceSourceId`, `extractionRunId`, `verbatimQuote`, `speaker` and `timestampMs`, all NOT NULL — that column set *is* CLAUDE.md invariant 2 (evidence or drop) expressed in the schema, and a fingerprint has none of them: no meeting, no segment, and under §11.2 R6 no text was ever read. Persisting one would require fabricated provenance or relaxing the M1 gate's own table. If these observations are wanted in memory later they need their own table with their own honest provenance (asset id, frame ranges, method, confidence) routed through a gate of their own.
 
 ## 6. Acceptance test
 Feed the reference reel from `01_REFERENCE_ANALYSIS.md` into the extractor. The fingerprint must report: cuts_per_min 30–36, median_shot_ms 1300–1600, tempo 110–115, beat_lock_ratio ≥0.80, layers = [banner, karaoke, handle], words_per_chunk_median 1–3, framing = letterbox. **If it doesn't reproduce those measured numbers, the extractor is wrong.**
