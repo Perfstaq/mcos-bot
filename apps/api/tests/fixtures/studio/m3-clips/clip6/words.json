@@ -3,30 +3,29 @@
   "durationSec": 70.008,
   "segments": [
     {
-      "start": 0.0,
+      "start": 0,
       "end": 1.24,
-      "text": "Welcome to this explainer.",
       "words": [
         {
-          "word": "Welcome",
-          "start": 0.0,
+          "word": "w0",
+          "start": 0,
           "end": 0.38,
           "score": 0.8636
         },
         {
-          "word": "to",
+          "word": "w1",
           "start": 0.38,
           "end": 0.56,
           "score": 0.9928
         },
         {
-          "word": "this",
+          "word": "w2",
           "start": 0.56,
           "end": 0.68,
           "score": 0.9531
         },
         {
-          "word": "explainer.",
+          "word": "w3",
           "start": 0.68,
           "end": 1.24,
           "score": 0.9557
@@ -36,40 +35,39 @@
     {
       "start": 1.54,
       "end": 4.12,
-      "text": "Today, we're unpacking the microservice architecture",
       "words": [
         {
-          "word": "Today,",
+          "word": "w4",
           "start": 1.54,
           "end": 1.76,
           "score": 0.99
         },
         {
-          "word": "we're",
+          "word": "w5",
           "start": 2.24,
           "end": 2.46,
           "score": 0.9788
         },
         {
-          "word": "unpacking",
+          "word": "w6",
           "start": 2.46,
           "end": 2.88,
           "score": 0.9989
         },
         {
-          "word": "the",
+          "word": "w7",
           "start": 2.88,
           "end": 2.98,
           "score": 0.9882
         },
         {
-          "word": "microservice",
+          "word": "w8",
           "start": 2.98,
           "end": 3.52,
           "score": 0.8722
         },
         {
-          "word": "architecture",
+          "word": "w9",
           "start": 3.52,
           "end": 4.12,
           "score": 0.9965
@@ -79,28 +77,27 @@
     {
       "start": 4.12,
       "end": 6.02,
-      "text": "of MetaWorks V1.1.",
       "words": [
         {
-          "word": "of",
+          "word": "w10",
           "start": 4.12,
           "end": 4.44,
           "score": 0.9954
         },
         {
-          "word": "MetaWorks",
+          "word": "w11",
           "start": 4.44,
           "end": 5.04,
           "score": 0.833
         },
         {
-          "word": "V1",
+          "word": "w12",
           "start": 5.04,
           "end": 5.52,
           "score": 0.7631
         },
         {
-          "word": ".1.",
+          "word": "w13",
           "start": 5.52,
           "end": 6.02,
           "score": 0.9983
@@ -110,58 +107,57 @@
     {
       "start": 6.44,
       "end": 8.62,
-      "text": "Now, if you've been following the AI orchestration space,",
       "words": [
         {
-          "word": "Now,",
+          "word": "w14",
           "start": 6.44,
           "end": 6.58,
           "score": 0.9628
         },
         {
-          "word": "if",
+          "word": "w15",
           "start": 6.64,
           "end": 6.78,
           "score": 0.9948
         },
         {
-          "word": "you've",
+          "word": "w16",
           "start": 6.78,
           "end": 6.94,
           "score": 0.9894
         },
         {
-          "word": "been",
+          "word": "w17",
           "start": 6.94,
           "end": 7.04,
           "score": 0.9824
         },
         {
-          "word": "following",
+          "word": "w18",
           "start": 7.04,
           "end": 7.3,
           "score": 0.9988
         },
         {
-          "word": "the",
+          "word": "w19",
           "start": 7.3,
           "end": 7.5,
           "score": 0.9903
         },
         {
-          "word": "AI",
+          "word": "w20",
           "start": 7.5,
           "end": 7.7,
           "score": 0.9883
         },
         {
-          "word": "orchestration",
+          "word": "w21",
           "start": 7.7,
           "end": 8.32,
           "score": 0.8433
         },
         {
-          "word": "space,",
+          "word": "w22",
           "start": 8.32,
           "end": 8.62,
           "score": 0.9923
@@ -171,64 +167,63 @@
     {
       "start": 9.1,
       "end": 11.18,
-      "text": "you know that bridging the gap between a simple chat",
       "words": [
         {
-          "word": "you",
+          "word": "w23",
           "start": 9.1,
           "end": 9.24,
           "score": 0.9875
         },
         {
-          "word": "know",
+          "word": "w24",
           "start": 9.24,
           "end": 9.42,
           "score": 0.9968
         },
         {
-          "word": "that",
+          "word": "w25",
           "start": 9.42,
           "end": 9.6,
           "score": 0.9904
         },
         {
-          "word": "bridging",
+          "word": "w26",
           "start": 9.6,
           "end": 9.9,
           "score": 0.9947
         },
         {
-          "word": "the",
+          "word": "w27",
           "start": 9.9,
           "end": 10.02,
           "score": 0.9935
         },
         {
-          "word": "gap",
+          "word": "w28",
           "start": 10.02,
           "end": 10.22,
           "score": 0.9857
         },
         {
-          "word": "between",
+          "word": "w29",
           "start": 10.22,
           "end": 10.54,
           "score": 0.9987
         },
         {
-          "word": "a",
+          "word": "w30",
           "start": 10.54,
           "end": 10.66,
           "score": 0.9961
         },
         {
-          "word": "simple",
+          "word": "w31",
           "start": 10.66,
           "end": 10.92,
           "score": 0.9981
         },
         {
-          "word": "chat",
+          "word": "w32",
           "start": 10.92,
           "end": 11.18,
           "score": 0.9706
@@ -238,46 +233,45 @@
     {
       "start": 11.18,
       "end": 13.76,
-      "text": "interface and real multi-step background automation",
       "words": [
         {
-          "word": "interface",
+          "word": "w33",
           "start": 11.18,
           "end": 11.54,
           "score": 0.9984
         },
         {
-          "word": "and",
+          "word": "w34",
           "start": 11.54,
           "end": 11.88,
           "score": 0.9707
         },
         {
-          "word": "real",
+          "word": "w35",
           "start": 11.88,
           "end": 12.22,
           "score": 0.9402
         },
         {
-          "word": "multi",
+          "word": "w36",
           "start": 12.22,
           "end": 12.68,
           "score": 0.4058
         },
         {
-          "word": "-step",
+          "word": "w37",
           "start": 12.68,
           "end": 12.96,
           "score": 0.9715
         },
         {
-          "word": "background",
+          "word": "w38",
           "start": 12.96,
           "end": 13.34,
           "score": 0.9929
         },
         {
-          "word": "automation",
+          "word": "w39",
           "start": 13.34,
           "end": 13.76,
           "score": 0.9989
@@ -287,34 +281,33 @@
     {
       "start": 13.76,
       "end": 15.62,
-      "text": "is a massive engineering hurdle.",
       "words": [
         {
-          "word": "is",
+          "word": "w40",
           "start": 13.76,
           "end": 14.28,
           "score": 0.9837
         },
         {
-          "word": "a",
+          "word": "w41",
           "start": 14.28,
           "end": 14.4,
           "score": 0.9983
         },
         {
-          "word": "massive",
+          "word": "w42",
           "start": 14.4,
           "end": 14.78,
           "score": 0.9955
         },
         {
-          "word": "engineering",
+          "word": "w43",
           "start": 14.78,
           "end": 15.28,
           "score": 0.982
         },
         {
-          "word": "hurdle.",
+          "word": "w44",
           "start": 15.28,
           "end": 15.62,
           "score": 0.9966
@@ -324,16 +317,15 @@
     {
       "start": 15.9,
       "end": 16.28,
-      "text": "It's tough.",
       "words": [
         {
-          "word": "It's",
+          "word": "w45",
           "start": 15.9,
           "end": 16.06,
           "score": 0.9934
         },
         {
-          "word": "tough.",
+          "word": "w46",
           "start": 16.06,
           "end": 16.28,
           "score": 0.9979
@@ -343,40 +335,39 @@
     {
       "start": 16.8,
       "end": 18.36,
-      "text": "So today, we're popping the hood",
       "words": [
         {
-          "word": "So",
+          "word": "w47",
           "start": 16.8,
           "end": 16.98,
           "score": 0.9614
         },
         {
-          "word": "today,",
+          "word": "w48",
           "start": 16.98,
           "end": 17.2,
           "score": 0.9083
         },
         {
-          "word": "we're",
+          "word": "w49",
           "start": 17.54,
           "end": 17.74,
           "score": 0.9964
         },
         {
-          "word": "popping",
+          "word": "w50",
           "start": 17.74,
           "end": 18.04,
           "score": 0.9866
         },
         {
-          "word": "the",
+          "word": "w51",
           "start": 18.04,
           "end": 18.22,
           "score": 0.9979
         },
         {
-          "word": "hood",
+          "word": "w52",
           "start": 18.22,
           "end": 18.36,
           "score": 0.9985
@@ -386,52 +377,51 @@
     {
       "start": 18.36,
       "end": 20.52,
-      "text": "to see exactly how MetaWorks pulls this off,",
       "words": [
         {
-          "word": "to",
+          "word": "w53",
           "start": 18.36,
           "end": 18.52,
           "score": 0.9899
         },
         {
-          "word": "see",
+          "word": "w54",
           "start": 18.52,
           "end": 18.66,
           "score": 0.9986
         },
         {
-          "word": "exactly",
+          "word": "w55",
           "start": 18.66,
           "end": 19.1,
           "score": 0.9838
         },
         {
-          "word": "how",
+          "word": "w56",
           "start": 19.1,
           "end": 19.38,
           "score": 0.9983
         },
         {
-          "word": "MetaWorks",
+          "word": "w57",
           "start": 19.38,
           "end": 19.9,
           "score": 0.9956
         },
         {
-          "word": "pulls",
+          "word": "w58",
           "start": 19.9,
           "end": 20.08,
           "score": 0.998
         },
         {
-          "word": "this",
+          "word": "w59",
           "start": 20.08,
           "end": 20.24,
           "score": 0.833
         },
         {
-          "word": "off,",
+          "word": "w60",
           "start": 20.24,
           "end": 20.52,
           "score": 0.9991
@@ -441,46 +431,45 @@
     {
       "start": 20.78,
       "end": 23.14,
-      "text": "specifically focusing on their Agno framework integration",
       "words": [
         {
-          "word": "specifically",
+          "word": "w61",
           "start": 20.78,
           "end": 21.18,
           "score": 0.9952
         },
         {
-          "word": "focusing",
+          "word": "w62",
           "start": 21.18,
           "end": 21.58,
           "score": 0.9754
         },
         {
-          "word": "on",
+          "word": "w63",
           "start": 21.58,
           "end": 21.78,
           "score": 0.9991
         },
         {
-          "word": "their",
+          "word": "w64",
           "start": 21.78,
           "end": 21.92,
           "score": 0.9923
         },
         {
-          "word": "Agno",
+          "word": "w65",
           "start": 21.92,
           "end": 22.26,
           "score": 0.8257
         },
         {
-          "word": "framework",
+          "word": "w66",
           "start": 22.26,
           "end": 22.5,
           "score": 0.6412
         },
         {
-          "word": "integration",
+          "word": "w67",
           "start": 22.5,
           "end": 23.14,
           "score": 0.9981
@@ -490,46 +479,45 @@
     {
       "start": 23.14,
       "end": 25.54,
-      "text": "and this brand new skills execution engine.",
       "words": [
         {
-          "word": "and",
+          "word": "w68",
           "start": 23.14,
           "end": 23.58,
           "score": 0.4054
         },
         {
-          "word": "this",
+          "word": "w69",
           "start": 23.58,
           "end": 24.04,
           "score": 0.9741
         },
         {
-          "word": "brand",
+          "word": "w70",
           "start": 24.04,
           "end": 24.3,
           "score": 0.9981
         },
         {
-          "word": "new",
+          "word": "w71",
           "start": 24.3,
           "end": 24.5,
           "score": 0.3955
         },
         {
-          "word": "skills",
+          "word": "w72",
           "start": 24.5,
           "end": 24.8,
           "score": 0.5863
         },
         {
-          "word": "execution",
+          "word": "w73",
           "start": 24.8,
           "end": 25.2,
           "score": 0.9707
         },
         {
-          "word": "engine.",
+          "word": "w74",
           "start": 25.2,
           "end": 25.54,
           "score": 0.991
@@ -539,52 +527,51 @@
     {
       "start": 26.04,
       "end": 28.3,
-      "text": "Let's quickly look at our roadmap for today.",
       "words": [
         {
-          "word": "Let's",
+          "word": "w75",
           "start": 26.04,
           "end": 26.62,
           "score": 0.9905
         },
         {
-          "word": "quickly",
+          "word": "w76",
           "start": 26.62,
           "end": 26.88,
           "score": 0.9974
         },
         {
-          "word": "look",
+          "word": "w77",
           "start": 26.88,
           "end": 27.18,
           "score": 0.9982
         },
         {
-          "word": "at",
+          "word": "w78",
           "start": 27.18,
           "end": 27.28,
           "score": 0.9959
         },
         {
-          "word": "our",
+          "word": "w79",
           "start": 27.28,
           "end": 27.42,
           "score": 0.9963
         },
         {
-          "word": "roadmap",
+          "word": "w80",
           "start": 27.42,
           "end": 27.72,
           "score": 0.8597
         },
         {
-          "word": "for",
+          "word": "w81",
           "start": 27.72,
           "end": 28.02,
           "score": 0.9959
         },
         {
-          "word": "today.",
+          "word": "w82",
           "start": 28.02,
           "end": 28.3,
           "score": 0.999
@@ -594,40 +581,39 @@
     {
       "start": 28.82,
       "end": 30.32,
-      "text": "We'll start by meeting the platform,",
       "words": [
         {
-          "word": "We'll",
+          "word": "w83",
           "start": 28.82,
           "end": 29.06,
           "score": 0.6527
         },
         {
-          "word": "start",
+          "word": "w84",
           "start": 29.06,
           "end": 29.28,
           "score": 0.9929
         },
         {
-          "word": "by",
+          "word": "w85",
           "start": 29.28,
           "end": 29.5,
           "score": 0.9888
         },
         {
-          "word": "meeting",
+          "word": "w86",
           "start": 29.5,
           "end": 29.72,
           "score": 0.9855
         },
         {
-          "word": "the",
+          "word": "w87",
           "start": 29.72,
           "end": 29.88,
           "score": 0.9974
         },
         {
-          "word": "platform,",
+          "word": "w88",
           "start": 29.88,
           "end": 30.32,
           "score": 0.991
@@ -637,64 +623,63 @@
     {
       "start": 30.66,
       "end": 32.78,
-      "text": "then look at the two AI brains running the show,",
       "words": [
         {
-          "word": "then",
+          "word": "w89",
           "start": 30.66,
           "end": 30.78,
           "score": 0.9838
         },
         {
-          "word": "look",
+          "word": "w90",
           "start": 30.78,
           "end": 30.94,
           "score": 0.9925
         },
         {
-          "word": "at",
+          "word": "w91",
           "start": 30.94,
           "end": 31.06,
           "score": 0.998
         },
         {
-          "word": "the",
+          "word": "w92",
           "start": 31.06,
           "end": 31.16,
           "score": 0.9953
         },
         {
-          "word": "two",
+          "word": "w93",
           "start": 31.16,
           "end": 31.36,
           "score": 0.9353
         },
         {
-          "word": "AI",
+          "word": "w94",
           "start": 31.36,
           "end": 31.64,
           "score": 0.9784
         },
         {
-          "word": "brains",
+          "word": "w95",
           "start": 31.64,
-          "end": 32.0,
+          "end": 32,
           "score": 0.9458
         },
         {
-          "word": "running",
-          "start": 32.0,
+          "word": "w96",
+          "start": 32,
           "end": 32.34,
           "score": 0.9958
         },
         {
-          "word": "the",
+          "word": "w97",
           "start": 32.34,
           "end": 32.52,
           "score": 0.9937
         },
         {
-          "word": "show,",
+          "word": "w98",
           "start": 32.52,
           "end": 32.78,
           "score": 0.9984
@@ -704,40 +689,39 @@
     {
       "start": 33.32,
       "end": 34.8,
-      "text": "dive into memory and data retrieval,",
       "words": [
         {
-          "word": "dive",
+          "word": "w99",
           "start": 33.32,
           "end": 33.42,
           "score": 0.9915
         },
         {
-          "word": "into",
+          "word": "w100",
           "start": 33.42,
           "end": 33.66,
           "score": 0.9929
         },
         {
-          "word": "memory",
+          "word": "w101",
           "start": 33.66,
           "end": 33.92,
           "score": 0.9864
         },
         {
-          "word": "and",
+          "word": "w102",
           "start": 33.92,
           "end": 34.12,
           "score": 0.9466
         },
         {
-          "word": "data",
+          "word": "w103",
           "start": 34.12,
           "end": 34.32,
           "score": 0.9953
         },
         {
-          "word": "retrieval,",
+          "word": "w104",
           "start": 34.32,
           "end": 34.8,
           "score": 0.9958
@@ -747,40 +731,39 @@
     {
       "start": 35.3,
       "end": 36.56,
-      "text": "break down the new skills engine,",
       "words": [
         {
-          "word": "break",
+          "word": "w105",
           "start": 35.3,
           "end": 35.38,
           "score": 0.9707
         },
         {
-          "word": "down",
+          "word": "w106",
           "start": 35.38,
           "end": 35.62,
           "score": 0.9959
         },
         {
-          "word": "the",
+          "word": "w107",
           "start": 35.62,
           "end": 35.78,
           "score": 0.9923
         },
         {
-          "word": "new",
+          "word": "w108",
           "start": 35.78,
           "end": 35.94,
           "score": 0.9373
         },
         {
-          "word": "skills",
+          "word": "w109",
           "start": 35.94,
           "end": 36.24,
           "score": 0.8394
         },
         {
-          "word": "engine,",
+          "word": "w110",
           "start": 36.24,
           "end": 36.56,
           "score": 0.9938
@@ -790,58 +773,57 @@
     {
       "start": 36.88,
       "end": 39.56,
-      "text": "and finally, wrap up with safety and cloud deployment.",
       "words": [
         {
-          "word": "and",
+          "word": "w111",
           "start": 36.88,
           "end": 36.98,
           "score": 0.9815
         },
         {
-          "word": "finally,",
+          "word": "w112",
           "start": 36.98,
           "end": 37.42,
           "score": 0.9955
         },
         {
-          "word": "wrap",
+          "word": "w113",
           "start": 37.76,
           "end": 37.82,
           "score": 0.9813
         },
         {
-          "word": "up",
+          "word": "w114",
           "start": 37.82,
           "end": 38.06,
           "score": 0.9617
         },
         {
-          "word": "with",
+          "word": "w115",
           "start": 38.06,
           "end": 38.24,
           "score": 0.9989
         },
         {
-          "word": "safety",
+          "word": "w116",
           "start": 38.24,
           "end": 38.48,
           "score": 0.8997
         },
         {
-          "word": "and",
+          "word": "w117",
           "start": 38.48,
           "end": 38.86,
           "score": 0.9947
         },
         {
-          "word": "cloud",
+          "word": "w118",
           "start": 38.86,
           "end": 39.1,
           "score": 0.9583
         },
         {
-          "word": "deployment.",
+          "word": "w119",
           "start": 39.1,
           "end": 39.56,
           "score": 0.997
@@ -851,52 +833,51 @@
     {
       "start": 40.1,
       "end": 43.36,
-      "text": "All right, section one, meet the MetaWorks platform.",
       "words": [
         {
-          "word": "All",
+          "word": "w120",
           "start": 40.1,
           "end": 40.48,
           "score": 0.8679
         },
         {
-          "word": "right,",
+          "word": "w121",
           "start": 40.48,
           "end": 40.68,
           "score": 0.9983
         },
         {
-          "word": "section",
+          "word": "w122",
           "start": 40.92,
           "end": 41.26,
           "score": 0.8645
         },
         {
-          "word": "one,",
+          "word": "w123",
           "start": 41.26,
           "end": 41.54,
           "score": 0.6471
         },
         {
-          "word": "meet",
+          "word": "w124",
           "start": 42.02,
           "end": 42.16,
           "score": 0.858
         },
         {
-          "word": "the",
+          "word": "w125",
           "start": 42.16,
           "end": 42.36,
           "score": 0.9922
         },
         {
-          "word": "MetaWorks",
+          "word": "w126",
           "start": 42.36,
           "end": 42.9,
           "score": 0.6999
         },
         {
-          "word": "platform.",
+          "word": "w127",
           "start": 42.9,
           "end": 43.36,
           "score": 0.9779
@@ -906,46 +887,45 @@
     {
       "start": 43.98,
       "end": 45.48,
-      "text": "So taking a look at this blueprint,",
       "words": [
         {
-          "word": "So",
+          "word": "w128",
           "start": 43.98,
           "end": 44.22,
           "score": 0.9516
         },
         {
-          "word": "taking",
+          "word": "w129",
           "start": 44.22,
           "end": 44.58,
           "score": 0.6662
         },
         {
-          "word": "a",
+          "word": "w130",
           "start": 44.58,
           "end": 44.72,
           "score": 0.9993
         },
         {
-          "word": "look",
+          "word": "w131",
           "start": 44.72,
           "end": 44.84,
           "score": 0.9996
         },
         {
-          "word": "at",
+          "word": "w132",
           "start": 44.84,
           "end": 44.96,
           "score": 0.9987
         },
         {
-          "word": "this",
+          "word": "w133",
           "start": 44.96,
           "end": 45.14,
           "score": 0.9973
         },
         {
-          "word": "blueprint,",
+          "word": "w134",
           "start": 45.14,
           "end": 45.48,
           "score": 0.9222
@@ -955,52 +935,51 @@
     {
       "start": 45.68,
       "end": 47.66,
-      "text": "you can see how a user's request travels",
       "words": [
         {
-          "word": "you",
+          "word": "w135",
           "start": 45.68,
           "end": 45.78,
           "score": 0.9981
         },
         {
-          "word": "can",
+          "word": "w136",
           "start": 45.78,
           "end": 45.88,
           "score": 0.9991
         },
         {
-          "word": "see",
+          "word": "w137",
           "start": 45.88,
           "end": 46.04,
           "score": 0.9996
         },
         {
-          "word": "how",
+          "word": "w138",
           "start": 46.04,
           "end": 46.22,
           "score": 0.9967
         },
         {
-          "word": "a",
+          "word": "w139",
           "start": 46.22,
           "end": 46.34,
           "score": 0.9609
         },
         {
-          "word": "user's",
+          "word": "w140",
           "start": 46.34,
           "end": 46.78,
           "score": 0.9179
         },
         {
-          "word": "request",
+          "word": "w141",
           "start": 46.78,
           "end": 47.1,
           "score": 0.9934
         },
         {
-          "word": "travels",
+          "word": "w142",
           "start": 47.1,
           "end": 47.66,
           "score": 0.9982
@@ -1010,64 +989,63 @@
     {
       "start": 47.66,
       "end": 50.86,
-      "text": "from the next JS frontend right into a sprawling ecosystem",
       "words": [
         {
-          "word": "from",
+          "word": "w143",
           "start": 47.66,
           "end": 47.86,
           "score": 0.997
         },
         {
-          "word": "the",
+          "word": "w144",
           "start": 47.86,
           "end": 47.94,
           "score": 0.9966
         },
         {
-          "word": "next",
+          "word": "w145",
           "start": 47.94,
           "end": 48.16,
           "score": 0.9485
         },
         {
-          "word": "JS",
+          "word": "w146",
           "start": 48.16,
           "end": 48.44,
           "score": 0.8527
         },
         {
-          "word": "frontend",
+          "word": "w147",
           "start": 48.44,
           "end": 49.04,
           "score": 0.5919
         },
         {
-          "word": "right",
+          "word": "w148",
           "start": 49.04,
           "end": 49.32,
           "score": 0.8654
         },
         {
-          "word": "into",
+          "word": "w149",
           "start": 49.32,
           "end": 49.66,
           "score": 0.9974
         },
         {
-          "word": "a",
+          "word": "w150",
           "start": 49.66,
           "end": 49.8,
           "score": 0.9906
         },
         {
-          "word": "sprawling",
+          "word": "w151",
           "start": 49.8,
           "end": 50.36,
           "score": 0.9954
         },
         {
-          "word": "ecosystem",
+          "word": "w152",
           "start": 50.36,
           "end": 50.86,
           "score": 0.9949
@@ -1077,34 +1055,33 @@
     {
       "start": 50.86,
       "end": 52.94,
-      "text": "of Google Cloud Platform microservices.",
       "words": [
         {
-          "word": "of",
+          "word": "w153",
           "start": 50.86,
           "end": 51.28,
           "score": 0.9969
         },
         {
-          "word": "Google",
+          "word": "w154",
           "start": 51.28,
           "end": 51.52,
           "score": 0.9961
         },
         {
-          "word": "Cloud",
+          "word": "w155",
           "start": 51.52,
           "end": 51.82,
           "score": 0.9117
         },
         {
-          "word": "Platform",
+          "word": "w156",
           "start": 51.82,
           "end": 52.26,
           "score": 0.9296
         },
         {
-          "word": "microservices.",
+          "word": "w157",
           "start": 52.26,
           "end": 52.94,
           "score": 0.7647
@@ -1114,52 +1091,51 @@
     {
       "start": 53.48,
       "end": 55.6,
-      "text": "This isn't just a simple API wrapper, right?",
       "words": [
         {
-          "word": "This",
+          "word": "w158",
           "start": 53.48,
           "end": 53.78,
           "score": 0.9947
         },
         {
-          "word": "isn't",
+          "word": "w159",
           "start": 53.78,
           "end": 54.04,
           "score": 0.9993
         },
         {
-          "word": "just",
+          "word": "w160",
           "start": 54.04,
           "end": 54.16,
           "score": 0.9977
         },
         {
-          "word": "a",
+          "word": "w161",
           "start": 54.16,
           "end": 54.28,
           "score": 0.9964
         },
         {
-          "word": "simple",
+          "word": "w162",
           "start": 54.28,
           "end": 54.58,
           "score": 0.9945
         },
         {
-          "word": "API",
+          "word": "w163",
           "start": 54.58,
           "end": 54.9,
           "score": 0.9902
         },
         {
-          "word": "wrapper,",
+          "word": "w164",
           "start": 54.9,
           "end": 55.36,
           "score": 0.9883
         },
         {
-          "word": "right?",
+          "word": "w165",
           "start": 55.52,
           "end": 55.6,
           "score": 0.9368
@@ -1169,34 +1145,33 @@
     {
       "start": 55.78,
       "end": 57.18,
-      "text": "It's a full orchestration layer.",
       "words": [
         {
-          "word": "It's",
+          "word": "w166",
           "start": 55.78,
           "end": 55.92,
           "score": 0.9979
         },
         {
-          "word": "a",
+          "word": "w167",
           "start": 55.92,
-          "end": 56.0,
+          "end": 56,
           "score": 0.9987
         },
         {
-          "word": "full",
-          "start": 56.0,
+          "word": "w168",
+          "start": 56,
           "end": 56.28,
           "score": 0.9989
         },
         {
-          "word": "orchestration",
+          "word": "w169",
           "start": 56.28,
           "end": 56.9,
           "score": 0.9835
         },
         {
-          "word": "layer.",
+          "word": "w170",
           "start": 56.9,
           "end": 57.18,
           "score": 0.9981
@@ -1206,34 +1181,33 @@
     {
       "start": 57.18,
       "end": 58.76,
-      "text": "We're talking cloud run services,",
       "words": [
         {
-          "word": "We're",
+          "word": "w171",
           "start": 57.18,
           "end": 57.62,
           "score": 0.9191
         },
         {
-          "word": "talking",
+          "word": "w172",
           "start": 57.62,
           "end": 57.86,
           "score": 0.9897
         },
         {
-          "word": "cloud",
+          "word": "w173",
           "start": 57.86,
           "end": 58.12,
           "score": 0.5382
         },
         {
-          "word": "run",
+          "word": "w174",
           "start": 58.12,
           "end": 58.3,
           "score": 0.5311
         },
         {
-          "word": "services,",
+          "word": "w175",
           "start": 58.3,
           "end": 58.76,
           "score": 0.9937
@@ -1243,46 +1217,45 @@
     {
       "start": 59.22,
       "end": 61.4,
-      "text": "Gen2 cloud functions for the asynchronous stuff,",
       "words": [
         {
-          "word": "Gen2",
+          "word": "w176",
           "start": 59.22,
           "end": 59.56,
           "score": 0.6817
         },
         {
-          "word": "cloud",
+          "word": "w177",
           "start": 59.56,
           "end": 59.82,
           "score": 0.6412
         },
         {
-          "word": "functions",
+          "word": "w178",
           "start": 59.82,
           "end": 60.22,
           "score": 0.991
         },
         {
-          "word": "for",
+          "word": "w179",
           "start": 60.22,
           "end": 60.52,
           "score": 0.8474
         },
         {
-          "word": "the",
+          "word": "w180",
           "start": 60.52,
           "end": 60.66,
           "score": 0.9286
         },
         {
-          "word": "asynchronous",
+          "word": "w181",
           "start": 60.66,
           "end": 61.02,
           "score": 0.984
         },
         {
-          "word": "stuff,",
+          "word": "w182",
           "start": 61.02,
           "end": 61.4,
           "score": 0.9962
@@ -1292,40 +1265,39 @@
     {
       "start": 61.82,
       "end": 63.36,
-      "text": "pubs solve messaging, tying it together,",
       "words": [
         {
-          "word": "pubs",
+          "word": "w183",
           "start": 61.82,
           "end": 62.12,
           "score": 0.5132
         },
         {
-          "word": "solve",
+          "word": "w184",
           "start": 62.12,
           "end": 62.2,
           "score": 0.1762
         },
         {
-          "word": "messaging,",
+          "word": "w185",
           "start": 62.2,
           "end": 62.56,
           "score": 0.9903
         },
         {
-          "word": "tying",
+          "word": "w186",
           "start": 62.78,
           "end": 62.9,
           "score": 0.8463
         },
         {
-          "word": "it",
+          "word": "w187",
           "start": 62.9,
           "end": 63.02,
           "score": 0.9982
         },
         {
-          "word": "together,",
+          "word": "w188",
           "start": 63.02,
           "end": 63.36,
           "score": 0.9979
@@ -1335,46 +1307,45 @@
     {
       "start": 63.64,
       "end": 66.3,
-      "text": "and specialized databases like MongoDB and Postgres,",
       "words": [
         {
-          "word": "and",
+          "word": "w189",
           "start": 63.64,
           "end": 63.72,
           "score": 0.9934
         },
         {
-          "word": "specialized",
+          "word": "w190",
           "start": 63.72,
           "end": 64.1,
           "score": 0.5524
         },
         {
-          "word": "databases",
+          "word": "w191",
           "start": 64.1,
           "end": 64.56,
           "score": 0.9699
         },
         {
-          "word": "like",
+          "word": "w192",
           "start": 64.56,
           "end": 65.04,
           "score": 0.9858
         },
         {
-          "word": "MongoDB",
+          "word": "w193",
           "start": 65.04,
           "end": 65.58,
           "score": 0.9823
         },
         {
-          "word": "and",
+          "word": "w194",
           "start": 65.58,
           "end": 65.88,
           "score": 0.9413
         },
         {
-          "word": "Postgres,",
+          "word": "w195",
           "start": 65.88,
           "end": 66.3,
           "score": 0.8294
@@ -1384,22 +1355,21 @@
     {
       "start": 66.76,
       "end": 67.5,
-      "text": "the whole Shabang.",
       "words": [
         {
-          "word": "the",
+          "word": "w196",
           "start": 66.76,
           "end": 66.84,
           "score": 0.9394
         },
         {
-          "word": "whole",
+          "word": "w197",
           "start": 66.84,
           "end": 66.98,
           "score": 0.5179
         },
         {
-          "word": "Shabang.",
+          "word": "w198",
           "start": 66.98,
           "end": 67.5,
           "score": 0.5757
@@ -1409,40 +1379,39 @@
     {
       "start": 67.9,
       "end": 69.82,
-      "text": "And all of that backend complex.",
       "words": [
         {
-          "word": "And",
+          "word": "w199",
           "start": 67.9,
           "end": 68.38,
           "score": 0.8978
         },
         {
-          "word": "all",
+          "word": "w200",
           "start": 68.38,
           "end": 68.66,
           "score": 0.9932
         },
         {
-          "word": "of",
+          "word": "w201",
           "start": 68.66,
           "end": 68.84,
           "score": 0.9557
         },
         {
-          "word": "that",
+          "word": "w202",
           "start": 68.84,
           "end": 68.98,
           "score": 0.9908
         },
         {
-          "word": "backend",
+          "word": "w203",
           "start": 68.98,
           "end": 69.44,
           "score": 0.5276
         },
         {
-          "word": "complex.",
+          "word": "w204",
           "start": 69.44,
           "end": 69.82,
           "score": 0.568

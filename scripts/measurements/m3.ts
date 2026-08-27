@@ -121,7 +121,9 @@ function lockPct(cuts: number[], period: number, phase: number): number {
   return (100 * hit) / cuts.length;
 }
 
-/** 1-D circular optimization over phase φ ∈ [0, period) — coarse then fine. */
+/** 1-D circular optimization over phase φ ∈ [0, period) — one 2ms sweep
+ *  (fine enough that a coarse-then-fine refinement pass wouldn't change the
+ *  winner; not actually two passes). */
 function bestPhase(cuts: number[], period: number): { phase: number; lockPct: number } {
   let best = { phase: 0, lockPct: -1 };
   for (let phase = 0; phase < period; phase += 0.002) {

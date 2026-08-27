@@ -3,72 +3,71 @@
   "durationSec": 53.033,
   "segments": [
     {
-      "start": 0.0,
+      "start": 0,
       "end": 2.56,
-      "text": "The moment you start working harder than the people around you,",
       "words": [
         {
-          "word": "The",
-          "start": 0.0,
+          "word": "w0",
+          "start": 0,
           "end": 0.08,
           "score": 0.1679
         },
         {
-          "word": "moment",
+          "word": "w1",
           "start": 0.08,
           "end": 0.28,
           "score": 0.9671
         },
         {
-          "word": "you",
+          "word": "w2",
           "start": 0.28,
           "end": 0.48,
           "score": 0.9896
         },
         {
-          "word": "start",
+          "word": "w3",
           "start": 0.48,
           "end": 0.68,
           "score": 0.9816
         },
         {
-          "word": "working",
+          "word": "w4",
           "start": 0.68,
-          "end": 1.0,
+          "end": 1,
           "score": 0.9897
         },
         {
-          "word": "harder",
-          "start": 1.0,
+          "word": "w5",
+          "start": 1,
           "end": 1.52,
           "score": 0.9939
         },
         {
-          "word": "than",
+          "word": "w6",
           "start": 1.52,
           "end": 1.68,
           "score": 0.9595
         },
         {
-          "word": "the",
+          "word": "w7",
           "start": 1.68,
           "end": 1.8,
           "score": 0.9447
         },
         {
-          "word": "people",
+          "word": "w8",
           "start": 1.8,
           "end": 2.06,
           "score": 0.9956
         },
         {
-          "word": "around",
+          "word": "w9",
           "start": 2.06,
           "end": 2.32,
           "score": 0.993
         },
         {
-          "word": "you,",
+          "word": "w10",
           "start": 2.32,
           "end": 2.56,
           "score": 0.998
@@ -78,34 +77,33 @@
     {
       "start": 2.68,
       "end": 3.94,
-      "text": "they stop calling it dedication,",
       "words": [
         {
-          "word": "they",
+          "word": "w11",
           "start": 2.68,
           "end": 2.76,
           "score": 0.8941
         },
         {
-          "word": "stop",
+          "word": "w12",
           "start": 2.76,
           "end": 3.02,
           "score": 0.9719
         },
         {
-          "word": "calling",
+          "word": "w13",
           "start": 3.02,
           "end": 3.34,
           "score": 0.9965
         },
         {
-          "word": "it",
+          "word": "w14",
           "start": 3.34,
           "end": 3.5,
           "score": 0.8714
         },
         {
-          "word": "dedication,",
+          "word": "w15",
           "start": 3.5,
           "end": 3.94,
           "score": 0.8956
@@ -115,40 +113,39 @@
     {
       "start": 4.54,
       "end": 5.9,
-      "text": "they start calling it a session.",
       "words": [
         {
-          "word": "they",
+          "word": "w16",
           "start": 4.54,
           "end": 4.58,
           "score": 0.9555
         },
         {
-          "word": "start",
+          "word": "w17",
           "start": 4.58,
           "end": 4.82,
           "score": 0.9875
         },
         {
-          "word": "calling",
+          "word": "w18",
           "start": 4.82,
           "end": 5.12,
           "score": 0.9974
         },
         {
-          "word": "it",
+          "word": "w19",
           "start": 5.12,
           "end": 5.32,
           "score": 0.9978
         },
         {
-          "word": "a",
+          "word": "w20",
           "start": 5.32,
           "end": 5.38,
           "score": 0.3995
         },
         {
-          "word": "session.",
+          "word": "w21",
           "start": 5.38,
           "end": 5.9,
           "score": 0.9353
@@ -157,79 +154,78 @@
     },
     {
       "start": 6.16,
-      "end": 9.0,
-      "text": "They tell you to slow down, to balance, to not lose yourself.",
+      "end": 9,
       "words": [
         {
-          "word": "They",
+          "word": "w22",
           "start": 6.16,
           "end": 6.24,
           "score": 0.9754
         },
         {
-          "word": "tell",
+          "word": "w23",
           "start": 6.24,
           "end": 6.4,
           "score": 0.991
         },
         {
-          "word": "you",
+          "word": "w24",
           "start": 6.4,
           "end": 6.52,
           "score": 0.9979
         },
         {
-          "word": "to",
+          "word": "w25",
           "start": 6.52,
           "end": 6.62,
           "score": 0.9951
         },
         {
-          "word": "slow",
+          "word": "w26",
           "start": 6.62,
           "end": 6.82,
           "score": 0.9908
         },
         {
-          "word": "down,",
+          "word": "w27",
           "start": 6.82,
           "end": 6.98,
           "score": 0.9957
         },
         {
-          "word": "to",
+          "word": "w28",
           "start": 7.12,
           "end": 7.2,
           "score": 0.9891
         },
         {
-          "word": "balance,",
+          "word": "w29",
           "start": 7.2,
           "end": 7.56,
           "score": 0.9941
         },
         {
-          "word": "to",
+          "word": "w30",
           "start": 7.8,
           "end": 7.88,
           "score": 0.9147
         },
         {
-          "word": "not",
+          "word": "w31",
           "start": 7.88,
           "end": 8.2,
           "score": 0.9949
         },
         {
-          "word": "lose",
+          "word": "w32",
           "start": 8.2,
           "end": 8.56,
           "score": 0.9905
         },
         {
-          "word": "yourself.",
+          "word": "w33",
           "start": 8.56,
-          "end": 9.0,
+          "end": 9,
           "score": 0.9565
         }
       ]
@@ -237,52 +233,51 @@
     {
       "start": 9.34,
       "end": 11.4,
-      "text": "To remember that life is more than work",
       "words": [
         {
-          "word": "To",
+          "word": "w34",
           "start": 9.34,
           "end": 9.4,
           "score": 0.7909
         },
         {
-          "word": "remember",
+          "word": "w35",
           "start": 9.4,
           "end": 9.88,
           "score": 0.996
         },
         {
-          "word": "that",
+          "word": "w36",
           "start": 9.88,
           "end": 10.24,
           "score": 0.8671
         },
         {
-          "word": "life",
+          "word": "w37",
           "start": 10.24,
           "end": 10.64,
           "score": 0.9912
         },
         {
-          "word": "is",
+          "word": "w38",
           "start": 10.64,
           "end": 10.82,
           "score": 0.9901
         },
         {
-          "word": "more",
+          "word": "w39",
           "start": 10.82,
           "end": 10.98,
           "score": 0.9373
         },
         {
-          "word": "than",
+          "word": "w40",
           "start": 10.98,
           "end": 11.12,
           "score": 0.9758
         },
         {
-          "word": "work",
+          "word": "w41",
           "start": 11.12,
           "end": 11.4,
           "score": 0.9922
@@ -292,64 +287,63 @@
     {
       "start": 11.4,
       "end": 13.74,
-      "text": "and you start to believe that because it sounds logical",
       "words": [
         {
-          "word": "and",
+          "word": "w42",
           "start": 11.4,
           "end": 11.7,
           "score": 0.4982
         },
         {
-          "word": "you",
+          "word": "w43",
           "start": 11.7,
           "end": 11.8,
           "score": 0.9929
         },
         {
-          "word": "start",
+          "word": "w44",
           "start": 11.8,
-          "end": 12.0,
+          "end": 12,
           "score": 0.985
         },
         {
-          "word": "to",
-          "start": 12.0,
+          "word": "w45",
+          "start": 12,
           "end": 12.18,
           "score": 0.9875
         },
         {
-          "word": "believe",
+          "word": "w46",
           "start": 12.18,
           "end": 12.42,
           "score": 0.9959
         },
         {
-          "word": "that",
+          "word": "w47",
           "start": 12.42,
           "end": 12.62,
           "score": 0.3092
         },
         {
-          "word": "because",
+          "word": "w48",
           "start": 12.62,
           "end": 12.92,
           "score": 0.4644
         },
         {
-          "word": "it",
+          "word": "w49",
           "start": 12.92,
           "end": 13.04,
           "score": 0.9729
         },
         {
-          "word": "sounds",
+          "word": "w50",
           "start": 13.04,
           "end": 13.3,
           "score": 0.9938
         },
         {
-          "word": "logical",
+          "word": "w51",
           "start": 13.3,
           "end": 13.74,
           "score": 0.9929
@@ -359,52 +353,51 @@
     {
       "start": 13.74,
       "end": 17.18,
-      "text": "but you forget that this isn't about them.",
       "words": [
         {
-          "word": "but",
+          "word": "w52",
           "start": 13.74,
           "end": 14.3,
           "score": 0.198
         },
         {
-          "word": "you",
+          "word": "w53",
           "start": 14.3,
           "end": 15.04,
           "score": 0.7496
         },
         {
-          "word": "forget",
+          "word": "w54",
           "start": 15.04,
           "end": 15.58,
           "score": 0.9964
         },
         {
-          "word": "that",
+          "word": "w55",
           "start": 15.58,
-          "end": 16.0,
+          "end": 16,
           "score": 0.9905
         },
         {
-          "word": "this",
-          "start": 16.0,
+          "word": "w56",
+          "start": 16,
           "end": 16.32,
           "score": 0.9869
         },
         {
-          "word": "isn't",
+          "word": "w57",
           "start": 16.32,
           "end": 16.68,
           "score": 0.9914
         },
         {
-          "word": "about",
+          "word": "w58",
           "start": 16.68,
           "end": 16.88,
           "score": 0.9954
         },
         {
-          "word": "them.",
+          "word": "w59",
           "start": 16.88,
           "end": 17.18,
           "score": 0.9956
@@ -414,58 +407,57 @@
     {
       "start": 17.4,
       "end": 20.1,
-      "text": "Their dreams are not at stake here, yours out.",
       "words": [
         {
-          "word": "Their",
+          "word": "w60",
           "start": 17.4,
           "end": 17.5,
           "score": 0.5426
         },
         {
-          "word": "dreams",
+          "word": "w61",
           "start": 17.5,
           "end": 17.9,
           "score": 0.9982
         },
         {
-          "word": "are",
+          "word": "w62",
           "start": 17.9,
           "end": 18.1,
           "score": 0.9887
         },
         {
-          "word": "not",
+          "word": "w63",
           "start": 18.1,
           "end": 18.3,
           "score": 0.9964
         },
         {
-          "word": "at",
+          "word": "w64",
           "start": 18.3,
           "end": 18.54,
           "score": 0.9735
         },
         {
-          "word": "stake",
+          "word": "w65",
           "start": 18.54,
           "end": 18.8,
           "score": 0.9988
         },
         {
-          "word": "here,",
+          "word": "w66",
           "start": 18.8,
           "end": 19.14,
           "score": 0.5305
         },
         {
-          "word": "yours",
+          "word": "w67",
           "start": 19.6,
           "end": 19.8,
           "score": 0.6965
         },
         {
-          "word": "out.",
+          "word": "w68",
           "start": 19.8,
           "end": 20.1,
           "score": 0.764
@@ -475,76 +467,75 @@
     {
       "start": 20.32,
       "end": 22.84,
-      "text": "If you want a life of your choice, you can't live like",
       "words": [
         {
-          "word": "If",
+          "word": "w69",
           "start": 20.32,
           "end": 20.44,
           "score": 0.9843
         },
         {
-          "word": "you",
+          "word": "w70",
           "start": 20.44,
           "end": 20.56,
           "score": 0.9976
         },
         {
-          "word": "want",
+          "word": "w71",
           "start": 20.56,
           "end": 20.74,
           "score": 0.9968
         },
         {
-          "word": "a",
+          "word": "w72",
           "start": 20.74,
           "end": 20.92,
           "score": 0.9649
         },
         {
-          "word": "life",
+          "word": "w73",
           "start": 20.92,
           "end": 21.14,
           "score": 0.9974
         },
         {
-          "word": "of",
+          "word": "w74",
           "start": 21.14,
           "end": 21.34,
           "score": 0.9922
         },
         {
-          "word": "your",
+          "word": "w75",
           "start": 21.34,
           "end": 21.48,
           "score": 0.9789
         },
         {
-          "word": "choice,",
+          "word": "w76",
           "start": 21.48,
           "end": 21.78,
           "score": 0.9991
         },
         {
-          "word": "you",
+          "word": "w77",
           "start": 22.2,
           "end": 22.3,
           "score": 0.9943
         },
         {
-          "word": "can't",
+          "word": "w78",
           "start": 22.3,
           "end": 22.56,
           "score": 0.9958
         },
         {
-          "word": "live",
+          "word": "w79",
           "start": 22.56,
           "end": 22.66,
           "score": 0.9388
         },
         {
-          "word": "like",
+          "word": "w80",
           "start": 22.66,
           "end": 22.84,
           "score": 0.9877
@@ -554,64 +545,63 @@
     {
       "start": 22.84,
       "end": 25.38,
-      "text": "and if your goals don't make you a little inhuman,",
       "words": [
         {
-          "word": "and",
+          "word": "w81",
           "start": 22.84,
           "end": 23.22,
           "score": 0.2042
         },
         {
-          "word": "if",
+          "word": "w82",
           "start": 23.22,
           "end": 23.36,
           "score": 0.9762
         },
         {
-          "word": "your",
+          "word": "w83",
           "start": 23.36,
           "end": 23.46,
           "score": 0.9454
         },
         {
-          "word": "goals",
+          "word": "w84",
           "start": 23.46,
           "end": 23.7,
           "score": 0.9901
         },
         {
-          "word": "don't",
+          "word": "w85",
           "start": 23.7,
           "end": 23.96,
           "score": 0.9951
         },
         {
-          "word": "make",
+          "word": "w86",
           "start": 23.96,
           "end": 24.14,
           "score": 0.997
         },
         {
-          "word": "you",
+          "word": "w87",
           "start": 24.14,
           "end": 24.36,
           "score": 0.8406
         },
         {
-          "word": "a",
+          "word": "w88",
           "start": 24.36,
           "end": 24.48,
           "score": 0.9157
         },
         {
-          "word": "little",
+          "word": "w89",
           "start": 24.48,
           "end": 24.66,
           "score": 0.9964
         },
         {
-          "word": "inhuman,",
+          "word": "w90",
           "start": 24.66,
           "end": 25.38,
           "score": 0.9161
@@ -621,64 +611,63 @@
     {
       "start": 25.62,
       "end": 28.38,
-      "text": "a little too intense, a little uncomfortable to be around,",
       "words": [
         {
-          "word": "a",
+          "word": "w91",
           "start": 25.62,
           "end": 25.68,
           "score": 0.9779
         },
         {
-          "word": "little",
+          "word": "w92",
           "start": 25.68,
           "end": 25.82,
           "score": 0.9983
         },
         {
-          "word": "too",
+          "word": "w93",
           "start": 25.82,
           "end": 26.02,
           "score": 0.5578
         },
         {
-          "word": "intense,",
+          "word": "w94",
           "start": 26.02,
           "end": 26.48,
           "score": 0.9977
         },
         {
-          "word": "a",
+          "word": "w95",
           "start": 26.72,
           "end": 26.78,
           "score": 0.9876
         },
         {
-          "word": "little",
+          "word": "w96",
           "start": 26.78,
           "end": 26.96,
           "score": 0.9991
         },
         {
-          "word": "uncomfortable",
+          "word": "w97",
           "start": 26.96,
           "end": 27.5,
           "score": 0.9927
         },
         {
-          "word": "to",
+          "word": "w98",
           "start": 27.5,
           "end": 28.06,
           "score": 0.9578
         },
         {
-          "word": "be",
+          "word": "w99",
           "start": 28.06,
           "end": 28.18,
           "score": 0.9964
         },
         {
-          "word": "around,",
+          "word": "w100",
           "start": 28.18,
           "end": 28.38,
           "score": 0.9979
@@ -688,22 +677,21 @@
     {
       "start": 28.58,
       "end": 29.04,
-      "text": "they're too small.",
       "words": [
         {
-          "word": "they're",
+          "word": "w101",
           "start": 28.58,
           "end": 28.64,
           "score": 0.8173
         },
         {
-          "word": "too",
+          "word": "w102",
           "start": 28.64,
           "end": 28.72,
           "score": 0.9985
         },
         {
-          "word": "small.",
+          "word": "w103",
           "start": 28.72,
           "end": 29.04,
           "score": 0.9974
@@ -713,47 +701,46 @@
     {
       "start": 29.04,
       "end": 32.72,
-      "text": "Because ambition is supposed to feel uncomfortable.",
       "words": [
         {
-          "word": "Because",
+          "word": "w104",
           "start": 29.04,
           "end": 29.38,
           "score": 0.5557
         },
         {
-          "word": "ambition",
+          "word": "w105",
           "start": 29.38,
           "end": 30.12,
           "score": 0.874
         },
         {
-          "word": "is",
+          "word": "w106",
           "start": 30.12,
           "end": 30.72,
           "score": 0.6752
         },
         {
-          "word": "supposed",
+          "word": "w107",
           "start": 30.72,
           "end": 31.26,
           "score": 0.9737
         },
         {
-          "word": "to",
+          "word": "w108",
           "start": 31.26,
           "end": 31.6,
           "score": 0.9976
         },
         {
-          "word": "feel",
+          "word": "w109",
           "start": 31.6,
-          "end": 32.0,
+          "end": 32,
           "score": 0.9903
         },
         {
-          "word": "uncomfortable.",
-          "start": 32.0,
+          "word": "w110",
+          "start": 32,
           "end": 32.72,
           "score": 0.8529
         }
@@ -762,52 +749,51 @@
     {
       "start": 33.22,
       "end": 35.48,
-      "text": "It's supposed to ask too much of you.",
       "words": [
         {
-          "word": "It's",
+          "word": "w111",
           "start": 33.22,
           "end": 33.62,
           "score": 0.9157
         },
         {
-          "word": "supposed",
+          "word": "w112",
           "start": 33.62,
           "end": 33.88,
           "score": 0.9863
         },
         {
-          "word": "to",
+          "word": "w113",
           "start": 33.88,
           "end": 34.14,
           "score": 0.9968
         },
         {
-          "word": "ask",
+          "word": "w114",
           "start": 34.14,
           "end": 34.42,
           "score": 0.8894
         },
         {
-          "word": "too",
+          "word": "w115",
           "start": 34.42,
           "end": 34.76,
           "score": 0.9451
         },
         {
-          "word": "much",
+          "word": "w116",
           "start": 34.76,
           "end": 35.14,
           "score": 0.9982
         },
         {
-          "word": "of",
+          "word": "w117",
           "start": 35.14,
           "end": 35.26,
           "score": 0.8184
         },
         {
-          "word": "you.",
+          "word": "w118",
           "start": 35.26,
           "end": 35.48,
           "score": 0.9943
@@ -817,76 +803,75 @@
     {
       "start": 35.56,
       "end": 38.16,
-      "text": "It's supposed to scare the people who want you to stay normal.",
       "words": [
         {
-          "word": "It's",
+          "word": "w119",
           "start": 35.56,
           "end": 35.74,
           "score": 0.9868
         },
         {
-          "word": "supposed",
+          "word": "w120",
           "start": 35.74,
           "end": 35.92,
           "score": 0.9935
         },
         {
-          "word": "to",
+          "word": "w121",
           "start": 35.92,
           "end": 36.14,
           "score": 0.9982
         },
         {
-          "word": "scare",
+          "word": "w122",
           "start": 36.14,
           "end": 36.42,
           "score": 0.9883
         },
         {
-          "word": "the",
+          "word": "w123",
           "start": 36.42,
           "end": 36.6,
           "score": 0.916
         },
         {
-          "word": "people",
+          "word": "w124",
           "start": 36.6,
           "end": 36.9,
           "score": 0.9976
         },
         {
-          "word": "who",
+          "word": "w125",
           "start": 36.9,
           "end": 37.06,
           "score": 0.9666
         },
         {
-          "word": "want",
+          "word": "w126",
           "start": 37.06,
           "end": 37.28,
           "score": 0.9851
         },
         {
-          "word": "you",
+          "word": "w127",
           "start": 37.28,
           "end": 37.42,
           "score": 0.9376
         },
         {
-          "word": "to",
+          "word": "w128",
           "start": 37.42,
           "end": 37.5,
           "score": 0.9846
         },
         {
-          "word": "stay",
+          "word": "w129",
           "start": 37.5,
           "end": 37.74,
           "score": 0.9735
         },
         {
-          "word": "normal.",
+          "word": "w130",
           "start": 37.74,
           "end": 38.16,
           "score": 0.995
@@ -896,58 +881,57 @@
     {
       "start": 38.36,
       "end": 40.46,
-      "text": "If your dream doesn't make you a little insane,",
       "words": [
         {
-          "word": "If",
+          "word": "w131",
           "start": 38.36,
           "end": 38.46,
           "score": 0.9901
         },
         {
-          "word": "your",
+          "word": "w132",
           "start": 38.46,
           "end": 38.54,
           "score": 0.9058
         },
         {
-          "word": "dream",
+          "word": "w133",
           "start": 38.54,
           "end": 38.84,
           "score": 0.9883
         },
         {
-          "word": "doesn't",
+          "word": "w134",
           "start": 38.84,
           "end": 39.14,
           "score": 0.9814
         },
         {
-          "word": "make",
+          "word": "w135",
           "start": 39.14,
           "end": 39.34,
           "score": 0.9958
         },
         {
-          "word": "you",
+          "word": "w136",
           "start": 39.34,
           "end": 39.5,
           "score": 0.9928
         },
         {
-          "word": "a",
+          "word": "w137",
           "start": 39.5,
           "end": 39.62,
           "score": 0.9662
         },
         {
-          "word": "little",
+          "word": "w138",
           "start": 39.62,
           "end": 39.82,
           "score": 0.9977
         },
         {
-          "word": "insane,",
+          "word": "w139",
           "start": 39.82,
           "end": 40.46,
           "score": 0.956
@@ -957,40 +941,39 @@
     {
       "start": 40.78,
       "end": 42.8,
-      "text": "you're thinking inside your comfort zone.",
       "words": [
         {
-          "word": "you're",
+          "word": "w140",
           "start": 40.78,
           "end": 40.94,
           "score": 0.9343
         },
         {
-          "word": "thinking",
+          "word": "w141",
           "start": 40.94,
           "end": 41.3,
           "score": 0.9939
         },
         {
-          "word": "inside",
+          "word": "w142",
           "start": 41.3,
           "end": 41.96,
           "score": 0.9853
         },
         {
-          "word": "your",
+          "word": "w143",
           "start": 41.96,
           "end": 42.2,
           "score": 0.9678
         },
         {
-          "word": "comfort",
+          "word": "w144",
           "start": 42.2,
           "end": 42.56,
           "score": 0.9974
         },
         {
-          "word": "zone.",
+          "word": "w145",
           "start": 42.56,
           "end": 42.8,
           "score": 0.9904
@@ -1000,58 +983,57 @@
     {
       "start": 43.04,
       "end": 47.02,
-      "text": "The world calls everyone who refuses to settle, obsessed.",
       "words": [
         {
-          "word": "The",
+          "word": "w146",
           "start": 43.04,
           "end": 43.12,
           "score": 0.9887
         },
         {
-          "word": "world",
+          "word": "w147",
           "start": 43.12,
           "end": 43.54,
           "score": 0.9578
         },
         {
-          "word": "calls",
+          "word": "w148",
           "start": 43.54,
           "end": 43.82,
           "score": 0.9884
         },
         {
-          "word": "everyone",
+          "word": "w149",
           "start": 43.82,
           "end": 44.7,
           "score": 0.9783
         },
         {
-          "word": "who",
+          "word": "w150",
           "start": 44.7,
           "end": 44.98,
           "score": 0.9796
         },
         {
-          "word": "refuses",
+          "word": "w151",
           "start": 44.98,
           "end": 45.44,
           "score": 0.9749
         },
         {
-          "word": "to",
+          "word": "w152",
           "start": 45.44,
           "end": 45.7,
           "score": 0.9989
         },
         {
-          "word": "settle,",
+          "word": "w153",
           "start": 45.7,
           "end": 46.12,
           "score": 0.9977
         },
         {
-          "word": "obsessed.",
+          "word": "w154",
           "start": 46.58,
           "end": 47.02,
           "score": 0.918
@@ -1061,46 +1043,45 @@
     {
       "start": 47.5,
       "end": 48.86,
-      "text": "Take pride in being one of them.",
       "words": [
         {
-          "word": "Take",
+          "word": "w155",
           "start": 47.5,
           "end": 47.6,
           "score": 0.9708
         },
         {
-          "word": "pride",
+          "word": "w156",
           "start": 47.6,
           "end": 47.98,
           "score": 0.9796
         },
         {
-          "word": "in",
+          "word": "w157",
           "start": 47.98,
           "end": 48.22,
           "score": 0.9962
         },
         {
-          "word": "being",
+          "word": "w158",
           "start": 48.22,
           "end": 48.38,
           "score": 0.9979
         },
         {
-          "word": "one",
+          "word": "w159",
           "start": 48.38,
           "end": 48.6,
           "score": 0.9947
         },
         {
-          "word": "of",
+          "word": "w160",
           "start": 48.6,
           "end": 48.72,
           "score": 0.9924
         },
         {
-          "word": "them.",
+          "word": "w161",
           "start": 48.72,
           "end": 48.86,
           "score": 0.9702
