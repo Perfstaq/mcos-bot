@@ -110,7 +110,11 @@ function rhythmCutTimes(durationSec: number, rand: () => number): number[] {
   return times;
 }
 
-function lockPct(cuts: number[], period: number, phase: number): number {
+// `export` added by Agent M (no behavioural change): the M-3 report now
+// scores BOTH the baseline and the new planner, and they must be measured
+// with one ruler — a second copy of this function is exactly the "two
+// estimators disagreeing" failure ADR-2/ADR-8 exist to prevent.
+export function lockPct(cuts: number[], period: number, phase: number): number {
   if (!cuts.length) return 100;
   let hit = 0;
   for (const c of cuts) {
