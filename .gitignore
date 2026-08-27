@@ -28,3 +28,6 @@ e2e/.seed-result.json
 e2e/test-results/
 e2e/playwright-report/
 e2e/blob-report/
+# Already caught by the blanket *.log above — listed here too so it reads as
+# one of this ring's own generated files, not an accident of a broader rule.
+e2e/server.log

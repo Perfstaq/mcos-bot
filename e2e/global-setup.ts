@@ -133,7 +133,24 @@ async function waitForHealthy(pid: number): Promise<number> {
     }
     await new Promise((resolve) => setTimeout(resolve, 300));
   }
-  throw new Error(`API server on ${E2E_BASE_URL} did not become healthy within 30s (pid ${pid})`);
+
+  // A server that never answers /healthz is not necessarily a server that
+  // never started listening — a slow migration, a port already held by a
+  // previous run's own wedged process, or a crash mid-boot can all leave a
+  // process (or, since it was spawned `detached`, a whole process group)
+  // sitting on port E2E_API_PORT with nothing to reap it: global-teardown.ts
+  // only ever runs against the `serverPid` written into STATE_FILE, which
+  // this function has not returned yet and never will. Left alone, that
+  // wedges the port for every later run until someone finds and kills it by
+  // hand (see the ENOSPC-outage recovery notes in this branch's history).
+  // `-pid` targets the whole detached group (tsx plus whatever it forked),
+  // not just the leader; ESRCH means it was already gone, which is fine.
+  try {
+    process.kill(-pid, "SIGTERM");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
+  }
+  throw new Error(`API server on ${E2E_BASE_URL} did not become healthy within 30s (pid ${pid}, now killed)`);
 }
 
 // Also runnable directly — `npx tsx e2e/global-setup.ts` — for manually
