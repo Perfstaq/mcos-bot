@@ -84,4 +84,4 @@ export async function uploadFileToR2(args: {
 }
 
 export type { UploadResult };
-export { putObject };
+export { presignGet, putObject };

@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { MediaAssetKind, RenderStatus } from "@prisma/client";
@@ -252,6 +252,48 @@ describe("render.submit — every failure is named on the Render row", () => {
     expect(render.failedStage).toBe("render");
     // The reason has to be readable by a person, not just a code.
     expect(render.error).toMatch(/RENDER_BACKEND is unset/);
+  });
+});
+
+/* ------------------------------------------------------ the props envelope */
+
+describe("render.submit — the props the composition actually receives", () => {
+  /**
+   * This test exists because the bug it catches TYPECHECKS. `Reel` takes
+   * `{ plan, footageSrc }`; passing the bare plan is valid JSON, the renderer
+   * starts happily, and the composition gets `plan: undefined`. Nothing in a
+   * unit test or a `tsc` run can see it — it took an actual render.
+   *
+   * So the fake renderer here reads the props file the job wrote and reports
+   * its shape, which is the only place the contract is observable from.
+   */
+  it("passes { plan, footageSrc } — not a bare plan", async () => {
+    const { renderId } = await seedRender();
+    const captured = path.join(workDir, "captured-props.json");
+    const script = path.join(workDir, "renderer.mjs");
+    writeFileSync(
+      script,
+      `import { readFileSync, writeFileSync } from "node:fs";
+       const i = process.argv.indexOf("--props");
+       writeFileSync(${JSON.stringify(captured)}, readFileSync(process.argv[i + 1], "utf8"));
+       process.exit(0);`,
+    );
+    process.env.RENDER_BACKEND = "local";
+    process.env.RENDER_LOCAL_SCRIPT = script;
+
+    const { runRenderSubmit } = await loadJob();
+    // It fails at `no_output` (the fake renderer writes no MP4), which is
+    // after the props were written — exactly the point we want to inspect.
+    await expect(runRenderSubmit({ tenantId, renderId })).rejects.toThrow(/no_output/);
+
+    const props = JSON.parse(readFileSync(captured, "utf8")) as { plan?: unknown; footageSrc?: unknown };
+    expect(props.plan).toBeTypeOf("object");
+    expect(props.plan).toHaveProperty("planVersion", "1");
+    // The composition cannot open an R2 key; it needs something
+    // <OffthreadVideo> can fetch. ADR-7: "feeds presigned R2 URLs in".
+    expect(props.footageSrc).toBeTypeOf("string");
+    expect(String(props.footageSrc)).toMatch(/^https?:\/\//);
+    expect(String(props.footageSrc)).toContain("X-Amz-Signature");
   });
 });
 

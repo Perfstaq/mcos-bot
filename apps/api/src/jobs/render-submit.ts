@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { RenderStatus } from "@prisma/client";
 import { prisma } from "../db.js";
 import { env } from "../env.js";
-import { studioKeys, uploadFileToR2 } from "../integrations/studio-r2.js";
+import { presignGet, studioKeys, uploadFileToR2 } from "../integrations/studio-r2.js";
 import { logger } from "../logger.js";
 import { renderQcQueue, type RenderSubmitJob } from "../queue.js";
 import { withTenantContext } from "./context.js";
@@ -178,7 +178,7 @@ export async function runRenderSubmit(job: RenderSubmitJob): Promise<void> {
   await withTenantContext(job.tenantId, async () => {
     const render = await prisma.render.findUnique({
       where: { id: job.renderId },
-      include: { plan: true },
+      include: { plan: { include: { footage: true } } },
     });
     if (!render) throw new Error(`Unknown render ${job.renderId}`);
 
@@ -201,10 +201,21 @@ export async function runRenderSubmit(job: RenderSubmitJob): Promise<void> {
     const workDir = mkdtempSync(path.join(tmpdir(), "render-submit-"));
     try {
       // "Plan-as-props": the composition's ONLY source of timing is the plan
-      // row (03 §4). Nothing is recomputed here, and nothing is passed that is
-      // not on the plan — which is what makes the render reproducible (G13).
+      // row (03 §4). Nothing is recomputed here — the render is reproducible
+      // from the plan alone (G13).
+      //
+      // The props envelope is `{ plan, footageSrc }`, NOT a bare plan. The
+      // plan carries the footage's `assetId` and `r2Key`, but the composition
+      // cannot open an R2 key — it needs something `<OffthreadVideo>` can
+      // fetch, and the key deliberately is not that. So the plan stays the
+      // frozen artifact and the fetchable location is supplied per render.
+      //
+      // This is worth stating because it is a mistake that typechecks: a bare
+      // plan is valid JSON, the renderer starts, and the composition gets
+      // `plan: undefined`. It cost a render to find.
+      const { url: footageSrc } = await presignGet(render.plan.footage.r2Key, RENDER_SUBMIT_TIMEOUT_MS / 1000);
       const propsPath = path.join(workDir, "props.json");
-      writeFileSync(propsPath, JSON.stringify(render.plan.plan));
+      writeFileSync(propsPath, JSON.stringify({ plan: render.plan.plan, footageSrc }));
 
       const outPath = path.join(workDir, "render.mp4");
 
