@@ -1,6 +1,6 @@
 import { prisma } from "../db.js";
 import { env } from "../env.js";
-import { generateMeetingDigest } from "../integrations/openai.js";
+import { DIGEST_PROMPT_VERSION, generateMeetingDigest } from "../integrations/openai.js";
 import { formatTimestamp } from "../domain/transcript.js";
 import { logger } from "../logger.js";
 import type { DigestJob } from "../queue.js";
@@ -61,6 +61,7 @@ async function generateAndStore(meetingId: string): Promise<void> {
       title: meeting.title ?? result.title,
       digest: result.digest,
       digestModel: env.DIGEST_MODEL,
+      digestPromptVersion: DIGEST_PROMPT_VERSION,
       digestGeneratedAt: new Date(),
     },
   });

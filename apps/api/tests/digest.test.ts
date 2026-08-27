@@ -82,6 +82,7 @@ describe("runDigest", () => {
     expect(meeting.title).toBe("Acme renewal risk and the pricing objection");
     expect(meeting.digest).toContain("Acme account");
     expect(meeting.digestModel).toBe("gpt-5.6-luna");
+    expect(meeting.digestPromptVersion).toBe("meeting_digest/v1-openai");
     expect(meeting.digestGeneratedAt).not.toBeNull();
     expect(meeting.status).toBe(MeetingStatus.transcript_ready);
   });
