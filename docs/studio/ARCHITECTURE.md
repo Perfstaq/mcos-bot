@@ -1316,3 +1316,46 @@ stale on this point** — the positions are `center_low`, `lower_left`, `center`
   Display is "the permitted case"; a subset is a Modified Version and may not carry the Reserved
   Font Name without permission. Universally tolerated in practice, but the note asserts the
   opposite of the licence. Folded into ADR-5's pre-GA licensing checklist alongside Remotion.
+
+### 12.22 The zoom fix, and what testing an inherited claim turned up
+
+§12.19 is closed. Of the three sanctioned options the fix agent chose **anchoring the odd-shot
+zoom origin on the chin line**, and its reasoning is worth keeping because it generalises:
+
+- Re-deriving anchors at the worst-case composed chin (0.771) *collapses the layout* — every
+  two-line block would need its centre in a 9px window to clear both that floor and G9's bottom
+  bound, destroying the vertical separation the position rotation exists for. Worse, it re-couples
+  the anchors to `REFRAME_STEP`, `MAX_GROW` and `punchScale`, so **any later change to any of the
+  three silently re-opens the bug**.
+- Suppressing the punch removes one term of three; base reframe alone already puts the chin at
+  0.739 against a two-line top of 0.733, passing today only because no committed plan happens to
+  place a two-line chunk at `center` on an odd shot.
+- Anchoring the origin makes the chin the transform's **exact fixed point**, so `FACE_FLOOR_RATIO`
+  is where the chin is at *every* scale. That satisfies §12.16 item 3 as written — neutralised,
+  not merely reduced — and leaves the floor a single measured constant.
+
+Measured against the branch's own plans, overlaps went **2/1/1 → 0/0/0 by construction rather than
+by tuning**, and the frames show it: the chunk the measurement flagged had "TO NOT" sitting on the
+jaw before, and clears it with neck and collar visible after.
+
+**And the inherited claim turned out to be false.** Enforcing the three-line limit at every
+position instead of only `center_low` showed the old "fits nowhere" title was never measured:
+`center_low` fails G9's bottom bound, `center` fails only the face floor, and **`lower_left` clears
+both — by 17.0px and 5.8px. A three-line chunk genuinely fits there.** The agent asserted that as
+found rather than tuning an anchor to preserve the headline. Since nothing in the chunker prevents
+three lines (G5 bounds words, not lines), **which position the rotation happens to pick decides
+whether a three-line chunk is safe** — that needs a product view, not an agent's guess.
+
+### 12.23 Three smaller corrections
+
+- **`ShotCamera.originY` was documented as "0..1 of the frame"; it is 0..1 of the content region**
+  (`Reel.tsx` applies it to the region div). Harmless only while the value was 0.5. Fixed, and
+  every template is now pinned to `CONTENT_REGION_RATIO` so a template shipping its own region
+  cannot move the origin out from under itself.
+- **The evidence harness cannot run outside `st-p` unaided**: `qc-render` needs
+  `ANALYZER_PYTHON` pointing at the analyzer venv, which only that worktree has. The first run
+  rendered a full MP4 and threw the work away at the QC step. The harness correctly refused to
+  write evidence for a crashed QC, but a per-worktree venv or a checked prerequisite would save a
+  render's worth of disk. Worth fixing before the next agent renders.
+- **`SPRINGS.punch` is underdamped** (ζ = 0.913), but the composed `attack − settle` peaks at
+  1.0599 — just under the 1.06 §12.19 assumed. The worst case stands; no correction needed.
