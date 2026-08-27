@@ -3,6 +3,7 @@ import {
   ContentBriefRefused,
   HOOK_TEXT_MAX,
   MalformedBriefGenerationError,
+  hookContainsEmphasisWord,
   parseBriefResponse,
   retryOnceOnMalformed,
 } from "../src/integrations/content-brief-model.js";
@@ -62,6 +63,21 @@ describe("parseBriefResponse", () => {
     const parsed = parseBriefResponse(response({ output_text: JSON.stringify({ briefs: [generated({ claim_ids: [] })] }) }));
     expect(parsed.briefs).toHaveLength(0);
     expect(parsed.refusals).toHaveLength(1);
+  });
+
+  it("drops a 'generated' entry whose emphasis_word does not appear in hook_text", () => {
+    const parsed = parseBriefResponse(
+      response({ output_text: JSON.stringify({ briefs: [generated({ emphasis_word: "nonexistentword" })] }) }),
+    );
+    expect(parsed.briefs).toHaveLength(0);
+    expect(parsed.refusals[0]!.reason).toMatch(/does not appear in hook_text/);
+  });
+
+  it("hookContainsEmphasisWord is case-insensitive", () => {
+    expect(hookContainsEmphasisWord("Support tickets are Eating your margin", "eating")).toBe(true);
+    expect(hookContainsEmphasisWord("Support tickets are eating your margin", "EATING")).toBe(true);
+    expect(hookContainsEmphasisWord("Support tickets are eating your margin", "invented")).toBe(false);
+    expect(hookContainsEmphasisWord("Anything", "")).toBe(false);
   });
 
   it("drops a 'generated' entry whose hook_text is longer than the one-line cap (G9)", () => {

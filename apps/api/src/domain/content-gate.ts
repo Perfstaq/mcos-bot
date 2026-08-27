@@ -11,6 +11,7 @@ import {
 import { prisma } from "../db.js";
 import { ApiError } from "../http.js";
 import { frameworkById, isKnownFrameworkId } from "./studio/frameworks.js";
+import { hookContainsEmphasisWord } from "../integrations/content-brief-model.js";
 
 /**
  * THE CONTENT-BRIEF GATE.
@@ -231,6 +232,19 @@ async function editApprove(
     throw ApiError.unprocessable(`Unknown framework_id "${frameworkId}"`);
   }
   const framework = frameworkId ? frameworkById(frameworkId) : undefined;
+
+  // The FINAL combination, not just whichever field was edited: an edit that
+  // only touches hookText (or only emphasisWord) can still orphan the other
+  // one from it — same rule the generation coercion layer applies
+  // (integrations/content-brief-model.ts's hookContainsEmphasisWord), kept
+  // as one shared function so the two enforcement points cannot drift.
+  const finalHookText = hookText ?? brief.hookText;
+  const finalEmphasisWord = emphasisWord ?? brief.emphasisWord;
+  if (!hookContainsEmphasisWord(finalHookText, finalEmphasisWord)) {
+    throw ApiError.badRequest(
+      `emphasis_word "${finalEmphasisWord}" does not appear in hook_text "${finalHookText}"`,
+    );
+  }
 
   const rootId = brief.editedFromId ?? brief.id;
 

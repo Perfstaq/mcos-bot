@@ -347,6 +347,23 @@ const BEAT_ROLE_SET = new Set<string>(BEAT_ROLES);
 const CLAIM_TYPE_SET = new Set<string>(CLAIM_TYPES);
 
 /**
+ * `05 §1`: "emphasis_word: the ONE colored word" — meant to be a word FROM
+ * hook_text, not an independent label. Case-insensitive because the model
+ * (or a reviewer editing the hook) may return different capitalization than
+ * where the word sits in the sentence (sentence-initial vs. mid-sentence),
+ * and a byte-exact match would reject good output over casing alone.
+ *
+ * Exported so `domain/content-gate.ts`'s `editApprove` applies the identical
+ * rule to a reviewer's edit — an edit that changes the hook or the emphasis
+ * word independently can otherwise orphan the emphasis word from the text
+ * it is supposed to be colouring.
+ */
+export function hookContainsEmphasisWord(hookText: string, emphasisWord: string): boolean {
+  if (!emphasisWord.trim()) return false;
+  return hookText.toLowerCase().includes(emphasisWord.trim().toLowerCase());
+}
+
+/**
  * The belt to strict mode's braces — see `integrations/openai.ts`'s
  * `coerceClaims` doc comment. Applies every non-empty-array/non-empty-string
  * rule strict mode's schema subset cannot express, and turns "refused" (or
@@ -400,6 +417,16 @@ function coerceBriefs(input: unknown): { briefs: ProposedBrief[]; refusals: Brie
       refusals.push({
         archetype: typedArchetype,
         reason: `Hook text is ${hookText.length} characters, over the ${HOOK_TEXT_MAX}-character one-line limit.`,
+      });
+      continue;
+    }
+
+    // 05 §1: emphasis_word must actually BE the coloured word IN the hook —
+    // not an independent label the renderer can never find and highlight.
+    if (!hookContainsEmphasisWord(hookText, emphasisWord)) {
+      refusals.push({
+        archetype: typedArchetype,
+        reason: `emphasis_word "${emphasisWord}" does not appear in hook_text.`,
       });
       continue;
     }

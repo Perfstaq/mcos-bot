@@ -306,6 +306,33 @@ describe("content-brief gate — approve / reject / edit / undo", () => {
     expect(await db.contentBrief.count({ where: { status: ContentBriefStatus.superseded } })).toBe(0);
   });
 
+  it("refuses an edit that would orphan emphasis_word from a rewritten hook_text", async () => {
+    const id = await generateOne();
+    // mockGeneratesOnePerArchetype() seeds hook_text "Hook for <archetype>"
+    // with emphasis_word "Hook" — rewriting the hook without also touching
+    // the emphasis word must not silently detach the two.
+    const response = await app.inject({
+      method: "PATCH",
+      url: `/api/v1/content/briefs/${id}`,
+      headers: HOME,
+      payload: { hook_text: "A totally different sentence with no match" },
+    });
+    expect(response.statusCode).toBe(400);
+    expect(await db.contentBrief.count({ where: { status: ContentBriefStatus.superseded } })).toBe(0);
+  });
+
+  it("allows an edit that rewrites hook_text and emphasis_word together, consistently", async () => {
+    const id = await generateOne();
+    const response = await app.inject({
+      method: "PATCH",
+      url: `/api/v1/content/briefs/${id}`,
+      headers: HOME,
+      payload: { hook_text: "Renewals are slipping through the cracks", emphasis_word: "slipping" },
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.json().result_brief.status).toBe("approved");
+  });
+
   it("undo reverses an approve back to proposed", async () => {
     const id = await generateOne();
     await app.inject({ method: "POST", url: `/api/v1/content/briefs/${id}/approve`, headers: HOME, payload: {} });
