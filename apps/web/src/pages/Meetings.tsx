@@ -154,11 +154,18 @@ export function Meetings() {
                   {meeting.claim_counts.proposed > 0 && <span style={{ color: "var(--orange)" }}>{meeting.claim_counts.proposed} to review</span>}
                   {meeting.claim_counts.total > 0 && meeting.claim_counts.proposed === 0 && <span>{meeting.claim_counts.total} claims</span>}
                 </div>
-                {meeting.digest && (
-                  <div style={{ color: "var(--faint)", fontSize: 12, marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {meeting.digest}
-                  </div>
-                )}
+                {/* Always rendered, never conditionally omitted: the digest
+                    arrives on the same fetch as everything else here, but a
+                    background digest job can also fill it in on a meeting the
+                    list is already showing (the 5s poll re-fetches while a
+                    meeting is in flight). A row whose height changed by
+                    itself, later, for a reason the reviewer took no action on,
+                    is a layout shift either way — reserving the line always
+                    keeps every row's height the same whether or not it has
+                    one yet. */}
+                <div className="row-digest" style={{ color: "var(--faint)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {meeting.digest ?? ""}
+                </div>
               </button>
             ))}
           </div>
