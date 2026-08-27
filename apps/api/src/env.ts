@@ -95,6 +95,13 @@ const schema = z.object({
 
   DEFAULT_TENANT_SLUG: z.string().default("freshworks-demo"),
   DEFAULT_REVIEWER_EMAIL: z.string().default("demo@freshworks.example"),
+
+  // --- Content Studio media sidecar (additive) ------------------------------
+  // Unset in dev: jobs/media-analyze.ts and scripts/qc-render.ts fall back to
+  // the repo-relative services/analyzer/.venv. Dockerfile.media sets both to
+  // the baked-in venv (ARCHITECTURE.md §5/ADR-3).
+  ANALYZER_PYTHON: optional(z.string()),
+  ANALYZER_SCRIPT: optional(z.string()),
 });
 
 export type Env = z.infer<typeof schema>;
