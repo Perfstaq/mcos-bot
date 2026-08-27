@@ -121,6 +121,27 @@ const schema = z.object({
   // MediaAnalysis.analyzerVersion's calibration provenance depends on
   // knowing exactly which model produced a given row's word timings.
   WHISPER_MODEL_SIZE: z.string().default("base"),
+
+  // --- Content Studio render backend (ADR-7, additive) ----------------------
+  // "Remotion Lambda for product renders; local renderer for dev/CI." The
+  // backend is chosen EXPLICITLY and never inferred, because the failure mode
+  // ADR-7 must not have is a production render quietly falling back to a
+  // 10-30 minute local CPU encode (or a dev box quietly billing Lambda). An
+  // unset value means "no renderer configured" and `render.submit` fails with
+  // that reason rather than picking one — see jobs/render-submit.ts.
+  RENDER_BACKEND: optional(z.enum(["lambda", "local"])),
+  // Local backend: packages/render's renderer entrypoint. Unset in dev falls
+  // back to the repo-relative packages/render/scripts/render-plan.mjs. Only
+  // packages/render may know how to invoke Remotion (ADR-5 containment,
+  // enforced by tests/render-containment.test.ts), so this job shells out to
+  // it exactly the way render-qc.ts shells to the compiled qc script.
+  RENDER_LOCAL_SCRIPT: optional(z.string()),
+  // Lambda backend (ADR-7). All four are required together; any missing one
+  // makes `RENDER_BACKEND=lambda` an explicit, named failure.
+  REMOTION_LAMBDA_FUNCTION_NAME: optional(z.string()),
+  REMOTION_LAMBDA_SERVE_URL: optional(z.string()),
+  REMOTION_LAMBDA_REGION: optional(z.string()),
+  REMOTION_LAMBDA_BUCKET: optional(z.string()),
 });
 
 export type Env = z.infer<typeof schema>;
