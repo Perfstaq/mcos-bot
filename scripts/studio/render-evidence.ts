@@ -51,6 +51,7 @@ const inputsDir = path.join(evidenceDir, "inputs");
 const manifestPath = path.join(evidenceDir, "manifest.json");
 const renderPkg = path.join(repoRoot, "packages/render");
 const stagingDir = path.join(renderPkg, "public");
+const renderPlanScript = path.join(renderPkg, "scripts", "render-plan.mjs");
 
 /**
  * Paths whose contents can change what a render looks like. `--check` asks
@@ -202,10 +203,9 @@ function harnessVersions(): Record<string, string> {
     out.pythonPackages = "unavailable";
   }
   try {
-    const pkg = JSON.parse(readFileSync(path.join(repoRoot, "package-lock.json"), "utf8"));
-    out.remotion = pkg.packages?.["node_modules/@remotion/renderer"]?.version ?? "unknown";
+    out.renderer = execFileSync("node", [renderPlanScript, "--print-version"], { encoding: "utf8" }).trim();
   } catch {
-    out.remotion = "unknown";
+    out.renderer = "unknown";
   }
   return out;
 }
@@ -276,11 +276,13 @@ function renderTemplate(
       console.log(`[${templateId}] plan changed since that MP4 was rendered — re-rendering rather than reusing`);
     }
     console.log(`[${templateId}] rendering ${plan.durationInFrames} frames…`);
-    execFileSync(
-      "npx",
-      ["remotion", "render", "src/index.ts", "Reel", mp4Path, `--props=${propsPath}`, "--log=error"],
-      { cwd: renderPkg, stdio: "inherit" },
-    );
+    // Delegated to packages/render (ADR-5): how to drive the renderer is
+    // renderer-specific knowledge and belongs behind the containment
+    // boundary, so a swap touches one directory rather than this script too.
+    execFileSync("node", [renderPlanScript, "--props", propsPath, "--out", mp4Path], {
+      cwd: repoRoot,
+      stdio: "inherit",
+    });
   }
   rmSync(propsPath, { force: true });
 
