@@ -170,9 +170,19 @@ export async function runPlanBuild(job: PlanBuildJob): Promise<void> {
  * (The residual, which belongs to `content-gate.ts` and is deliberately not
  * fixed from here: undo counts plans BEFORE its own update blocks, so an undo
  * racing this transaction can still succeed *after* the plan commits, leaving
- * an approved-at-write-time plan attached to a re-`proposed` brief. Closing it
- * needs the same lock inside `undo()`, which is the gate module's to take —
- * that file is off-limits to this agent. Reported rather than reached into.)
+ * an approved-at-write-time plan attached to a re-`proposed` brief. The
+ * sequential case is safe — undo returns 409 once a plan exists, verified by
+ * scripts/studio/prove-plan-chain.ts — so this is a narrow concurrency window,
+ * not an open door. Closing it needs the same lock inside `undo()`, which is
+ * the gate module's to take; that file is off-limits to this agent. Reported
+ * rather than reached into.)
+ *
+ * One operational note for whoever raises `render.submit`/`plan.build`
+ * concurrency: because the approval check runs on a second connection while
+ * this transaction holds a first, each in-flight job needs TWO pool
+ * connections, not one. At the registered concurrency of 4 that is 8 against
+ * Prisma's default pool, which is comfortable; a large increase without a
+ * matching `connection_limit` would deadlock rather than merely queue.
  */
 async function materialize(job: PlanBuildJob, plan: RenderPlan): Promise<void> {
   await prisma.$transaction(async (tx) => {
