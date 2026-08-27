@@ -24,12 +24,12 @@
       "computable": true,
       "pass": false,
       "measured": {
-        "matchedRatio": 0.074,
-        "matched": 2,
+        "matchedRatio": 0.111,
+        "matched": 3,
         "totalPlanCuts": 27,
-        "detectedCuts": 13,
+        "detectedCuts": 28,
         "windowMs": 66,
-        "informationalPixelBeatLockRatio": 0.538,
+        "informationalPixelBeatLockRatio": 0.75,
         "referenceBaseline": 0.821
       },
       "target": "≥90% of the plan's cut times have a detected cut within ±2 frames (66ms). Pixel-derived ratio is informational only, never gated."
@@ -76,7 +76,7 @@
       "hard": true,
       "computable": true,
       "pass": true,
-      "measured": 4,
+      "measured": 3,
       "target": "≥3 distinct positions"
     },
     {
@@ -134,7 +134,7 @@
       "computable": true,
       "pass": null,
       "measured": {
-        "checksum": "sha256:e0651678b705a7e1e925187d197c0a77cd4551a5449fc55d739c80fa7f7f9d62"
+        "checksum": "sha256:7bb6b6864265aeeaa20fbec3b902fd98de77f169db86b39b540d0680454d1320"
       },
       "target": "same plan+footage ⇒ identical checksum",
       "note": "no --prev-checksum given — recorded for a future comparison, not scored this run"

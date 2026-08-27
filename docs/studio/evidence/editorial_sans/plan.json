@@ -35,8 +35,8 @@
       "outputEndMs": 6160,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.2419557216088286,
-        "toScale": 1.18,
+        "fromScale": 1.1619557216088288,
+        "toScale": 1.1,
         "spring": "drift",
         "durationInFrames": 59,
         "originX": 0.5361109881848097,
@@ -67,8 +67,8 @@
       "outputEndMs": 9172,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.2386798257939517,
-        "toScale": 1.18,
+        "fromScale": 1.158679825793952,
+        "toScale": 1.1,
         "spring": "drift",
         "durationInFrames": 45,
         "originX": 0.5191101785376668,
@@ -99,8 +99,8 @@
       "outputEndMs": 16000,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.235798921941314,
-        "toScale": 1.18,
+        "fromScale": 1.155798921941314,
+        "toScale": 1.1,
         "spring": "drift",
         "durationInFrames": 61,
         "originX": 0.5275986077077687,
@@ -131,8 +131,8 @@
       "outputEndMs": 18300,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.2414867337653412,
-        "toScale": 1.18,
+        "fromScale": 1.1614867337653414,
+        "toScale": 1.1,
         "spring": "drift",
         "durationInFrames": 34,
         "originX": 0.5149871314689517,
@@ -163,8 +163,8 @@
       "outputEndMs": 20320,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.2436801819643004,
-        "toScale": 1.18,
+        "fromScale": 1.1636801819643006,
+        "toScale": 1.1,
         "spring": "drift",
         "durationInFrames": 30,
         "originX": 0.46974875262007115,
@@ -195,8 +195,8 @@
       "outputEndMs": 25600,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.235487531304825,
-        "toScale": 1.18,
+        "fromScale": 1.1554875313048252,
+        "toScale": 1.1,
         "spring": "drift",
         "durationInFrames": 78,
         "originX": 0.5166597042232752,
@@ -227,8 +227,8 @@
       "outputEndMs": 27818,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.243697218496818,
-        "toScale": 1.18,
+        "fromScale": 1.1636972184968182,
+        "toScale": 1.1,
         "spring": "drift",
         "durationInFrames": 33,
         "originX": 0.4733609550818801,
@@ -259,8 +259,8 @@
       "outputEndMs": 32903,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.2378301138174719,
-        "toScale": 1.18,
+        "fromScale": 1.157830113817472,
+        "toScale": 1.1,
         "spring": "drift",
         "durationInFrames": 106,
         "originX": 0.4615679969638586,
@@ -291,8 +291,8 @@
       "outputEndMs": 37280,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.25933657170739,
-        "toScale": 1.18,
+        "fromScale": 1.1793365717073903,
+        "toScale": 1.1,
         "spring": "drift",
         "durationInFrames": 34,
         "originX": 0.4851048584654927,
@@ -323,8 +323,8 @@
       "outputEndMs": 39500,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.2526965710450895,
-        "toScale": 1.18,
+        "fromScale": 1.1726965710450896,
+        "toScale": 1.1,
         "spring": "drift",
         "durationInFrames": 35,
         "originX": 0.4701640539057553,
@@ -355,8 +355,8 @@
       "outputEndMs": 42800,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.2324702985770999,
-        "toScale": 1.18,
+        "fromScale": 1.1524702985771,
+        "toScale": 1.1,
         "spring": "drift",
         "durationInFrames": 68,
         "originX": 0.5231160307303071,
@@ -387,8 +387,8 @@
       "outputEndMs": 47500,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.2368239342072047,
-        "toScale": 1.18,
+        "fromScale": 1.1568239342072049,
+        "toScale": 1.1,
         "spring": "drift",
         "durationInFrames": 32,
         "originX": 0.47489696092903616,
@@ -419,8 +419,8 @@
       "outputEndMs": 50202,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.2485071228235027,
-        "toScale": 1.18,
+        "fromScale": 1.1685071228235029,
+        "toScale": 1.1,
         "spring": "drift",
         "durationInFrames": 32,
         "originX": 0.5029260354861617,
@@ -451,8 +451,8 @@
       "outputEndMs": 54870,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.2490336999087595,
-        "toScale": 1.18,
+        "fromScale": 1.1690336999087596,
+        "toScale": 1.1,
         "spring": "drift",
         "durationInFrames": 109,
         "originX": 0.4723135536909103,
@@ -488,7 +488,7 @@
       "endMs": 480,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.785,
         "align": "center"
       }
     },
@@ -519,7 +519,7 @@
       "endMs": 1520,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.785,
         "align": "center"
       }
     },
@@ -550,7 +550,7 @@
       "endMs": 2060,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.785,
         "align": "center"
       }
     },
@@ -575,7 +575,7 @@
       "endMs": 2560,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.785,
         "align": "center"
       }
     },
@@ -606,7 +606,7 @@
       "endMs": 3340,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.785,
         "align": "center"
       }
     },
@@ -631,7 +631,7 @@
       "endMs": 3940,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.785,
         "align": "center"
       }
     },
@@ -662,7 +662,7 @@
       "endMs": 5120,
       "anchor": {
         "x": 0.5,
-        "y": 0.72,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -693,7 +693,7 @@
       "endMs": 5900,
       "anchor": {
         "x": 0.5,
-        "y": 0.72,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -718,14 +718,14 @@
           "isEmphasis": false
         }
       ],
-      "position": "upper_third",
+      "position": "lower_left",
       "emphasisWordIndex": null,
       "startMs": 6160,
       "endMs": 6520,
       "anchor": {
-        "x": 0.5,
-        "y": 0.26,
-        "align": "center"
+        "x": 0.12,
+        "y": 0.8,
+        "align": "left"
       }
     },
     {
@@ -749,14 +749,14 @@
           "isEmphasis": false
         }
       ],
-      "position": "upper_third",
+      "position": "lower_left",
       "emphasisWordIndex": null,
       "startMs": 6520,
       "endMs": 6980,
       "anchor": {
-        "x": 0.5,
-        "y": 0.26,
-        "align": "center"
+        "x": 0.12,
+        "y": 0.8,
+        "align": "left"
       }
     },
     {
@@ -774,14 +774,14 @@
           "isEmphasis": false
         }
       ],
-      "position": "upper_third",
+      "position": "lower_left",
       "emphasisWordIndex": null,
       "startMs": 7120,
       "endMs": 7540,
       "anchor": {
-        "x": 0.5,
-        "y": 0.26,
-        "align": "center"
+        "x": 0.12,
+        "y": 0.8,
+        "align": "left"
       }
     },
     {
@@ -805,14 +805,14 @@
           "isEmphasis": false
         }
       ],
-      "position": "lower_left",
+      "position": "center",
       "emphasisWordIndex": 1,
       "startMs": 7820,
       "endMs": 8560,
       "anchor": {
-        "x": 0.3,
-        "y": 0.8,
-        "align": "left"
+        "x": 0.5,
+        "y": 0.785,
+        "align": "center"
       }
     },
     {
@@ -824,14 +824,14 @@
           "isEmphasis": false
         }
       ],
-      "position": "lower_left",
+      "position": "center",
       "emphasisWordIndex": null,
       "startMs": 8560,
       "endMs": 9000,
       "anchor": {
-        "x": 0.3,
-        "y": 0.8,
-        "align": "left"
+        "x": 0.5,
+        "y": 0.785,
+        "align": "center"
       }
     },
     {
@@ -855,13 +855,13 @@
           "isEmphasis": false
         }
       ],
-      "position": "center",
+      "position": "center_low",
       "emphasisWordIndex": 1,
       "startMs": 9340,
       "endMs": 10240,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -886,13 +886,13 @@
           "isEmphasis": false
         }
       ],
-      "position": "center",
+      "position": "center_low",
       "emphasisWordIndex": null,
       "startMs": 10240,
       "endMs": 10980,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -917,13 +917,13 @@
           "isEmphasis": false
         }
       ],
-      "position": "center",
+      "position": "center_low",
       "emphasisWordIndex": null,
       "startMs": 10980,
       "endMs": 11700,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -948,13 +948,13 @@
           "isEmphasis": false
         }
       ],
-      "position": "center",
+      "position": "center_low",
       "emphasisWordIndex": null,
       "startMs": 11700,
       "endMs": 12180,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -979,13 +979,13 @@
           "isEmphasis": false
         }
       ],
-      "position": "center",
+      "position": "center_low",
       "emphasisWordIndex": null,
       "startMs": 12180,
       "endMs": 12920,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -1010,13 +1010,13 @@
           "isEmphasis": false
         }
       ],
-      "position": "center",
+      "position": "center_low",
       "emphasisWordIndex": null,
       "startMs": 12920,
       "endMs": 13740,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -1041,14 +1041,14 @@
           "isEmphasis": false
         }
       ],
-      "position": "center_low",
+      "position": "lower_left",
       "emphasisWordIndex": 0,
       "startMs": 14020,
       "endMs": 15580,
       "anchor": {
-        "x": 0.5,
-        "y": 0.72,
-        "align": "center"
+        "x": 0.12,
+        "y": 0.8,
+        "align": "left"
       }
     },
     {
@@ -1072,14 +1072,14 @@
           "isEmphasis": false
         }
       ],
-      "position": "center_low",
+      "position": "lower_left",
       "emphasisWordIndex": null,
       "startMs": 15580,
       "endMs": 16680,
       "anchor": {
-        "x": 0.5,
-        "y": 0.72,
-        "align": "center"
+        "x": 0.12,
+        "y": 0.8,
+        "align": "left"
       }
     },
     {
@@ -1097,13 +1097,13 @@
           "isEmphasis": false
         }
       ],
-      "position": "upper_third",
+      "position": "center",
       "emphasisWordIndex": null,
       "startMs": 16680,
       "endMs": 17160,
       "anchor": {
         "x": 0.5,
-        "y": 0.26,
+        "y": 0.785,
         "align": "center"
       }
     },
@@ -1128,14 +1128,14 @@
           "isEmphasis": false
         }
       ],
-      "position": "lower_left",
+      "position": "center_low",
       "emphasisWordIndex": 0,
       "startMs": 17440,
       "endMs": 18100,
       "anchor": {
-        "x": 0.3,
-        "y": 0.8,
-        "align": "left"
+        "x": 0.5,
+        "y": 0.818,
+        "align": "center"
       }
     },
     {
@@ -1159,14 +1159,14 @@
           "isEmphasis": false
         }
       ],
-      "position": "lower_left",
+      "position": "center_low",
       "emphasisWordIndex": 0,
       "startMs": 18100,
       "endMs": 18800,
       "anchor": {
-        "x": 0.3,
-        "y": 0.8,
-        "align": "left"
+        "x": 0.5,
+        "y": 0.818,
+        "align": "center"
       }
     },
     {
@@ -1178,14 +1178,14 @@
           "isEmphasis": false
         }
       ],
-      "position": "center",
+      "position": "lower_left",
       "emphasisWordIndex": null,
       "startMs": 18800,
       "endMs": 19140,
       "anchor": {
-        "x": 0.5,
-        "y": 0.62,
-        "align": "center"
+        "x": 0.12,
+        "y": 0.8,
+        "align": "left"
       }
     },
     {
@@ -1203,13 +1203,13 @@
           "isEmphasis": false
         }
       ],
-      "position": "center_low",
+      "position": "center",
       "emphasisWordIndex": 0,
       "startMs": 19620,
       "endMs": 20100,
       "anchor": {
         "x": 0.5,
-        "y": 0.72,
+        "y": 0.785,
         "align": "center"
       }
     },
@@ -1234,13 +1234,13 @@
           "isEmphasis": false
         }
       ],
-      "position": "upper_third",
+      "position": "center_low",
       "emphasisWordIndex": null,
       "startMs": 20320,
       "endMs": 20740,
       "anchor": {
         "x": 0.5,
-        "y": 0.26,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -1265,13 +1265,13 @@
           "isEmphasis": false
         }
       ],
-      "position": "upper_third",
+      "position": "center_low",
       "emphasisWordIndex": null,
       "startMs": 20740,
       "endMs": 21340,
       "anchor": {
         "x": 0.5,
-        "y": 0.26,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -1290,13 +1290,13 @@
           "isEmphasis": false
         }
       ],
-      "position": "upper_third",
+      "position": "center_low",
       "emphasisWordIndex": null,
       "startMs": 21340,
       "endMs": 21780,
       "anchor": {
         "x": 0.5,
-        "y": 0.26,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -1321,13 +1321,13 @@
           "isEmphasis": true
         }
       ],
-      "position": "upper_third",
+      "position": "center_low",
       "emphasisWordIndex": 2,
       "startMs": 22220,
       "endMs": 22660,
       "anchor": {
         "x": 0.5,
-        "y": 0.26,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -1340,13 +1340,13 @@
           "isEmphasis": false
         }
       ],
-      "position": "upper_third",
+      "position": "center_low",
       "emphasisWordIndex": null,
       "startMs": 22660,
       "endMs": 22840,
       "anchor": {
         "x": 0.5,
-        "y": 0.26,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -1376,7 +1376,7 @@
       "startMs": 23160,
       "endMs": 23460,
       "anchor": {
-        "x": 0.3,
+        "x": 0.12,
         "y": 0.8,
         "align": "left"
       }
@@ -1407,7 +1407,7 @@
       "startMs": 23460,
       "endMs": 24140,
       "anchor": {
-        "x": 0.3,
+        "x": 0.12,
         "y": 0.8,
         "align": "left"
       }
@@ -1438,7 +1438,7 @@
       "startMs": 24140,
       "endMs": 24660,
       "anchor": {
-        "x": 0.3,
+        "x": 0.12,
         "y": 0.8,
         "align": "left"
       }
@@ -1457,7 +1457,7 @@
       "startMs": 24660,
       "endMs": 25360,
       "anchor": {
-        "x": 0.3,
+        "x": 0.12,
         "y": 0.8,
         "align": "left"
       }
@@ -1489,7 +1489,7 @@
       "endMs": 26020,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.785,
         "align": "center"
       }
     },
@@ -1508,7 +1508,7 @@
       "endMs": 26480,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.785,
         "align": "center"
       }
     },
@@ -1539,7 +1539,7 @@
       "endMs": 27500,
       "anchor": {
         "x": 0.5,
-        "y": 0.72,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -1564,14 +1564,14 @@
           "isEmphasis": false
         }
       ],
-      "position": "upper_third",
+      "position": "lower_left",
       "emphasisWordIndex": null,
       "startMs": 27840,
       "endMs": 28380,
       "anchor": {
-        "x": 0.5,
-        "y": 0.26,
-        "align": "center"
+        "x": 0.12,
+        "y": 0.8,
+        "align": "left"
       }
     },
     {
@@ -1595,14 +1595,14 @@
           "isEmphasis": false
         }
       ],
-      "position": "upper_third",
+      "position": "lower_left",
       "emphasisWordIndex": null,
       "startMs": 28580,
       "endMs": 29040,
       "anchor": {
-        "x": 0.5,
-        "y": 0.26,
-        "align": "center"
+        "x": 0.12,
+        "y": 0.8,
+        "align": "left"
       }
     },
     {
@@ -1626,14 +1626,14 @@
           "isEmphasis": false
         }
       ],
-      "position": "upper_third",
+      "position": "lower_left",
       "emphasisWordIndex": null,
       "startMs": 29040,
       "endMs": 30720,
       "anchor": {
-        "x": 0.5,
-        "y": 0.26,
-        "align": "center"
+        "x": 0.12,
+        "y": 0.8,
+        "align": "left"
       }
     },
     {
@@ -1657,14 +1657,14 @@
           "isEmphasis": false
         }
       ],
-      "position": "lower_left",
+      "position": "center",
       "emphasisWordIndex": null,
       "startMs": 30720,
       "endMs": 32000,
       "anchor": {
-        "x": 0.3,
-        "y": 0.8,
-        "align": "left"
+        "x": 0.5,
+        "y": 0.785,
+        "align": "center"
       }
     },
     {
@@ -1676,14 +1676,14 @@
           "isEmphasis": false
         }
       ],
-      "position": "lower_left",
+      "position": "center",
       "emphasisWordIndex": null,
       "startMs": 32000,
       "endMs": 32720,
       "anchor": {
-        "x": 0.3,
-        "y": 0.8,
-        "align": "left"
+        "x": 0.5,
+        "y": 0.785,
+        "align": "center"
       }
     },
     {
@@ -1707,13 +1707,13 @@
           "isEmphasis": false
         }
       ],
-      "position": "center",
+      "position": "center_low",
       "emphasisWordIndex": null,
       "startMs": 33220,
       "endMs": 34140,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -1738,13 +1738,13 @@
           "isEmphasis": true
         }
       ],
-      "position": "center",
+      "position": "center_low",
       "emphasisWordIndex": 2,
       "startMs": 34140,
       "endMs": 35140,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -1763,13 +1763,13 @@
           "isEmphasis": false
         }
       ],
-      "position": "center",
+      "position": "center_low",
       "emphasisWordIndex": null,
       "startMs": 35140,
       "endMs": 35480,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -1794,13 +1794,13 @@
           "isEmphasis": false
         }
       ],
-      "position": "center",
+      "position": "center_low",
       "emphasisWordIndex": null,
       "startMs": 35560,
       "endMs": 36140,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -1825,14 +1825,14 @@
           "isEmphasis": false
         }
       ],
-      "position": "center_low",
+      "position": "lower_left",
       "emphasisWordIndex": null,
       "startMs": 36140,
       "endMs": 36900,
       "anchor": {
-        "x": 0.5,
-        "y": 0.72,
-        "align": "center"
+        "x": 0.12,
+        "y": 0.8,
+        "align": "left"
       }
     },
     {
@@ -1856,14 +1856,14 @@
           "isEmphasis": false
         }
       ],
-      "position": "center_low",
+      "position": "lower_left",
       "emphasisWordIndex": 0,
       "startMs": 36900,
       "endMs": 37440,
       "anchor": {
-        "x": 0.5,
-        "y": 0.72,
-        "align": "center"
+        "x": 0.12,
+        "y": 0.8,
+        "align": "left"
       }
     },
     {
@@ -1887,13 +1887,13 @@
           "isEmphasis": true
         }
       ],
-      "position": "upper_third",
+      "position": "center",
       "emphasisWordIndex": 2,
       "startMs": 37440,
       "endMs": 38140,
       "anchor": {
         "x": 0.5,
-        "y": 0.26,
+        "y": 0.785,
         "align": "center"
       }
     },
@@ -1918,14 +1918,14 @@
           "isEmphasis": true
         }
       ],
-      "position": "lower_left",
+      "position": "center_low",
       "emphasisWordIndex": 2,
       "startMs": 38340,
       "endMs": 38840,
       "anchor": {
-        "x": 0.3,
-        "y": 0.8,
-        "align": "left"
+        "x": 0.5,
+        "y": 0.818,
+        "align": "center"
       }
     },
     {
@@ -1949,14 +1949,14 @@
           "isEmphasis": false
         }
       ],
-      "position": "lower_left",
+      "position": "center_low",
       "emphasisWordIndex": 1,
       "startMs": 38840,
       "endMs": 39500,
       "anchor": {
-        "x": 0.3,
-        "y": 0.8,
-        "align": "left"
+        "x": 0.5,
+        "y": 0.818,
+        "align": "center"
       }
     },
     {
@@ -1980,14 +1980,14 @@
           "isEmphasis": false
         }
       ],
-      "position": "center",
+      "position": "lower_left",
       "emphasisWordIndex": null,
       "startMs": 39500,
       "endMs": 40460,
       "anchor": {
-        "x": 0.5,
-        "y": 0.62,
-        "align": "center"
+        "x": 0.12,
+        "y": 0.8,
+        "align": "left"
       }
     },
     {
@@ -2011,13 +2011,13 @@
           "isEmphasis": false
         }
       ],
-      "position": "center_low",
+      "position": "center",
       "emphasisWordIndex": null,
       "startMs": 40760,
       "endMs": 41960,
       "anchor": {
         "x": 0.5,
-        "y": 0.72,
+        "y": 0.785,
         "align": "center"
       }
     },
@@ -2042,13 +2042,13 @@
           "isEmphasis": false
         }
       ],
-      "position": "center_low",
+      "position": "center",
       "emphasisWordIndex": null,
       "startMs": 41960,
       "endMs": 42800,
       "anchor": {
         "x": 0.5,
-        "y": 0.72,
+        "y": 0.785,
         "align": "center"
       }
     },
@@ -2073,13 +2073,13 @@
           "isEmphasis": false
         }
       ],
-      "position": "upper_third",
+      "position": "center_low",
       "emphasisWordIndex": 1,
       "startMs": 43040,
       "endMs": 43820,
       "anchor": {
         "x": 0.5,
-        "y": 0.26,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -2104,13 +2104,13 @@
           "isEmphasis": false
         }
       ],
-      "position": "upper_third",
+      "position": "center_low",
       "emphasisWordIndex": 1,
       "startMs": 43820,
       "endMs": 45440,
       "anchor": {
         "x": 0.5,
-        "y": 0.26,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -2129,13 +2129,13 @@
           "isEmphasis": false
         }
       ],
-      "position": "upper_third",
+      "position": "center_low",
       "emphasisWordIndex": null,
       "startMs": 45440,
       "endMs": 46120,
       "anchor": {
         "x": 0.5,
-        "y": 0.26,
+        "y": 0.818,
         "align": "center"
       }
     },
@@ -2153,7 +2153,7 @@
       "startMs": 46580,
       "endMs": 47020,
       "anchor": {
-        "x": 0.3,
+        "x": 0.12,
         "y": 0.8,
         "align": "left"
       }
@@ -2185,7 +2185,7 @@
       "endMs": 48220,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.785,
         "align": "center"
       }
     },
@@ -2216,7 +2216,7 @@
       "endMs": 48700,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.785,
         "align": "center"
       }
     },
@@ -2235,7 +2235,7 @@
       "endMs": 48860,
       "anchor": {
         "x": 0.5,
-        "y": 0.62,
+        "y": 0.785,
         "align": "center"
       }
     }
@@ -2254,33 +2254,33 @@
     "opacity": 0.52,
     "cornerByShot": [
       "upper_right",
-      "mid_left",
+      "upper_left",
       "upper_right",
-      "mid_left",
+      "upper_left",
       "upper_right",
-      "mid_left",
+      "upper_left",
       "upper_right",
-      "mid_left",
+      "upper_left",
       "upper_right",
-      "mid_left",
+      "upper_left",
       "upper_right",
-      "mid_left",
+      "upper_left",
       "upper_right",
-      "mid_left",
+      "upper_left",
       "upper_right",
-      "mid_left",
+      "upper_left",
       "upper_right",
-      "mid_left",
+      "upper_left",
       "upper_right",
-      "mid_left",
+      "upper_left",
       "upper_right",
-      "mid_left",
+      "upper_left",
       "upper_right",
-      "mid_left",
+      "upper_left",
       "upper_right",
-      "mid_left",
+      "upper_left",
       "upper_right",
-      "mid_left"
+      "upper_left"
     ]
   },
   "beatGrid": {
@@ -2419,7 +2419,12 @@
       "handle": 0.06
     },
     "bannerLines": 1,
-    "punchScale": 0.06
+    "punchScale": 0.06,
+    "content": {
+      "regionRatio": 0.625,
+      "cropX": 0.5,
+      "cropY": 0.5
+    }
   },
   "scrim": "never"
 }

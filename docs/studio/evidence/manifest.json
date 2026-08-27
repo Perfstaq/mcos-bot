@@ -1,8 +1,8 @@
 {
   "description": "Render evidence for the three shipped templates (ARCHITECTURE §12.10). The MP4s are NOT committed; their sha256 is recorded here alongside the commit they were rendered from, so a reviewer can tell whether the committed plan/qc/frames describe the code in front of them. Regenerate with `npx tsx scripts/studio/render-evidence.ts --footage <clean.mp4>`; check with `--check`.",
-  "generatedAt": "2026-08-27T18:55:11.089Z",
-  "renderedFromCommit": "ed3d19861885bcf82177581e617388448201c7ab",
-  "renderedFromCommitSubject": "refactor(render): move the renderer invocation behind the ADR-5 boundary",
+  "generatedAt": "2026-08-27T19:15:59.038Z",
+  "renderedFromCommit": "6fde6bc3c984f9a59ae72ff7aa88ee02b81996e1",
+  "renderedFromCommitSubject": "fix(studio): size the content region like the reference, not like a 16:9 fit",
   "treeDirty": false,
   "renderAffectingPaths": [
     "packages/render/src",
@@ -38,40 +38,40 @@
     "statement_serif": {
       "templateVersion": 1,
       "mp4": {
-        "sha256": "64855d6a3e65d03a551b28729078cfbbce3b0512fde747efc35ba77f9d329cc6",
-        "bytes": 22175142,
+        "sha256": "10f05520767bbb254de5bf3fc5204d5dc32656480aba7fb72c1da3b8584414d2",
+        "bytes": 32167090,
         "retained": false,
         "file": null
       },
       "plan": {
         "file": "plan.json",
-        "sha256": "9caba137a2b8d316519ab667e248d8bd4c7de4164491032aedb90e46210eb0c8"
+        "sha256": "24679edc5ce0df49e776fc5ef1a522321f1876577c1d7f34f90af60ae4d7a917"
       },
       "qc": {
         "file": "qc.json",
-        "sha256": "971076475c567feb609f45830b4ef0359d440d0696ca13c90398a3fbd3d08dc6"
+        "sha256": "266845f93af7d2b18c782c16ce4af027419e29bfb6bf8bccd23df253036b3a6c"
       },
       "frames": [
         {
           "file": "frame1.png",
-          "sha256": "0bcfee22ec665bb182308238c011568681194ffcf97dffc8ac75b55b0eff80f5",
-          "bytes": 539112,
+          "sha256": "56571e3fd3cf2c8abda77642c54ce639eedca8a818398827a7fe2d937515f91a",
+          "bytes": 727788,
           "frame": 23,
           "timeMs": 780,
           "why": "banner settled + first karaoke chunk — the scroll-stopper as a viewer first sees it"
         },
         {
           "file": "frame2.png",
-          "sha256": "a8daba8701ceeab2d73844ca7a65cb8e0294aa34fcc6dba1e306ccdd98c2ad14",
-          "bytes": 286893,
+          "sha256": "f2e39f5b5bc3241faabfb2266211af816469d83f76d9708a992719395246c785",
+          "bytes": 291696,
           "frame": 244,
           "timeMs": 8147,
           "why": "emphasis word \"not\" at its punch peak — accent means emphasis only (§12.9)"
         },
         {
           "file": "frame3.png",
-          "sha256": "929b4431ac4d9f2f4b0e6d2c9cfe222609853adc32492b5ec6aaae43b2e0134f",
-          "bytes": 448760,
+          "sha256": "c82afa5c20247d8d9e3b853b41edba3fe5712fcc7e1256c7eb2ed0f1aaee8dba",
+          "bytes": 752087,
           "frame": 1454,
           "timeMs": 48460,
           "why": "late chunk \"being one of\" at position \"center\" — caption rotation and the alternating handle corner"
@@ -95,9 +95,9 @@
             "matchedRatio": 0.069,
             "matched": 2,
             "totalPlanCuts": 29,
-            "detectedCuts": 12,
+            "detectedCuts": 29,
             "windowMs": 66,
-            "informationalPixelBeatLockRatio": 0.5,
+            "informationalPixelBeatLockRatio": 0.759,
             "referenceBaseline": 0.821
           }
         },
@@ -119,7 +119,7 @@
         },
         "G6": {
           "pass": true,
-          "measured": 4
+          "measured": 3
         },
         "G8": {
           "pass": true,
@@ -152,7 +152,7 @@
         "G13": {
           "pass": null,
           "measured": {
-            "checksum": "sha256:64855d6a3e65d03a551b28729078cfbbce3b0512fde747efc35ba77f9d329cc6"
+            "checksum": "sha256:10f05520767bbb254de5bf3fc5204d5dc32656480aba7fb72c1da3b8584414d2"
           }
         },
         "G14": {
@@ -185,43 +185,43 @@
     "staccato_condensed": {
       "templateVersion": 1,
       "mp4": {
-        "sha256": "8b2961edfc1715fba39f6b819a5499503c2b0edf7aaeff343f0f29f8dc8f3bd8",
-        "bytes": 21163378,
+        "sha256": "7224cda24e124dc1baadc06b47beaf96e6d1064e63e13326552202ebf592ad13",
+        "bytes": 30994016,
         "retained": false,
         "file": null
       },
       "plan": {
         "file": "plan.json",
-        "sha256": "2de7ef25292ce9e5e395bcc9c09418f14a0301bf9391e3cbab1d1e07b826135c"
+        "sha256": "eec5803664109c6a9fa46ed16e1b20861081deca34b54f81ce27de35cc2c7504"
       },
       "qc": {
         "file": "qc.json",
-        "sha256": "9bf2628bad46b7bcd09de423e46ea6ab3cac05797321c77d46af65890fda51b3"
+        "sha256": "baed03715cd458507161668e6d860e04958a36c2fd30e4c2a89ae41b35c9c38a"
       },
       "frames": [
         {
           "file": "frame1.png",
-          "sha256": "819234cd2145c4a47b459b1fdde2c82c21fd08947350b11f2ccbac97bb33b0d2",
-          "bytes": 520725,
+          "sha256": "b79985e3cedc82fd30ab8275d0a80af213dc146deddf4c64f2c2af758da30acb",
+          "bytes": 678038,
           "frame": 23,
           "timeMs": 780,
           "why": "banner settled + first karaoke chunk — the scroll-stopper as a viewer first sees it"
         },
         {
           "file": "frame2.png",
-          "sha256": "b8b6db8b937a7a684ffd7c7515e5f0eb74e0d92dbebf2f6ff6a3b9581ac916c3",
-          "bytes": 219971,
+          "sha256": "c99e6810b525934f03cf3e6fc1b81606bb0b50342bc212675de314081111184c",
+          "bytes": 240733,
           "frame": 244,
           "timeMs": 8147,
           "why": "emphasis word \"not\" at its punch peak — accent means emphasis only (§12.9)"
         },
         {
           "file": "frame3.png",
-          "sha256": "3dcf75f199558244fdc2c00fd3486ba0cdb6afb3fc4c165e2285e02b18f993ef",
-          "bytes": 442062,
-          "frame": 1454,
-          "timeMs": 48460,
-          "why": "late chunk \"being one of\" at position \"upper_third\" — caption rotation and the alternating handle corner"
+          "sha256": "6381258ae4d61ee88a3692ac0864cc92e9855a24163264a429787eb92826ee6f",
+          "bytes": 772956,
+          "frame": 1373,
+          "timeMs": 45780,
+          "why": "late chunk \"to settle,\" at position \"center\" — caption rotation and the alternating handle corner"
         }
       ],
       "overallPass": false,
@@ -239,12 +239,12 @@
         "G1b": {
           "pass": false,
           "measured": {
-            "matchedRatio": 0.061,
-            "matched": 2,
+            "matchedRatio": 0.121,
+            "matched": 4,
             "totalPlanCuts": 33,
-            "detectedCuts": 12,
+            "detectedCuts": 28,
             "windowMs": 66,
-            "informationalPixelBeatLockRatio": 0.5,
+            "informationalPixelBeatLockRatio": 0.786,
             "referenceBaseline": 0.821
           }
         },
@@ -266,7 +266,7 @@
         },
         "G6": {
           "pass": true,
-          "measured": 4
+          "measured": 3
         },
         "G8": {
           "pass": true,
@@ -299,7 +299,7 @@
         "G13": {
           "pass": null,
           "measured": {
-            "checksum": "sha256:8b2961edfc1715fba39f6b819a5499503c2b0edf7aaeff343f0f29f8dc8f3bd8"
+            "checksum": "sha256:7224cda24e124dc1baadc06b47beaf96e6d1064e63e13326552202ebf592ad13"
           }
         },
         "G14": {
@@ -332,43 +332,43 @@
     "editorial_sans": {
       "templateVersion": 1,
       "mp4": {
-        "sha256": "e0651678b705a7e1e925187d197c0a77cd4551a5449fc55d739c80fa7f7f9d62",
-        "bytes": 21395689,
+        "sha256": "7bb6b6864265aeeaa20fbec3b902fd98de77f169db86b39b540d0680454d1320",
+        "bytes": 31263701,
         "retained": false,
         "file": null
       },
       "plan": {
         "file": "plan.json",
-        "sha256": "29d07bb6f4c2cb218bd004c6aec301b27580c8ab7766c532a5047ad95f6fec99"
+        "sha256": "7a3a92ce13748123fd53e17e38f01508ac47001974657cd556001b71b0a60438"
       },
       "qc": {
         "file": "qc.json",
-        "sha256": "41a0cf831d1f453e4f350dcb8d9c842efb72f574edbdf2ceb0ad6738816f617d"
+        "sha256": "3b41b4c65e5314d591cc37e8285386addf60b586241517f7b0387d1d555040db"
       },
       "frames": [
         {
           "file": "frame1.png",
-          "sha256": "6cc9f610e2bcfd7bf88808800d214c1d36697f2c7210b639923b295296052cd8",
-          "bytes": 527868,
+          "sha256": "8a381a7b7d4d92afa20f6e9d321fa3026d761ff4e6815a1221a7cf446c91c8bc",
+          "bytes": 705532,
           "frame": 23,
           "timeMs": 780,
           "why": "banner settled + first karaoke chunk — the scroll-stopper as a viewer first sees it"
         },
         {
           "file": "frame2.png",
-          "sha256": "131eabb7214ef002c4b924f0203afd24ff92debe9ee382f1519d10aed5ddf46d",
-          "bytes": 289558,
+          "sha256": "271029bda31930611a831d9c2d2464a6b74a2f140b1eef84ac2314455e26474c",
+          "bytes": 305347,
           "frame": 244,
           "timeMs": 8147,
           "why": "emphasis word \"not\" at its punch peak — accent means emphasis only (§12.9)"
         },
         {
           "file": "frame3.png",
-          "sha256": "9f7e0b1ecac4093f6077ca93e84a7dd6d9dc47a0c8bc4afd6ce221883024f8b9",
-          "bytes": 537155,
+          "sha256": "a69305a25b689658c4b06249ca11c67244b02140d2ce25094406afe751f5202f",
+          "bytes": 746655,
           "frame": 1373,
           "timeMs": 45780,
-          "why": "late chunk \"to settle,\" at position \"upper_third\" — caption rotation and the alternating handle corner"
+          "why": "late chunk \"to settle,\" at position \"center_low\" — caption rotation and the alternating handle corner"
         }
       ],
       "overallPass": false,
@@ -386,12 +386,12 @@
         "G1b": {
           "pass": false,
           "measured": {
-            "matchedRatio": 0.074,
-            "matched": 2,
+            "matchedRatio": 0.111,
+            "matched": 3,
             "totalPlanCuts": 27,
-            "detectedCuts": 13,
+            "detectedCuts": 28,
             "windowMs": 66,
-            "informationalPixelBeatLockRatio": 0.538,
+            "informationalPixelBeatLockRatio": 0.75,
             "referenceBaseline": 0.821
           }
         },
@@ -413,7 +413,7 @@
         },
         "G6": {
           "pass": true,
-          "measured": 4
+          "measured": 3
         },
         "G8": {
           "pass": true,
@@ -446,7 +446,7 @@
         "G13": {
           "pass": null,
           "measured": {
-            "checksum": "sha256:e0651678b705a7e1e925187d197c0a77cd4551a5449fc55d739c80fa7f7f9d62"
+            "checksum": "sha256:7bb6b6864265aeeaa20fbec3b902fd98de77f169db86b39b540d0680454d1320"
           }
         },
         "G14": {
