@@ -388,9 +388,17 @@ function runRender(): void {
     generatedAt: new Date().toISOString(),
     renderedFromCommit: git(["rev-parse", "HEAD"]),
     renderedFromCommitSubject: git(["log", "-1", "--format=%s"]),
-    // A dirty tree means the recorded commit does NOT fully describe what was
-    // rendered. Recording it is the difference between evidence and a claim.
-    treeDirty: git(["status", "--porcelain"]).length > 0,
+    // "Was the CODE that produced this render committed?" — scoped to
+    // render-affecting paths, deliberately.
+    //
+    // Computed over the whole tree it was worse than useless: writing the
+    // first template's evidence dirties the tree, so every template after it
+    // flagged itself dirty for a reason that has nothing to do with whether
+    // the code was committed. A flag that is always true after the first
+    // render carries no information, which is the same "cries wolf" failure
+    // the `--check` design avoids. Evidence files are this script's OUTPUT;
+    // only its inputs can invalidate it.
+    treeDirty: git(["status", "--porcelain", "--", ...RENDER_AFFECTING]).length > 0,
     renderAffectingPaths: RENDER_AFFECTING,
     harness: harnessVersions(),
     footage: { path: footage, sha256: sha256(footage), bytes: statSync(footage).size },

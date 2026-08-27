@@ -1,8 +1,8 @@
 {
   "description": "Render evidence for the three shipped templates (ARCHITECTURE §12.10). The MP4s are NOT committed; their sha256 is recorded here alongside the commit they were rendered from, so a reviewer can tell whether the committed plan/qc/frames describe the code in front of them. Regenerate with `npx tsx scripts/studio/render-evidence.ts --footage <clean.mp4>`; check with `--check`.",
-  "generatedAt": "2026-08-27T18:33:18.795Z",
-  "renderedFromCommit": "f4703a3fa33ebd89f39a53e9c063de05db0cf38d",
-  "renderedFromCommitSubject": "chore(studio): keep render props scratch out of the evidence dir",
+  "generatedAt": "2026-08-27T18:39:23.724Z",
+  "renderedFromCommit": "6cc403f0c5396c1be4308a60c48fbdadb686613c",
+  "renderedFromCommitSubject": "fix(studio): frame selection sampled past the end of short caption chunks",
   "treeDirty": true,
   "renderAffectingPaths": [
     "packages/render/src",
