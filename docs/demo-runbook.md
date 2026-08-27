@@ -74,9 +74,27 @@ You land on `/brief?v=1&diff=1` automatically — no extra navigation needed.
 ## §4 — The diff (15s)
 
 **Say, pointing at the banner at the top of the document:** "This is what
-that merge changed — added, edited, removed, right where the numbers came
-from." Scroll to the edited claim. "There's the one I rewrote — the
-original struck through, my version live, both real."
+that merge changed — ten added, right where the count came from." Scroll to
+the claim you rewrote in §2. "There it is, live in the document, marked the
+same as every other claim this merge added."
+
+Do not claim the banner reads "added, edited, removed" as if all three were
+nonzero — on a first merge they cannot be. **Edited** and **removed** are
+always 0 here: there is no earlier version to diff against, so nothing yet
+counts as changed or gone, only new. And the count is **ten**, not eleven —
+not because anything was "removed" (a claim rejected in §2 before it was
+ever added does not show up as removed; it just was never added), but
+because the queue held eleven and you kept ten.
+
+This is also not the edited claim from §2. The struck-through "model said /
+I said" comparison lives only in the review queue while you are deciding,
+and afterward in that claim's review decision — the document itself always
+shows a claim's current, approved text, marked **+ NEW** like everything
+else this merge added, not a diff against its own pre-edit self. The real
+**~ EDITED** marker, with the original struck through, appears only when an
+*already-merged* claim is re-decided in a *later* version — a second
+review, not this one (see the "v3" step in `e2e/tests/ring.spec.ts` for
+exactly that case). Do not go looking for it here.
 
 ## §5 — The version rail (10s)
 
