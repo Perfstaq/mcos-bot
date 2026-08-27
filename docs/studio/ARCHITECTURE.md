@@ -1,0 +1,768 @@
+# Content Studio — Architecture Decision Document
+
+> Architect output (one-shot, 2026-08-27), written before any Studio code. Source of the port:
+> `/Users/sathvik/aix/founder-journey` (package `perfstaq`, branch `agency`, ~56.5k LOC, 786 tests).
+> Every claim below carries a file:line citation. Where a spec doc in this folder is factually
+> wrong about the codebase, §10 says so plainly — stop trusting those statements.
+> All founder-journey paths are relative to `/Users/sathvik/aix/founder-journey`; all
+> meeting-bot paths relative to `/Users/sathvik/aix/meeting-bot`.
+
+---
+
+## 1. Port ledger
+
+Ruthless rule applied: the restraint thesis (01_REFERENCE_ANALYSIS §8 — hard cuts only, no
+stickers, no SFX) makes most of the decoration layer LEAVE BEHIND. The audio and cutting
+*infrastructure* underneath it is the real asset and ports nearly clean.
+
+### 1.1 `remotion/src/` (the render engine)
+
+| Module | Verdict | Why (one line) |
+|---|---|---|
+| `schema.ts` | **PORT AS-IS** | The EDL + word-edge invariant core (`EPSILON=0.05` at schema.ts:15, `wordEdges`/`snapToEdge` at :68-96, `computeKeptSpans` at :196-210) is exactly G10's "never mid-word" enforcement, already loud-validated. |
+| `reel.ts` | **PORT WITH CHANGES** | Keep the layering (EDL → output-time spans/captions, reel.ts:61-132) and `CaptionWordSchema`; **delete** `ENTER_VALUES` (44 entrance effects, reel.ts:25-43), `OverlaySchema` gif/Giphy (:143-158), `BrollSchema` pexels (:167-177), `SfxSchema` (:101-106), `AccentSchema` — all banned by 01 §8. |
+| `motion.ts` | **PORT WITH CHANGES** | Keep `effectiveMotion`/scale-floor concepts; replace the analytic ease-out in `motionScale` (motion.ts:32-37) with `SPRINGS.drift` per 02 §1; raise `MAX_GROW` 0.06 → the 0.05-0.08 band of 01 §5; drop `decayingScaleFloor` (only serves banned slide entrances, motion.ts:55-70) and `atmosphericWashAllowed` (washes are banned). |
+| `duck.ts` | **PORT AS-IS** | Pure, unit-testable music-under-voice gain math (duck.ts:1-8) — exactly 03 §5's sidechain ducking. Audio infrastructure, not decoration. |
+| `fonts.ts` + `fontdata.generated.ts` + `scripts/embed-fonts.mjs` | **PORT WITH CHANGES** | Embedded data-URL fonts exist because a pending font fetch can hang `delayRender` until timeout (fonts.ts:4-9) — deterministic on Lambda. Swap the font set for 02 §7's tokens (Anton/Playfair/Inter-class, OFL). I explicitly prefer this over 03 §4's `@remotion/google-fonts` suggestion. |
+| `compositions/Reel.tsx` | **PORT WITH CHANGES** | Keep the shell — `<Sequence>` per span, `<OffthreadVideo>`, plan-as-props, imports only react+remotion+relative modules (Reel.tsx:1-30), which is already 03 §4's architecture. Strip every entrance/overlay/broll/evidence branch; the caption layer is a REWRITE per 02 §2 (three independent layers). |
+| `sfx.ts` | **LEAVE BEHIND** | No SFX in v1 (01 §8). |
+| `Root.tsx` | **PORT WITH CHANGES** | Re-register the pruned composition only. |
+| `compositions/Graphics.tsx`, `graphics-layout.ts`, `compositions/scenes/*` (16 files incl. `surface.tsx`) | **LEAVE BEHIND** | The card/evidence system's headline-vs-graphic collision is admitted unsolved (PERFSTAQ-STATUS.md §6: "two systems competing for the same pixels"). Don't import an unsolved problem; templates are new, on M's primitives. |
+
+### 1.2 `pipeline/` (43 files)
+
+| Module | Verdict | Why |
+|---|---|---|
+| `ingest.ts` | **PORT WITH CHANGES** | Probe + rotation-correct + manifest is stage one of `media.analyze`; convert CLI (`process.argv`) to a job function. |
+| `transcribe.ts` + `scripts/whisperx_run.py` | **PORT WITH CHANGES** | The proven venv-shell pattern (transcribe.ts:32-46) and the faster-whisper+Silero runner (whisperx_run.py:3-9, deliberately avoiding pyannote/torchcodec) become the sidecar's `words` stage. CLI → job. |
+| `detect.ts` | **PORT WITH CHANGES** | Word-gap silence detection (detect.ts:129-138) IS 03 §6's "split on speech pauses (gaps >400ms)"; keep the segmenter + `mergeNonOverlapping`, drop CLI + the cuts.json human-gate loop (Studio's gate is the ContentBrief, not per-cut). |
+| `audio.ts` | **PORT AS-IS** | Word onset/offset protection at cut boundaries — feeds G10 directly. |
+| `proxy.ts` | **PORT AS-IS** | 4K 10-bit HEVC phone footage wedges compositors (proxy.ts header) — precisely what tenant uploads will be. Not in any spec doc; porting it anyway. **Disagreement flagged**: the docs forgot render-source normalization exists. |
+| `face.ts` + `scripts/mediapipe_face_run.py` | **PORT AS-IS** | Median-aggregated per-span face boxes (reel.ts:50-58) drive 02 §2.2 scrim/safe-placement and 03 §1's face/luminance stage. |
+| `music.ts` | **PORT WITH CHANGES** | Keep `findMusicBed` tier-1 library selection and `synthBed` (license-clean, and its BPM is *known by construction* — a free exact beat grid). Demote `detectBeats`/`buildBeatGrid` (music.ts:647-701) to last-rung fallback (§4). Drop IA-netlabel tier-2 and `suggestTrendingAudio`. |
+| `music-library.ts`, `music-index.ts` | **PORT WITH CHANGES** | Bring-your-own licensed library (Epidemic/Artlist) is the only 03 §5-compliant source; re-home from local dir to per-tenant R2 prefix. |
+| `tracks.ts` | **PORT WITH CHANGES** | Keep `deriveTargetTempo` (tracks.ts:485) + `bpmMatchScore` (:525) scoring math; **leave** all Internet Archive sourcing/download. |
+| `music-sources.ts` | **LEAVE BEHIND** | Remote CC sourcing conflicts with licensed-only (03 §5). |
+| `io.ts` | **PORT WITH CHANGES** | Zod-validated loud loaders pattern; re-target paths from `work/<clip>` to job temp dirs + R2. |
+| `apply.ts` | **LEAVE BEHIND** | ffmpeg-concat rough cuts are superseded — Remotion renders from the plan; spans seek inside the source. |
+| `env.ts` | **LEAVE BEHIND** | meeting-bot has `apps/api/src/env.ts`. |
+| `analyze.ts` | **LEAVE BEHIND** (v1) | LLM shot-notes; 03's analyze stage is signal-based. Revisit for style transfer classification later. |
+| `giphy.ts`, `pexels.ts`, `sfx.ts`, `sfx-fetch.ts`, `shoot.ts` | **LEAVE BEHIND** | The decoration layer. GIF stickers, stock B-roll cutaways and SFX are all explicitly banned by 01 §8 ("no B-roll cutaways", "no stickers"). |
+| `compose.ts`, `enrich.ts`, `direct.ts`, `director.ts`, `visual-director.ts`, `visual-search.ts`, `evidence.ts` | **LEAVE BEHIND** | The creative-brain/enrichment chain exists to choose entrances, GIFs, B-roll and evidence scenes — the banned vocabulary. The Studio's "brain" is the ContentBrief + template, chosen upstream of render. |
+| `story.ts`, `storyline.ts`, `variants.ts`, `suggest.ts`, `series.ts`, `persona.ts`, `strategy.ts`, `strategy-schema.ts`, `brief.ts`, `brand-research.ts`, `formats.ts`, `memory.ts` | **LEAVE BEHIND** | perfstaq's own strategy stack — it directly competes with the M1 Brief + review gate, which is the product (CLAUDE.md invariant 1). Bringing any of it in would create a second, ungated memory. |
+| `keywords.ts` | **LEAVE BEHIND** | 02 §3's emphasis scorer is ~40 lines against claim text + RMS; RAKE adds nothing it needs. |
+| `translate.ts` | **LEAVE BEHIND** | Multi-language captions are out of scope (00 §7). |
+| `review.ts`, `serve.ts` | **LEAVE BEHIND** | Static review page + file server superseded by `apps/web`. |
+
+**Where I disagree with the restraint reading**: restraint applies to *visible decoration*, not audio
+plumbing. `duck.ts`, `synthBed`, the music library, and `proxy.ts` are infrastructure the spec docs
+silently assume exists; they port. Everything a viewer could point at that the reference doesn't
+have (entrances, GIFs, SFX, accents, evidence cards) stays behind — no exceptions in v1.
+
+---
+
+## 2. Target module layout
+
+```
+meeting-bot/
+├── apps/api/src/
+│   ├── routes/content.ts            # 05 §4 endpoints (briefs, plans, renders) — NEW file, review.ts untouched
+│   ├── domain/content-gate.ts       # ContentBrief approve/reject/edit-approve (see §6)
+│   ├── domain/studio/               # plan builder, footage selection, emphasis scoring, beat snap
+│   ├── jobs/media-analyze.ts  plan-build.ts  render-submit.ts  render-qc.ts
+│   ├── queue.ts                     # +4 queues, additive, same QUEUE-const pattern (queue.ts:15-23)
+│   ├── integrations/studio-r2.ts    # studio key namespace built ON r2.ts exports; r2.ts not modified
+│   └── worker-media.ts              # NEW entrypoint: consumes media.analyze + render.qc only
+├── apps/web/src/pages/Studio.tsx    # upload / template pick / render status (dark theme tokens)
+│   └── pages/ReviewQueue.tsx        # extended: ContentBrief card type (UI reuse — see §6)
+├── packages/render/                 # NEW npm workspace — the Remotion bundle root
+│   ├── remotion.config.ts
+│   └── src/  plan.ts (zod RenderPlan contract)  motion/  captions/  fonts/  compositions/Reel.tsx
+├── services/analyzer/               # NEW — Python sidecar (no Node imports)
+│   ├── analyzer.py                  # CLI: --input --out --stages words,beats,scenes,motion,faces
+│   └── requirements.txt             # faster-whisper, librosa, scenedetect[opencv], numpy (pinned)
+├── Dockerfile.media                 # node + ffmpeg + python venv + packages/render
+└── infra/terraform/                 # additive: ECR repo studio-media, service worker-media
+```
+
+Decisions and justification:
+
+- **`packages/render` is a new workspace**, not code inside `apps/api`. Remotion needs its own
+  webpack bundle root and a React dependency tree; `apps/api` is a server-only build shipped in the
+  production image (infra/terraform/ecs.tf:2-7). Keeping remotion imports confined to one package is
+  also the licensing containment boundary (ADR-5): only `packages/render` may import `remotion`;
+  enforce with a typecheck-time lint (`no-restricted-imports`) in api/web.
+- **No `apps/studio` HTTP service.** Auth, tenancy (db.ts:66-98), authz and rate limiting already
+  live in `apps/api`; a second HTTP service would duplicate Better Auth wiring for zero isolation
+  benefit. Studio routes are just more api routes.
+- **Jobs follow the existing pattern exactly**: four new queue names in the `QUEUE` const with typed
+  Queue instances and per-queue retry posture, exactly as `digestQueue` does (queue.ts:87-94).
+- **Two worker entrypoints, three images total.** Today one image runs `api`/`worker`/`migrate`
+  (ecs.tf:2-7, commands at :219/:270). That image stays byte-identical in behavior. A new
+  `Dockerfile.media` image (Node + ffmpeg + Python venv) runs `worker-media.ts`, consuming only
+  `media.analyze` and `render.qc` — the two queues needing ffmpeg/librosa/PySceneDetect.
+  `plan.build` (pure TS) and `render.submit` (Lambda API calls) stay on the existing lean worker.
+- **Rendering is Remotion Lambda** (03 §4), not the Fargate task: 1650 frames of 1080×1920 on
+  Fargate CPU is a 10-30 minute render; Lambda parallelizes to ~1-2 min. Input footage reaches
+  Lambda via `presignGet` R2 URLs (r2.ts:122); output comes back S3 → `streamUrlToR2` (r2.ts:67)
+  into `renders/`. Local `@remotion/renderer` inside the media image is the dev/CI path so tests
+  never need AWS.
+- **R2 keys**: extend the namespace in `studio-r2.ts` (e.g. `tenants/<t>/studio/footage/<id>`,
+  `.../renders/<id>.mp4`, `.../music/<id>`) using `putObject`/`presignGet`/`objectExists`/
+  `deleteObjects` as exported (r2.ts:33-151). `r2.ts` itself is off-limits (§6).
+
+---
+
+## 3. Prisma schema (additive — invariant 6)
+
+Conventions matched to `apps/api/prisma/schema.prisma`: uuid string ids, `tenantId String
+@map("tenant_id")`, snake-case `@@map`, tenant relation `onDelete: Cascade`, `@@index([tenantId, …])`
+(cf. Meeting at schema.prisma:85-151, Artifact at :261-281). Two deliberate deviations from
+03_RENDER_PIPELINE §2's sketch, both forced by real code:
+
+1. **`MediaAnalysis` gains `tenant_id`.** The spec sketch omits it, but the db.ts client extension
+   injects `tenantId` into every query of every non-exempt model (db.ts:66-98); a model without the
+   column would throw on first use, and invariant 5 requires it anyway.
+2. **`MotionTemplate` is a global catalog** (no `tenant_id`) — templates ship with the product.
+   It must therefore be added to the `UNSCOPED` set (db.ts:19-37), one additive line with a comment,
+   like the Better Auth models. Per-tenant custom templates later = additive nullable `tenant_id`.
+
+`RenderPlan` rows are immutable (G13 reproducibility): add `"RenderPlan"` to `APPEND_ONLY_MODELS`
+(apps/api/src/domain/append-only.ts:28) — an additive set entry. `Render` is mutable (status
+transitions). The `Tenant` model block gains back-relation array fields only (additive lines,
+no columns — same shape as schema.prisma:41-60).
+
+```prisma
+// ---------------------------------------------------------------------------
+// Content Studio — media, analysis, templates, plans, renders.
+// ---------------------------------------------------------------------------
+
+enum MediaAssetKind {
+  footage
+  reference
+  render
+  music
+
+  @@map("media_asset_kind")
+}
+
+model MediaAsset {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  kind         MediaAssetKind
+  r2Key        String         @unique @map("r2_key")
+  contentType  String         @map("content_type")
+  bytes        BigInt
+  checksum     String?
+  originalName String?        @map("original_name")
+
+  durationMs Int?   @map("duration_ms")
+  width      Int?
+  height     Int?
+  fps        Float?
+
+  uploadedByUserId String? @map("uploaded_by_user_id")
+
+  // Reference reels are purged after fingerprinting (04 §5) — same posture as
+  // artifacts.purged_at: the row survives, the bytes do not.
+  purgedAt  DateTime? @map("purged_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  analysis MediaAnalysis?
+  plans    RenderPlan[]
+
+  @@index([tenantId, kind, createdAt])
+  @@map("media_assets")
+}
+
+enum MediaAnalysisStatus {
+  running
+  succeeded
+  failed
+
+  @@map("media_analysis_status")
+}
+
+model MediaAnalysis {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  assetId String @unique @map("asset_id")
+
+  status MediaAnalysisStatus @default(running)
+  error  String?
+
+  // Signal payloads (03 §1); each null until its stage lands.
+  words  Json? // word-level timings (faster-whisper), ms
+  beats  Json? // { method, tempo_bpm, beat_times_ms[], grid_quality } — THE canonical grid (§4)
+  scenes Json? // PySceneDetect shot list (reference assets only)
+  motion Json? // per-window motion energy
+  faces  Json? // per-span face boxes + luminance map
+
+  tempoBpm   Float?  @map("tempo_bpm")
+  beatMethod String? @map("beat_method") // 'beat_track' | 'onset_env' | 'constant_grid'
+
+  // Pins the sidecar (and its librosa version) that produced this row —
+  // same reasoning as extraction_runs.prompt_version.
+  analyzerVersion String @map("analyzer_version")
+
+  startedAt  DateTime  @default(now()) @map("started_at")
+  finishedAt DateTime? @map("finished_at")
+
+  tenant Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  asset  MediaAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+  @@map("media_analyses")
+}
+
+enum TemplateFraming {
+  letterbox
+  fill
+
+  @@map("template_framing")
+}
+
+// Global catalog — NO tenant_id; must be listed in db.ts UNSCOPED. Rows are
+// seeded by fixture (explicitly marked; templates are not memory, so the gate
+// invariant does not apply to them).
+model MotionTemplate {
+  id        String @id @default(uuid())
+  name      String
+  archetype String
+
+  framing TemplateFraming
+  slots   Json // rhythm-slot spec: establish/accelerate/hold pattern
+  fonts   Json // 02 §7 typography tokens
+  grade   Json // 02 §6 grade parameters
+
+  version Int     @default(1)
+  active  Boolean @default(true)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  plans RenderPlan[]
+
+  @@unique([name, version])
+  @@map("motion_templates")
+}
+
+// Immutable once written (APPEND_ONLY_MODELS): the reproducible artifact.
+// plan embeds EVERYTHING the render consumes — cut list, caption chunks with
+// word timings, emphasis flags, motion curves, grade, music asset id, beat
+// grid, seed — so a re-render never recomputes analysis or re-runs an LLM.
+model RenderPlan {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  // Plain column until Agent B's ContentBrief model lands, then a relation is
+  // added in B's own additive migration (see §6).
+  contentBriefId String @map("content_brief_id")
+  templateId     String @map("template_id")
+  footageAssetId String @map("footage_asset_id")
+
+  plan        Json
+  seed        Int
+  planVersion String @map("plan_version") // schema version of the plan payload
+  createdBy   String @map("created_by")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  template MotionTemplate @relation(fields: [templateId], references: [id])
+  footage  MediaAsset     @relation(fields: [footageAssetId], references: [id])
+  renders  Render[]
+
+  @@index([tenantId, contentBriefId])
+  @@index([tenantId, createdAt])
+  @@map("render_plans")
+}
+
+enum RenderStatus {
+  queued
+  rendering
+  qc
+  succeeded
+  failed
+
+  @@map("render_status")
+}
+
+model Render {
+  id       String @id @default(uuid())
+  tenantId String @map("tenant_id")
+
+  planId String @map("plan_id")
+
+  status         RenderStatus @default(queued)
+  r2Key          String?      @unique @map("r2_key")
+  durationMs     Int?         @map("duration_ms")
+  bytes          BigInt?
+  checksum       String? // G13: same plan+footage ⇒ same checksum
+  qc             Json? // full gate-by-gate report from render.qc
+  qcPassed       Boolean?     @map("qc_passed")
+  lambdaRenderId String?      @map("lambda_render_id")
+
+  // Mirrors meetings.failure_reason/failed_stage: failures are surfaced, never silent.
+  error       String?
+  failedStage String? @map("failed_stage") // analyze | plan | render | qc
+
+  createdAt  DateTime  @default(now()) @map("created_at")
+  finishedAt DateTime? @map("finished_at")
+
+  tenant Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  plan   RenderPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+  @@index([planId, createdAt])
+  @@map("renders")
+}
+```
+
+---
+
+## 4. The beat-lock decision (G1 — the milestone's gate)
+
+**Decision: real beat tracking (librosa `beat.beat_track`) in the Python sidecar is REQUIRED.
+The ported constant-tempo `buildBeatGrid` is not sufficient and is demoted to the last fallback
+rung.** Three independent reasons, any one of which decides it:
+
+1. **The measurer and the planner must share one grid.** G1 is defined as "% of cuts within 150ms
+   of a *librosa* beat" (07 §1) and `scripts/qc-render.ts` runs librosa. If the planner snaps to a
+   grid from the hand-rolled estimator (`analyzeOnsets` → mode-of-IOI-bins, music.ts:658-663,
+   :610-644) while QC measures against librosa's DP beat tracker, the two estimators' systematic
+   disagreement is charged against the gate even with perfect snapping. Two beat backends is an
+   architecture bug regardless of either one's quality.
+2. **Drift math at 112 BPM over 55s.** Beat period 0.534s; ~103 beats in 55s. A tempo estimate
+   off by fraction ε accumulates ε·t of drift: at t=55s, staying under 150ms requires
+   ε < 0.15/55 ≈ **0.27% (±0.3 BPM at 112)**. `estimateTempo` quantizes to 0.1 BPM
+   (music.ts:643) — inside budget *only if* the mode-of-binned-IOIs estimate is that accurate on
+   real mixed music, which is unproven; its onsets are 20ms-hop energy peaks on an 11kHz mono
+   decode (music.ts:689-691). librosa's beat tracker follows the onset envelope dynamically and
+   absorbs both estimate error and real tempo variance.
+3. **Phase.** `detectBeats` anchors the grid at `onsets[0]` — the first detected onset of the track
+   (music.ts:696), which is routinely a pickup note, not beat one. A constant phase error up to
+   ±267ms fails G1 outright before drift even starts. The founder-journey usage never cared:
+   `detectBeats` only feeds `bpmMatchScore` track *selection* (tracks.ts:525), where phase is
+   irrelevant. The spec's G1 is the inverse problem and phase is everything.
+
+### 4.1 Measured re-analysis: the gate is inside methodology noise — pin the harness
+
+The reference reel was independently re-measured (2026-08-27) with the exact method 04 §2 names —
+librosa 0.11 `beat_track` (22050Hz mono, ffmpeg-demuxed WAV) + PySceneDetect
+`ContentDetector(threshold=27)`. Raw data + script: `reference_measured.json` /
+`measure_reference.py` (session scratchpad; Agent D commits them as the calibration fixture).
+Results:
+
+- **Confirms 01 is genuinely measured**: tempo 112.3 (claimed 112.3), 97 beats (claimed 97),
+  duration 54.87s, median cut-to-beat 80ms (claimed 86ms), and the shot-duration list is identical
+  to the doc's for the first 28 shots.
+- **But the headline gate number does not survive re-measurement**: 29 shots detected vs the doc's
+  30 (one threshold-sensitive tail cut: the doc splits its final 5.65s into 1.63+4.02; the detector
+  sees one shot), giving **beat_lock_ratio 0.821 (23/28) vs the claimed 0.862 (25/29)**. The five
+  misses are 151, 163, 183, 201, 249ms — one of them a single millisecond over the window.
+  **The exemplar the ≥85% gate was derived from fails its own gate under a plausible measurement
+  configuration.** The pass/fail margin is methodology noise, not signal.
+
+Three consequences, ruled 27 Aug 2026 (full reasoning in ADR-8):
+
+1. **G1 splits into two hard gates with different owners.** The questions "did we cut on the
+   beat?" and "did the renderer do what the plan said?" have different failure modes, different
+   owners (planner vs renderer), and different noise characteristics — one number cannot gate both.
+   - **G1a — musical intent (planner's gate, normative).** Plan cut times vs the plan-embedded
+     librosa grid: **≥85% within 150ms** required, ≈100% expected because cuts are snapped
+     deliberately; scoring near the threshold means the planner is broken. Evaluated at
+     `plan.build` — a plan that fails G1a is rejected before a single frame renders, which is
+     also far cheaper than discovering it post-render.
+   - **G1b — render fidelity (renderer's gate).** Scene-detect the output and require **≥90% of
+     the PLAN's cut times to have a detected cut within ±2 frames (66ms at 30fps)**. Matching
+     against *known* cut times is robust to detector sensitivity in a way blind re-discovery is
+     not — blind re-discovery is exactly the noise that scored the reference 0.862 or 0.821
+     depending on threshold. The pixel-derived beat-lock ratio is written to `qc.json` as
+     **informational**, alongside the reference's calibrated 0.821 baseline — never gated on.
+   Pixel re-detection without a plan remains necessary only for *reference* fingerprinting (04),
+   where its acceptance stays calibration-relative: ≥ reference-under-the-pinned-harness − 2pts,
+   i.e. ≥0.80 today.
+2. **The QC harness pins its methodology, normative for both gates**, committed as config,
+   not convention: librosa version pinned in `requirements.txt` (0.11.x), `beat_track` on
+   ffmpeg-demuxed mono 22050Hz WAV (librosa/soundfile cannot open MP4 — demux first), default
+   hop 512, `units="time"`; `ContentDetector(threshold=27)` for pixel paths; the t=0 boundary is
+   not a cut; distances compared as integer milliseconds, pass at ≤150 inclusive (G1a) / ≤66ms
+   (G1b). Changing any of these is a `planVersion`/`analyzerVersion` bump, never a silent edit.
+3. **The reference re-measurement is the calibration baseline**, committed as a fixture
+   (`reference_measured.json` + script): the informational pixel ratio is always reported next to
+   the 0.821 baseline so a reviewer reads it against what the human exemplar actually scores under
+   the same harness, and the fingerprint threshold moves only when the pinned harness re-measures
+   the reference — never independently.
+
+This evidence also *strengthens* the librosa decision rather than reopening it: a human editor
+cutting by feel lands median 80ms from the beat and still only manages 82-86%. Clearing 85%
+reliably means our cuts must be tighter than the human exemplar's, which only construction-time
+snapping to real tracked beat times delivers — an extrapolated constant grid spends the entire
+error budget (§4 reason 2) before the first cut is placed. And the misses clustering at 151-249ms
+is exactly the scale of estimator disagreement, confirming reason 1 (one grid for planner and QC).
+
+**Canonical grid = `MediaAnalysis.beats`, embedded into `RenderPlan.plan`.** QC scores G1a as plan
+cut times vs the plan's embedded grid at `plan.build` (§4.1 — single source of truth,
+detector-noise-free, and required anyway for G13 reproducibility); G1b then verifies the render
+executed the plan, and the pixel-derived ratio is informational only. To prevent a degraded grid from gaming the gate, QC adds a **grid-quality check**:
+mean onset-strength at beat times ÷ mean at inter-beat midpoints must exceed a threshold calibrated
+on the reference (which measures 86% lock at 112.3 BPM, 01 §3).
+
+**The snap algorithm gets a second degree of freedom the docs miss.** Cuts are constrained to word
+edges (G10, ported `snapToEdge`, ±50ms — schema.ts:85-96); beats every 534ms. The joint constraint
+can be infeasible on dense speech. But the music bed's *start offset is ours to choose*: first fix
+the speech-legal cut list from the rhythm plan, then solve for the bed's global phase φ minimizing
+total cut-to-beat distance (a 1-D circular optimization), then micro-shift residual cuts within
+their word-edge slack. Cuts placed inside speech pauses (any point in a ≥400ms gap is legal)
+satisfy both constraints almost freely. And when the bed is `synthBed`, the grid is exact **by
+construction** — the strongest guarantee available.
+
+**Fallback ladder** (recorded in `beat_method`):
+1. `beat_track` — librosa on the chosen licensed/synth bed. The production path.
+2. `onset_env` — speech-only footage, no bed (02 §5): grid from librosa onset-strength peaks,
+   cuts snapped to speech-pause boundaries; QC measures against this stored grid.
+3. `constant_grid` — ported `buildBeatGrid`, dev machines without the sidecar only. QC marks the
+   render `degraded`; a `constant_grid` plan can never pass G1a for merge evidence.
+
+**What must be MEASURED before Agent M builds the planner** (P's first-week spike, §8):
+- **M-1 estimator honesty**: librosa `beat_track` vs ported `detectBeats` on ≥10 licensed-library
+  tracks + the reference audio: Δtempo and median per-beat offset at t=55s. Validates reasons 2-3
+  with numbers.
+- **M-2 reference reproduction** (04 §6): **already done** — see §4.1. The extractor reports tempo
+  112.3, beat_lock_ratio 0.821 under the pinned harness. `measure_reference.py` is the working
+  seed of `scripts/qc-render.ts`'s measurement stage (P adapts it; D commits
+  `reference_measured.json` as the calibration fixture). 04 §6's "≥0.80" line survives; its
+  "if it doesn't reproduce those numbers the extractor is wrong" now has the numbers pinned.
+- **M-3 joint feasibility**: on ≥3 real talking-head clips, simulate the planner (word edges +
+  phase-optimized grid, a ~100-line script over MediaAnalysis output): report achievable lock %.
+  Target ≥90% (margin over the 85% gate). **If M-3 fails, the milestone's core promise is at
+  risk and the human must see the number before M builds anything.**
+- **M-4 fallback ceiling**: |beat_track − constant grid| at t=55s across the library, p95 — tells
+  us honestly whether rung 3 is ever more than a dev convenience.
+
+### 4.2 M-3 came back MARGINAL — the planner algorithm is therefore mandated (orchestrator ruling)
+
+Agent P measured M-3 on 6 real talking-head clips using a *perfect* phase-optimized grid, which
+isolates the geometric question from any grid-estimation error. Result: at the reference's
+112.3bpm, mean lock across seeds 86.9–92.2% (grand mean ~89.7%) — but **per-clip minimums of
+78.9–87.8%, i.e. some clip on some rhythm draw falls under the 85% G1a gate**, and one real clip
+failed outright at 82.05%. Tempo sensitivity is steep and real: 90bpm → 84.5% mean (fails on
+average), 130bpm → 93.5% (clears comfortably).
+
+M-1/M-4 give the accompanying verdict on the fallback: the ported estimator's median tempo error
+is 14bpm against a budget of ~0.3bpm, p95 drift at t≈55s is 556ms against a 150ms gate, and it
+converges on exactly 187.5bpm on dense tracks because of a 150ms minimum-onset-gap floor.
+`constant_grid` is a dev convenience and never a production rung. ADR-2 stands, now with numbers.
+
+**The ruling.** What P simulated is the algorithm 02_MOTION_SYSTEM §5 specifies — *draw a rhythm
+curve, then snap each planned cut to the nearest beat* — and that algorithm is structurally
+marginal, because it commits to cut POSITIONS before it knows where legal word edges are and
+therefore wastes cuts on positions no word boundary can serve. **02_MOTION_SYSTEM §5 step 3 is
+superseded for Agent M**, which must instead treat cut placement as a joint optimization over
+candidate cut points:
+
+- **Candidates** are word boundaries from the WhisperX/faster-whisper output, each carrying a
+  pause-quality score (a >400ms gap is a better cut than a mid-sentence word edge).
+- **Cost** per candidate combines distance to the nearest beat (hard-reject beyond 150ms),
+  deviation from the rhythm curve's target duration for that slot, and pause quality.
+- **Solve** with a DP/Viterbi over candidates subject to the [0.6s, 5.0s] shot constraint,
+  maximizing beat-locked cuts while keeping the rhythm plausible. This never places a cut where a
+  word edge and a beat fail to coincide; the rhythm curve bends to accommodate instead.
+- **Phase** (where the licensed bed starts) stays an optimization variable, as does **tempo**:
+  search 2–3 candidate beds within the mood-appropriate band and keep the best-scoring plan.
+  Bias upward within that band when feasibility is tight — that is what the 130bpm figure buys.
+- **Honest failure**: if the best plan still cannot clear G1a, emit `plan_infeasible` with the
+  measured lock % (03 §7) rather than rendering something that will fail QC. G1a is evaluated at
+  `plan.build` precisely so this costs a plan, not a render.
+
+Consequence for ADR-8: G1a's "expected ≈100%" was optimistic. Expect high-but-not-perfect, and
+treat a plan that clears 85% only barely as a signal to re-search tempo/phase, not as a pass.
+
+M iterates against P's committed M-3 fixture and must demonstrate improvement by re-running that
+same simulation — a number in a PR body is not runnable evidence.
+
+---
+
+## 5. Python sidecar strategy
+
+**Decision: one new container image (`Dockerfile.media`: Node + ffmpeg + Python venv), run as a
+separate long-running ECS Fargate service (`worker-media`) consuming only `media.analyze` and
+`render.qc`. The Node job shells to the venv via `execFileSync` — the exact pattern founder-journey
+has run in production shape (pipeline/transcribe.ts:32-46).**
+
+| Option | Verdict | Why |
+|---|---|---|
+| Same (existing) image | Rejected | torch+faster-whisper+librosa ≈ 1.8GB installed (founder-journey `.venv` measured 1.8GB); bloats every api deploy and couples api rollbacks to ML deps. |
+| **Separate service, same repo, new image** | **Chosen** | BullMQ already routes by queue name; `worker-media.ts` is ~30 lines of worker wiring. No cold start (long-running); image pull cost paid once per deploy, not per job. Analysis sizing (2 vCPU / 8GB) decoupled from api sizing. One extra Fargate service ≈ $60-70/mo at 1 task — cheapest option that isn't a lie about ops complexity. |
+| Lambda (container) | Rejected | 15-min hard cap vs the 15m analyze budget (03 §3) leaves zero headroom on long footage; 10-30s cold starts with torch; BullMQ→Lambda bridging is new machinery. |
+| Managed API (Modal/Replicate) | Rejected for v1 | Ships client footage to a third party (data posture), new vendor dependency needing PR-body justification. Documented escape hatch if analyze throughput ever demands GPU. |
+
+Details: Python is invoked per-job as a CLI (`analyzer.py --stages …` writing JSON to a temp dir,
+zod-validated on the Node side via the ported io.ts loaders) — no long-lived Python process, no
+Python↔Redis client, no HTTP inside the task. `requirements.txt` pins exact versions;
+`MediaAnalysis.analyzerVersion` records them (QC and planner grids must come from the same librosa).
+faster-whisper runs CPU int8 (03 §3 says CPU acceptable at this scale; whisperx_run.py already
+avoids the pyannote/torchcodec swamp). Terraform: additive resources only — new ECR repo, task
+definition, service, log group; existing `api`/`worker`/`migrate` definitions untouched.
+
+---
+
+## 6. Boundary with the M1 ring
+
+**Files Studio agents must never modify** (07 §4 + project CLAUDE.md, made exact):
+
+| Area | Off-limits files |
+|---|---|
+| Webhooks | `apps/api/src/routes/webhooks.ts`, `apps/api/src/domain/webhook.ts`, `apps/api/src/jobs/webhook.ts` |
+| Recall client | `apps/api/src/integrations/recall.ts` |
+| R2 streaming | `apps/api/src/integrations/r2.ts` (consume its exports from new `studio-r2.ts`; never edit) |
+| Review-gate write path | `apps/api/src/domain/review-gate.ts`, `apps/api/src/routes/review.ts` (new endpoints go in `routes/content.ts`) |
+| Brief versioning | `apps/api/src/domain/brief.ts`, `apps/api/src/routes/brief.ts` |
+| M1 ingestion jobs | `apps/api/src/jobs/ingest-recording.ts`, `ingest-transcript.ts`, `extract.ts` |
+| Schema | every existing model block in `apps/api/prisma/schema.prisma` (Tenant gains back-relation lines only) |
+
+Permitted single-line touches, called out so they aren't smuggled: `db.ts` UNSCOPED gains
+`"MotionTemplate"`; `append-only.ts` APPEND_ONLY_MODELS gains `"RenderPlan"` and
+`"ContentBriefDecision"`; `queue.ts` gains the four studio queues; `worker.ts` registration if
+needed. Nothing else in those files.
+
+**How ContentBrief reuses the gate without touching its write path.** A fact the spec doc gets
+wrong: 05 §3 says ContentBriefs use "the same `review_decisions` table". **They cannot, additively**
+— `review_decisions.claim_id` is a required FK to `candidate_claims`
+(schema.prisma:438, relation at :453); a ContentBrief id cannot live there without loosening the FK,
+which is a destructive change to the M1 audit log. What "reuse the gate" really means, and what we
+build:
+
+- **Reuse the surface**: the same ReviewQueue UI, same A/E/R keyboard, a new card type showing
+  hook / archetype / beats / WHY-line with claim source chips. `ReviewQueue.tsx` is extended
+  (UI, not write path).
+- **Mirror the mechanism, own table**: Agent B adds `ContentBrief` (status:
+  proposed/approved/rejected/superseded, `claim_ids`, `framework_id`, `generated_by_model`, …) and
+  an append-only `ContentBriefDecision` table mirroring ReviewDecision's shape, written in the same
+  transaction as the status flip by **`domain/content-gate.ts`** — a deliberate clone of
+  `recordDecision`'s one-transaction discipline (review-gate.ts:87-107).
+- **Yes, ContentBrief needs the analogous guard.** The existing source-scan test walks `src/` and
+  fails any `candidateClaim.<write>` carrying `status:` outside the gate module
+  (review-gate.test.ts:637-660, balanced-paren scanner at :677-690). Agent B must ship
+  `tests/content-gate.test.ts` doing the identical scan for `contentBrief.` writes with
+  `domain/content-gate.ts` as the only allowed writer — including the "gate really contains the
+  write" positive assertion (:658-659). Without it, invariant "only approved briefs enter
+  `plan.build`" (05 §3) is a convention, not a property.
+- Enforcement at the seam: `plan.build` loads the brief through a service function that throws
+  unless `status === 'approved'` — service layer, not route layer, per 05 §3.
+
+---
+
+## 7. ADRs
+
+### ADR-1 — Port target layout: `packages/render` workspace + api-resident jobs + `services/analyzer`
+- **Context**: Remotion needs a bundle root; meeting-bot is a 2-workspace npm monorepo with one
+  HTTP service and jobs in `apps/api/src/jobs` (queue.ts:15-23); production is one Node image on
+  Fargate (ecs.tf:2-7).
+- **Decision**: render contract + compositions in a new `packages/render` workspace (no DB, no
+  network — preserving Reel.tsx's proven purity, Reel.tsx:1-30); orchestration in `apps/api`;
+  Python in `services/analyzer` baked into a second image.
+- **Consequences**: `remotion` imports confined to one package (licensing + swap containment);
+  api image unchanged; one more workspace in the root `package.json`.
+- **Rejected**: `apps/studio` service (duplicates auth/tenancy for nothing); Remotion inside
+  `apps/api` (React+webpack in a server build, license spread); porting founder-journey's
+  ports-and-adapters + raw `pg` layer (incompatible with Prisma/meeting-bot conventions —
+  only files above the data layer port).
+
+### ADR-2 — Beat grid: librosa in the sidecar is the source of truth; plan embeds the grid
+- **Context**: §4. G1 measured with librosa; constant grid has unbounded phase error and a 0.27%
+  tempo-accuracy budget; planner/QC estimator split would corrupt the gate.
+- **Decision**: `beat_track` → `MediaAnalysis.beats` → embedded in `RenderPlan.plan`; QC measures
+  against the embedded grid + grid-quality check; ladder `beat_track → onset_env → constant_grid
+  (dev-only, marked degraded)`; bed phase is an optimization variable.
+- **Consequences**: librosa becomes a hard production dependency (it is currently installed
+  nowhere on this machine — verified); G1 becomes self-consistent and reproducible.
+- **Rejected**: ported `buildBeatGrid` as primary (music.ts:647-655 — extrapolated constant tempo,
+  first-onset anchor); JS beat-tracking libraries (unproven against the librosa-defined gate);
+  aubio/madmom sidecars (heavier or unmaintained; librosa is the gate's own ruler).
+
+### ADR-3 — Python sidecar: second image + second Fargate service, Node shells to venv per job
+- **Context**: §5. faster-whisper + librosa + PySceneDetect + torch ≈ 1.8GB; meeting-bot ships one
+  lean Node image; BullMQ is the job fabric.
+- **Decision**: `worker-media` service from `Dockerfile.media`; per-job `execFileSync` CLI calls
+  (ported transcribe.ts pattern); pinned `requirements.txt` recorded as `analyzerVersion`.
+- **Consequences**: second deploy artifact + ECR repo (~$60-70/mo idle); api rollbacks decoupled
+  from ML deps; analyze concurrency scales by service count.
+- **Rejected**: same image (bloat/coupling), Lambda (15-min cap, cold start, bridge machinery),
+  managed API (client footage leaves our account).
+
+### ADR-4 — Transitions/restraint: hard cuts only; ENTER_VALUES does not port
+- **Context**: reel.ts:25-43 defines 44 entrance effects plus GIF stickers (Giphy), B-roll
+  (Pexels), 8 SFX kinds; 01 §8 measures the reference at zero transitions and bans all of it.
+- **Decision**: none of the decoration vocabulary ports (ledger §1). The plan schema has no
+  `enter` field at all in v1 — absence in the contract, not a lint rule, is the enforcement.
+  Audio infrastructure (duck, synthBed, music library, proxy) explicitly ports (my one
+  disagreement with a maximal reading of restraint).
+- **Consequences**: T's templates cannot reach for an effect that doesn't exist; adding any
+  transition later is a schema change that shows up in review. Big deletion surface in the
+  Reel.tsx port.
+- **Rejected**: porting effects "disabled by default" (dead code invites resurrection and
+  contradicts "build the capability, not a label" — PERFSTAQ-STATUS §8.1).
+
+### ADR-5 — Remotion licensing: flagged risk, containment now, decision deferred to the human
+- **Context**: Remotion requires a paid company license for commercial/automated use — Automators
+  tier listed at $0.01/render + $100/mo min (open-source-video-tools.md:35); Revideo and Motion
+  Canvas are MIT escape hatches (:36-37). PerfStaq Studio is exactly the automated commercial case.
+- **Decision**: **DEFERRED by the human, 27 Aug 2026 — revisit before commercial launch.** Build
+  on Remotion now under its development/evaluation terms; the commercial licence decision happens
+  before GA, not now. The containment requirement stands and is what preserves the option: all
+  timing/motion/caption math lives in pure TS modules in `packages/render/src` (framework-free,
+  like ported motion.ts/duck.ts); compositions are thin plan-consumers; `remotion` imports allowed
+  only inside `packages/render`. A forced Revideo swap then touches one directory, not the
+  pipeline.
+- **Consequences**: no licence spend or migration cost now; the obligation accrues with every week
+  of build on Remotion, and a swap gets more expensive over time (each new template/composition
+  deepens the Remotion-specific layer). A dated revisit gate belongs in the GA checklist; if the
+  decision then is "don't pay", expect ~2-3 weeks of composition-layer rework, bounded by the
+  purity rule.
+- **Rejected**: switching to Revideo now (discards the highest-value ported asset and the master
+  doc's explicit decision); ignoring the license (it's a per-render commercial term, not a
+  theoretical risk).
+
+### ADR-6 — ContentBrief approval: own decision table + own gate module + own source-scan guard
+- **Context**: §6. `review_decisions.claim_id` FK makes "same table" impossible additively;
+  the review-gate's guarantee is enforced by a static scan (review-gate.test.ts:637-660).
+- **Decision**: `ContentBriefDecision` (append-only) + `domain/content-gate.ts` (one-transaction
+  status+audit) + mirrored source-scan test; ReviewQueue UI extended with the brief card type;
+  approved-only enforcement in the service in front of `plan.build`.
+- **Consequences**: 05 §3's "same audit log" becomes "same audit *discipline*"; the M1 log's FK
+  integrity is preserved; the guard makes the property machine-checked from day one.
+- **Rejected**: loosening the FK (destructive, invariant 6); polymorphic decision rows
+  (subject_type/subject_id — destroys FK integrity for both); reusing CandidateClaim rows to
+  represent briefs (wrong shape, pollutes claim analytics and the merge path).
+
+### ADR-7 — Render execution: Remotion Lambda for product renders; local renderer for dev/CI
+- **Context**: 03 §4 mandates Lambda; Fargate CPU renders a 55s reel in 10-30 min vs ~1-2 min
+  parallelized; footage lives in R2, Lambda in AWS.
+- **Decision**: `render.submit` deploys the `packages/render` site bundle once per version, feeds
+  presigned R2 URLs in (r2.ts:122), copies output S3 → R2 via `streamUrlToR2` (r2.ts:67); embedded
+  data-URL fonts (fonts.ts pattern) keep the bundle deterministic offline. Dev/CI render via
+  `@remotion/renderer` inside the media image — tests never need AWS.
+- **Consequences**: first real AWS-Lambda dependency in the stack (Terraform additive); QC runs on
+  the returned MP4 identically in both paths.
+- **Rejected**: Fargate render farm (03 §4 forbids; slow), rendering inside api/worker (starves
+  the queue fabric).
+
+### ADR-8 — G1 splits into G1a (musical intent) + G1b (render fidelity); pinned harness; calibrated baseline
+- **Context**: Independent re-measurement of the reference (§4.1, `reference_measured.json`) with
+  the spec's own method (librosa 0.11 + ContentDetector(27)) reproduces 01's tempo/beats/shot list
+  exactly — but yields beat_lock 0.821 vs the claimed 0.862, on a single threshold-sensitive tail
+  cut, with one miss 1ms over the 150ms window. The exemplar fails its own ≥85% gate under a
+  plausible configuration; the margin is measurement noise. Underneath that noise sit two distinct
+  questions a single pixel-measured ratio was conflating: "did we cut on the beat?" (planner) and
+  "did the renderer do what the plan said?" (renderer) — different failure modes, different
+  owners, different noise characteristics.
+- **Decision** (ruled 27 Aug 2026): (a) **G1a — musical intent, normative hard gate**: plan cut
+  times vs plan-embedded librosa grid, ≥85% within 150ms, expected ≈100% because cuts are snapped
+  deliberately; evaluated at `plan.build`, so a failing plan is rejected before any render spend.
+  (b) **G1b — render fidelity, hard gate**: scene-detect the output and require ≥90% of the
+  plan's cut times to have a detected cut within ±2 frames (66ms at 30fps); matching against
+  known cut times is robust to detector sensitivity where blind re-discovery is not. The
+  pixel-derived beat-lock ratio goes into `qc.json` as informational, reported alongside the
+  calibrated 0.821 reference baseline — never gated on. Reference-fingerprint acceptance (04 §6)
+  stays calibration-relative: ≥ (reference under the pinned harness − 2pts) = ≥0.80 today.
+  (c) The harness config — librosa version, demux-to-WAV, hop, detector threshold, t=0 not a cut,
+  integer-ms comparison, ≤150ms (G1a) / ±2 frames (G1b) — is pinned in committed config and
+  normative for both gates; changes bump `analyzerVersion`/`planVersion`. Reference measurement +
+  script committed as fixtures.
+- **Consequences**: planner failures and renderer failures are separately attributable to their
+  owning agents (M vs T/P) with no shared number to argue over; G1a rejection is pre-render and
+  cheap; detector tuning can no longer game or fail a gate (G1b never asks the detector to find
+  cuts it wasn't told about); the gate stops depending on whether a 5.65s tail reads as one shot
+  or two; a reviewer arguing with a number can re-run one script.
+- **Rejected**: one pixel-measured ratio gating both questions (conflates two failure modes with
+  different owners; the exemplar itself oscillates across the threshold — a gate the exemplar
+  can't reliably pass indicts the harness, not the render); hardcoded 0.85 measured by pixel
+  re-detection (same reason); loosening to ≥0.80 everywhere (throws away the margin exactly where
+  we control the outcome); widening the window to 160ms (moves the noise boundary instead of
+  removing it).
+
+---
+
+## 8. Revised build order & agent scoping
+
+**P → M → T → B (B parallel with M/T), F after T merges — the order HOLDS.** The port changes
+what "P first" means and shrinks M's greenfield. Corrections the orchestrator must apply to agent
+prompts:
+
+| Agent | First task (revised) | Notes |
+|---|---|---|
+| **P** | Not "inventory PerfStack" — **this document is that inventory; delete that task.** Instead: (1) scaffold `packages/render` + `services/analyzer` + `Dockerfile.media`; (2) additive Prisma migration from §3; (3) four queues + `worker-media.ts`; (4) sidecar `words/beats` stages working end-to-end; (5) **run measurements M-1…M-4 (§4) and report the numbers before M starts the planner.** Also owns `scripts/qc-render.ts` (07 §1) — QC must exist before there is anything to gate. |
+| **M** | Port `schema.ts`/`motion.ts`/`duck.ts` into `packages/render/src` (prune per ledger), then SPRINGS + caption engine + emphasis scorer + the beat-snap planner **using P's M-3 data**. M consumes a real `MediaAnalysis` fixture, not synthetic timings. |
+| **T** | Port the Reel.tsx shell (strip decoration branches per ADR-4), then template #1 on M's primitives. First template escalates a model rung per 06 §1 — it sets the pattern. |
+| **B** | ContentBrief model + `content-gate.ts` + `ContentBriefDecision` + the mirrored source-scan guard (§6) + review-card UI + `routes/content.ts`. Adds the `RenderPlan.contentBriefId` relation in its own additive migration. Fully parallel with M/T once P's migration lands. |
+| **F** | Unchanged: after T. Its acceptance test is 04 §6 against the reference — which P's M-2 measurement will already have exercised, so F starts with a working extractor harness. |
+| **D** | Golden fixtures: the reference clip's `MediaAnalysis` JSON, a 60-90s talking-head footage fixture with known pauses, 2-3 licensed-library test tracks (or synthBed output) with known BPM. |
+| **Reviewer** | Gains the grid-quality check (§4) on top of 07's gates; a `constant_grid` render is auto-rejected as merge evidence. |
+
+**Context discipline correction (06 §4)**: each agent's packet must now include
+`ARCHITECTURE.md` (this file) alongside 00/01/CLAUDE.md + its own doc — the ledger and boundary
+list are load-bearing for every agent, and 06's packet predates this file's existence.
+
+**Doc assumptions now false** — see §10; the orchestrator should paste that table into any agent
+prompt that cites the affected sections.
+
+---
+
+## 9. Risk register (ranked — #1 most likely to sink the milestone)
+
+1. **G1×G10 joint infeasibility on real speech** — beat-lock ≥85% AND zero mid-word cuts may not
+   coexist on dense, pause-poor speech even with phase optimization. *Mitigation*: M-3 measured in
+   P's first week, before the planner exists; rhythm plans biased to cut in pauses; synthBed's
+   by-construction grid as the guaranteed-feasible bed. *Signal*: M-3 < 85% ⇒ halt and surface.
+2. **Remotion commercial license** (ADR-5) — decision DEFERRED by the human (27 Aug 2026) to
+   before commercial launch; build proceeds under development/evaluation terms. The exposure is
+   not static: **the obligation accrues with every week of build on Remotion, and a swap gets more
+   expensive over time** as templates and compositions deepen the Remotion-specific layer.
+   *Mitigation*: the containment boundary (remotion imports only in `packages/render`, pure-TS
+   timing/motion math) is mandatory precisely because it is what keeps the deferred option
+   affordable; put a dated revisit gate in the GA checklist.
+3. **QC/planner measurement mismatch** — *downgraded off the blocking path by ADR-8*: the
+   evidence (reference beat-lock 0.862→0.821 under a plausible config, §4.1) is resolved by the
+   G1a/G1b split — G1a is detector-free, and G1b only matches *known* plan cut times (±2 frames),
+   never asking the detector to find cuts it wasn't told about, so Ken-Burns-vs-ContentDetector
+   sensitivity no longer gates a render. Residual (non-blocking): detector noise still colors the
+   informational pixel ratio and reference fingerprinting (Agent F) — calibrate on renders of
+   known plans (D's fixtures) and read the informational figure against the 0.821 baseline.
+4. **Sidecar ops drag** — second image doubles deploy surface; torch image builds are slow;
+   librosa/numpy pinning drift breaks grid reproducibility. *Mitigation*: pinned requirements,
+   `analyzerVersion` on every row, media image built only when `services/analyzer` or
+   `Dockerfile.media` change.
+5. **Port contamination** — agents "helpfully" porting banned modules (Giphy, ENTER_VALUES, SFX)
+   because the code is right there and works. *Mitigation*: ledger is normative; plan schema has no
+   fields for the banned vocabulary (ADR-4); lint forbids `remotion` outside `packages/render`.
+6. **Lambda↔R2 plumbing** — presigned-URL expiry mid-render, egress cost, output copy-back
+   failures. *Mitigation*: long-expiry presigns scoped per render, retry posture copied from
+   queue.ts:45-50, `failedStage` on Render rows.
+7. **Style-transfer caption OCR fidelity** (04 §2 med-high at best) — F's fingerprints may be too
+   noisy to map. *Mitigation*: per-field confidence with template-default fallback is already
+   spec'd (04 §3); F is last in the build order, so the miss is contained to capability B of the
+   mission, not the render pipeline.
+8. **M1 regression via shared surfaces** — queue.ts/worker/db.ts one-liners are the only shared
+   touches; the 344-test api suite + the off-limits list (§6) fence the rest. Lowest likelihood,
+   highest severity — every Studio PR runs the M1 suite (07 §4).
+
+---
+
+## 10. Doc corrections — statements to stop trusting
+
+| Doc | Says | Reality |
+|---|---|---|
+| 00_MASTER §3 | "PerfStack pipeline (prior work): Remotion, WhisperX, FFmpeg" — a utils pile | It is a ~56.5k LOC *product* (own Postgres+pgvector data layer, 16-port hexagonal core, strategy brain, 786 tests). Agents port the specific files in §1's ledger; nothing imports the repo wholesale. Its data layer (raw `pg`, checksum-guarded SQL migrations) is incompatible with Prisma and does not port. |
+| 03 §1 / 02 §2.2 | "WhisperX word-level timestamps" | The actual runner is faster-whisper + Silero VAD via `scripts/whisperx_run.py` (whisperx_run.py:3-9), deliberately avoiding pyannote/torchcodec breakage. Keep that runner; treat "WhisperX" in the docs as "word-level ASR". |
+| 02 §5 / 03 §1 / 07 G1 | librosa assumed available | librosa (and PySceneDetect) are installed **nowhere** on this machine — the founder-journey venv has faster-whisper+torch only. The sidecar (§5) must introduce both; they are new production dependencies, not existing capability. |
+| 05 §3 | ContentBriefs use "the same `review_decisions` table" | Impossible additively: `review_decisions.claim_id` FKs `candidate_claims` (schema.prisma:438). Same UI surface and same discipline, **new** `ContentBriefDecision` table + `content-gate.ts` + mirrored guard (§6, ADR-6). |
+| 03 §2 | `MediaAnalysis` sketch has no tenant_id | Every non-exempt model must carry it — the db.ts tenancy extension injects it into all queries (db.ts:66-98). §3's blocks are the corrected shapes. |
+| 03 §4 | "Fonts via `@remotion/google-fonts` or self-hosted woff2 in public/" | Ported embedded data-URL fonts (fonts.ts:4-9) are strictly better: no `delayRender` hang risk, offline-deterministic on Lambda. |
+| 00 §3 / implicit | The engine's cutting is beat-aware and reusable for G1 | Cutting is silence/filler-based (detect.ts:129-155); `detectBeats` exists only to *select music* by BPM match (tracks.ts:525). The G1 direction — cuts snapped to a beat grid — exists nowhere in the source and is new work on a new (librosa) foundation (§4). |
+| 01 §3 / §9, 07 G1 | Reference achieves 86% beat-lock; gate is a plain "≥85% within 150ms" | Methodology-sensitive: re-measurement with the spec's own tools yields **82.1%** (29 shots, not 30) — the exemplar straddles its own gate. 86% is not a reproducible constant; G1 is only well-defined under the pinned harness + plan-based measurement of §4.1/ADR-8. Trust 01's tempo/shot-list numbers (they reproduce exactly); do not trust the headline ratio as a stable target. |
+| 06 §4 packet list | Agent packet = 00 + 01 + own doc + CLAUDE.md | Add ARCHITECTURE.md (this file) to every packet — ledger and off-limits list are load-bearing. |
+| `/Users/sathvik/aix/PRODUCT_STATUS.md` | (root status doc) | 5 weeks stale, understates the source repo ~20×. Ignore entirely; `founder-journey/docs/PERFSTAQ-STATUS.md` is the definitive self-audit. |
