@@ -32,6 +32,7 @@
     "setup": "npm install && npm run db:up && npm run db:migrate && npm run db:seed:demo",
     "db:seed:demo": "npm run db:seed -w @mcos/api -- --demo",
     "seed:golden": "npm run seed:golden -w @mcos/api",
+    "seed:templates": "tsx scripts/studio/seed-templates.ts",
     "demo:reset": "npm run demo:reset -w @mcos/api",
     "eval:extraction": "npm run eval:extraction -w @mcos/api --",
     "test:e2e:install": "playwright install --with-deps chromium",

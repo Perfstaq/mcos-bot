@@ -11,6 +11,8 @@ import {
   type ExtractJob,
   type IngestRecordingJob,
   type IngestTranscriptJob,
+  type PlanBuildJob,
+  type RenderSubmitJob,
   type WebhookJob,
 } from "./queue.js";
 import { processWebhook } from "./jobs/webhook.js";
@@ -20,6 +22,8 @@ import { failExtraction, runExtraction } from "./jobs/extract.js";
 import { syncActiveConnections, syncCalendarConnection } from "./jobs/calendar-sync.js";
 import { runActionItemSuggestions } from "./jobs/suggest-action-items.js";
 import { runDigest } from "./jobs/digest.js";
+import { failPlanBuild, runPlanBuild } from "./jobs/plan-build.js";
+import { failRenderSubmit, runRenderSubmit } from "./jobs/render-submit.js";
 import { disconnect } from "./db.js";
 import { logger } from "./logger.js";
 import { env } from "./env.js";
@@ -81,6 +85,28 @@ const workers = [
     connection,
     concurrency: 2,
   }),
+
+  // Content Studio (ARCHITECTURE §12.12). Both live on THIS worker, not
+  // worker-media.ts: `plan.build` is pure TypeScript and `render.submit` makes
+  // renderer/API calls — neither needs ffmpeg, faster-whisper or librosa, and
+  // registering them on the media image would put ML dependencies on their
+  // deploy path for no reason (queue.ts's own note says so).
+  //
+  // Concurrency and lockDuration come from 03_RENDER_PIPELINE §3's table:
+  // plan.build 4 @ 60s, render.submit 4 @ 20m. BullMQ has no first-class
+  // per-job timeout, so `lockDuration` is what reclaims a stalled job rather
+  // than holding the slot forever.
+  new Worker<PlanBuildJob>(QUEUE.planBuild, (job) => runPlanBuild(job.data), {
+    connection,
+    concurrency: 4,
+    lockDuration: 60 * 1000,
+  }),
+
+  new Worker<RenderSubmitJob>(QUEUE.renderSubmit, (job) => runRenderSubmit(job.data), {
+    connection,
+    concurrency: 4,
+    lockDuration: 20 * 60 * 1000,
+  }),
 ];
 
 for (const worker of workers) {
@@ -111,6 +137,15 @@ for (const worker of workers) {
           break;
         case QUEUE.extract:
           await failExtraction(job.data as ExtractJob, error);
+          break;
+        case QUEUE.planBuild:
+          // 03 §7's `plan_infeasible(reason)`: structured and logged with the
+          // plan id. See failPlanBuild's own comment for the gap this leaves —
+          // there is no durable per-plan status row for a UI to read yet.
+          await failPlanBuild(job.data as PlanBuildJob, error);
+          break;
+        case QUEUE.renderSubmit:
+          await failRenderSubmit(job.data as RenderSubmitJob, error);
           break;
       }
     } catch (markError) {

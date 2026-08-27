@@ -1,7 +1,10 @@
-import { createWriteStream } from "node:fs";
-import { Readable } from "node:stream";
+import crypto from "node:crypto";
+import { createReadStream, createWriteStream } from "node:fs";
+import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import { presignGet, putObject, type UploadResult } from "./r2.js";
+import { Upload } from "@aws-sdk/lib-storage";
+import { env } from "../env.js";
+import { presignGet, putObject, r2, type UploadResult } from "./r2.js";
 
 /**
  * Content Studio's R2 key namespace — built ON `r2.ts`'s exports, never
@@ -34,5 +37,51 @@ export async function downloadToFile(key: string, destPath: string): Promise<voi
   await pipeline(Readable.fromWeb(response.body as Parameters<typeof Readable.fromWeb>[0]), createWriteStream(destPath));
 }
 
+/**
+ * Stream a LOCAL file into R2.
+ *
+ * The third direction `r2.ts` does not have: it covers remote URL → R2
+ * (`streamUrlToR2`) and in-memory payload → R2 (`putObject`, explicitly "for
+ * payloads we already hold in memory — the transcript JSON, kilobytes"), and
+ * it is off-limits to edit. A finished render is 30MB+, so `putObject` is the
+ * wrong tool — it buffers the whole body, and at `render.submit`'s concurrency
+ * of 4 that is four MP4s resident at once for no reason.
+ *
+ * So this composes r2.ts's exported client with `Upload` exactly the way
+ * `streamUrlToR2` does, including its metering transform, and gets multipart
+ * for free past the part size. Consuming the exports, never editing the file —
+ * the posture ARCHITECTURE §6 prescribes for this module.
+ */
+export async function uploadFileToR2(args: {
+  filePath: string;
+  key: string;
+  contentType: string;
+}): Promise<UploadResult> {
+  const hash = crypto.createHash("sha256");
+  let bytes = 0;
+  const gauge = new Transform({
+    transform(chunk, _enc, cb) {
+      hash.update(chunk);
+      bytes += chunk.length;
+      cb(null, chunk);
+    },
+  });
+
+  const upload = new Upload({
+    client: r2,
+    params: {
+      Bucket: env.R2_BUCKET,
+      Key: args.key,
+      Body: createReadStream(args.filePath).pipe(gauge),
+      ContentType: args.contentType,
+    },
+    queueSize: 4,
+    partSize: 16 * 1024 * 1024,
+  });
+
+  await upload.done();
+  return { key: args.key, bytes, checksum: `sha256:${hash.digest("hex")}`, contentType: args.contentType };
+}
+
 export type { UploadResult };
-export { putObject };
+export { presignGet, putObject };
