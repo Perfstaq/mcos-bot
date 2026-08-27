@@ -1,8 +1,8 @@
 {
   "description": "Render evidence for the three shipped templates (ARCHITECTURE §12.10). The MP4s are NOT committed; their sha256 is recorded here alongside the commit they were rendered from, so a reviewer can tell whether the committed plan/qc/frames describe the code in front of them. Regenerate with `npx tsx scripts/studio/render-evidence.ts --footage <clean.mp4>`; check with `--check`.",
-  "generatedAt": "2026-08-27T18:45:11.119Z",
-  "renderedFromCommit": "f0643d18811c99f8874f614049f94ba4f38fac58",
-  "renderedFromCommitSubject": "fix(studio): treeDirty asked a question whose answer was always yes",
+  "generatedAt": "2026-08-27T18:55:11.089Z",
+  "renderedFromCommit": "ed3d19861885bcf82177581e617388448201c7ab",
+  "renderedFromCommitSubject": "refactor(render): move the renderer invocation behind the ADR-5 boundary",
   "treeDirty": false,
   "renderAffectingPaths": [
     "packages/render/src",
@@ -17,7 +17,7 @@
     "node": "v22.22.0",
     "analyzerPython": "/Users/sathvik/aix/st-p/services/analyzer/.venv/bin/python",
     "pythonPackages": "librosa=0.11.0 scenedetect=0.7.1 numpy=2.3.5",
-    "remotion": "4.0.518"
+    "renderer": "4.0.518"
   },
   "footage": {
     "path": "/Users/sathvik/aix/studio-renders/reference-16x9-proxy.mp4",
