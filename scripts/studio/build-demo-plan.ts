@@ -71,10 +71,16 @@ function main(): void {
   // The bed. Its grid is the sidecar's librosa output, used verbatim — phase
   // stays a search variable (the bed's start offset is ours to choose,
   // ARCHITECTURE §4), tempo does not, because this grid is the footage's own.
+  // This grid comes from the FOOTAGE's own audio, not from a music bed we are
+  // laying underneath it, so its phase is fixed: there is no start offset to
+  // choose. ADR-2 rung 2. Sweeping φ here would produce a plan locked to a
+  // grid that does not exist — which is exactly what the first render of this
+  // demo did, scoring 100% in the planner and 29% in QC.
   const bed: Bed = {
     id: "analyzer-grid",
     tempoBpm: beats.tempoBpm ?? 112.3,
     beatTimesSec: beats.beatTimesMs.map((ms) => ms / 1000),
+    phaseLocked: true,
   };
 
   const plan = planBeatLockedCuts({ words: intervals, durationSec, beds: [bed], seed, gatePct: 0 });
@@ -141,10 +147,17 @@ function main(): void {
       opacity: HANDLE_OPACITY,
       cornerByShot: cuts.map((_, i) => handleCornerForShot(i)),
     },
+    // The grid the planner ACTUALLY scored against, not the raw analyzer
+    // file. When phase is a free variable these differ by φ, and embedding
+    // the wrong one makes G1a measure the plan against a grid it was never
+    // built for — the plan's cuts are then correct and unscoreable at once.
+    // "Canonical grid = MediaAnalysis.beats, embedded into RenderPlan.plan"
+    // (ARCHITECTURE §4.1) means the grid as used, which is what the planner
+    // returns.
     beatGrid: {
       method: beats.method,
       tempoBpm: beats.tempoBpm,
-      beatTimesMs: beats.beatTimesMs,
+      beatTimesMs: plan.beatTimesSec.map((s) => Math.round(s * 1000)),
       gridQuality: beats.gridQuality,
     },
     music: null,

@@ -64,21 +64,48 @@ export function effectiveMotion(shotIndex: number, override?: SpanMotion): SpanM
 }
 
 /**
+ * Alternating base framing — wide, then punched in — so that a hard cut
+ * between two shots is actually VISIBLE.
+ *
+ * Found by rendering: the reference gets its visible cuts by removing footage
+ * ("a single continuous interview, cut on itself" — 01 §8), so every cut is a
+ * real discontinuity. A plan that plays its footage continuously and only
+ * resets the drift spring at each boundary produces a scale step of well
+ * under 1% — the cuts are invisible, a scene detector finds nothing at them,
+ * and **G1b (≥90% of plan cut times matched by a detected cut) can never
+ * pass**. Alternating the base framing restores the discontinuity without
+ * dropping a single word of speech, which footage removal cannot promise.
+ *
+ * Deliberately larger than the drift range: it must survive being sampled at
+ * the two sides of a cut where drift has already moved the scale.
+ */
+export const REFRAME_STEP = 0.18;
+
+/**
  * Both scales stay ≥1 so the 9:16 cover-crop never reveals the source frame's
  * edges — the invariant the ported `motionScale` protected and the one thing
  * about it that must not change.
  */
-export function shotCamera(shotIndex: number, shotFrames: number, seed: number, override?: SpanMotion): ShotCamera {
+export function shotCamera(
+  shotIndex: number,
+  shotFrames: number,
+  seed: number,
+  override?: SpanMotion,
+  reframeStep = REFRAME_STEP,
+): ShotCamera {
   const rand = mulberry32(seed + shotIndex * 7919);
   const grow = MIN_GROW + rand() * (MAX_GROW - MIN_GROW);
   const motion = effectiveMotion(shotIndex, override);
+  // Even shots sit wide, odd shots punched in. Applied to BOTH ends of the
+  // range, so the per-shot scale delta — and therefore G7 — is untouched.
+  const base = 1 + (shotIndex % 2 === 1 ? reframeStep : 0);
   // Offset alternates between subject-centre and a slight lateral offset
   // (02 §4.1) — small enough that it never crops into the subject.
   const offset = (rand() - 0.5) * 0.08;
   return {
     motion,
-    fromScale: motion === "push" ? 1 : 1 + grow,
-    toScale: motion === "push" ? 1 + grow : 1,
+    fromScale: motion === "push" ? base : base + grow,
+    toScale: motion === "push" ? base + grow : base,
     config: SPRINGS.drift,
     durationInFrames: driftDurationInFrames(shotFrames),
     originX: shotIndex % 2 === 0 ? 0.5 : 0.5 + offset,

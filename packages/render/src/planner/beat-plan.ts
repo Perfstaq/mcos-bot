@@ -47,6 +47,20 @@ export type Bed = {
    * `tempoBpm`.
    */
   beatTimesSec?: number[];
+  /**
+   * Set when the grid's phase is NOT ours to choose.
+   *
+   * ARCHITECTURE §4's phase freedom is specifically "the music bed's *start
+   * offset* is ours to choose" — it exists because we decide when to drop the
+   * needle on a track we are laying under the footage. It does NOT exist for
+   * a grid derived from the footage's own audio (ADR-2's rung 2, speech-only
+   * footage with no bed): you cannot slide a speaker's room tone in time, so
+   * sweeping φ there produces a plan locked to a grid that does not exist.
+   * That failure is silent and total — the cuts look perfectly locked to the
+   * planner and land ~200ms off every beat in the render — so it is a flag on
+   * the bed rather than a convention at the call site.
+   */
+  phaseLocked?: boolean;
 };
 
 export type PlannerWeights = {
@@ -375,6 +389,12 @@ export function planBeatLockedCuts(input: PlannerInput): PlannerResult {
     const grid = bed.beatTimesSec;
     const period =
       grid && grid.length > 1 ? (grid[grid.length - 1]! - grid[0]!) / (grid.length - 1) : 60 / bed.tempoBpm;
+
+    if (bed.phaseLocked) {
+      const a = attempt(bed, 0, false);
+      if (a && betterThan(a, best)) best = a;
+      continue;
+    }
 
     // Coarse phase sweep, then a local refinement around the strongest few.
     const coarse: Attempt[] = [];

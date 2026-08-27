@@ -109,6 +109,32 @@ describe("camera — ported motion.ts, pruned per the ledger (ARCHITECTURE §1.1
     }
   });
 
+  it("makes consecutive shots visibly different framings, or G1b can never pass", () => {
+    // Caught by rendering, not by reasoning. The reference gets visible cuts
+    // by REMOVING footage (01 §8, "cut on itself"). A plan that plays its
+    // footage continuously and only resets the drift spring produces a step
+    // of well under 1% at each boundary — the cuts are invisible, a scene
+    // detector finds nothing at them, and G1b (≥90% of plan cut times matched
+    // by a detected cut) is unreachable. The first render of the demo scored
+    // 0/24 matched for exactly this reason.
+    for (let shot = 0; shot < 8; shot++) {
+      const a = shotCamera(shot, 45, 42);
+      const b = shotCamera(shot + 1, 45, 42);
+      const step = Math.abs(a.toScale - b.fromScale);
+      expect(step, `boundary ${shot}->${shot + 1}`).toBeGreaterThan(0.1);
+    }
+  });
+
+  it("keeps the reframe out of the per-shot delta, so G7 measures drift alone", () => {
+    // The alternating base is applied to BOTH ends of the range. If it leaked
+    // into one end only, G7 would read the reframe as micro-motion and a
+    // genuinely static shot could pass.
+    for (let shot = 0; shot < 8; shot++) {
+      const delta = scaleDelta(shotCamera(shot, 45, 42));
+      expect(delta).toBeLessThanOrEqual(MAX_GROW + 1e-9);
+    }
+  });
+
   it("is seed-deterministic (G13 precondition — no Math.random in the package)", () => {
     expect(shotCamera(3, 45, 42)).toEqual(shotCamera(3, 45, 42));
     expect(shotCamera(3, 45, 42)).not.toEqual(shotCamera(3, 45, 43));

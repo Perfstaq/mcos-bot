@@ -149,6 +149,32 @@ describe("beat-snap planner — reproducibility and honest failure", () => {
     expect(r.cutTimesSec).toEqual([]);
   });
 
+  it("never shifts a phaseLocked grid — the footage's own audio has no start offset", () => {
+    // ARCHITECTURE §4's phase freedom is specifically the music bed's start
+    // offset. A grid derived from the footage's own audio (ADR-2 rung 2)
+    // cannot be slid in time. Sweeping φ there produces a plan locked to a
+    // grid that does not exist: the demo render scored 100% in the planner
+    // and 29.2% in QC because the planner had shifted the grid 354ms and the
+    // plan embedded the unshifted one.
+    const clip = clips[0]!;
+    const beatTimesSec = Array.from({ length: 120 }, (_, i) => 0.31 + i * (60 / REFERENCE_BPM));
+    const r = planBeatLockedCuts({
+      words: loadWords(clip),
+      durationSec: clip.durationSec,
+      beds: [{ id: "own-audio", tempoBpm: REFERENCE_BPM, beatTimesSec, phaseLocked: true }],
+      seed: HEADLINE_SEED,
+      gatePct: 0,
+    });
+    expect(r.phaseSec).toBe(0);
+    // The embedded grid must be the untouched input, so what the planner
+    // scored and what G1a will score are the same array.
+    expect(r.beatTimesSec[0]).toBeCloseTo(beatTimesSec[0]!, 6);
+    for (const t of r.cutTimesSec) {
+      const nearest = Math.min(...beatTimesSec.map((b) => Math.abs(b - t)));
+      expect(nearest * 1000).toBeLessThanOrEqual(150);
+    }
+  });
+
   it("searches tempo when given several beds and keeps the best-scoring plan", () => {
     const words = loadWords(clips[2]!); // clip3 — the clip that failed outright at 82.05%
     const single = planBeatLockedCuts({
