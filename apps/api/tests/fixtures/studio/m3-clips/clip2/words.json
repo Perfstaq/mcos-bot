@@ -1,0 +1,1340 @@
+{
+  "language": "en",
+  "durationSec": 66.64,
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 3.98,
+      "text": "There are five levels of using Claude, and I bet you're stuck on level one.",
+      "words": [
+        {
+          "word": "There",
+          "start": 0.0,
+          "end": 0.0,
+          "score": 0.1961
+        },
+        {
+          "word": "are",
+          "start": 0.0,
+          "end": 0.12,
+          "score": 0.965
+        },
+        {
+          "word": "five",
+          "start": 0.12,
+          "end": 0.46,
+          "score": 0.5423
+        },
+        {
+          "word": "levels",
+          "start": 0.46,
+          "end": 0.84,
+          "score": 0.9888
+        },
+        {
+          "word": "of",
+          "start": 0.84,
+          "end": 1.16,
+          "score": 0.9913
+        },
+        {
+          "word": "using",
+          "start": 1.16,
+          "end": 1.46,
+          "score": 0.9378
+        },
+        {
+          "word": "Claude,",
+          "start": 1.46,
+          "end": 1.86,
+          "score": 0.8015
+        },
+        {
+          "word": "and",
+          "start": 1.96,
+          "end": 2.02,
+          "score": 0.9592
+        },
+        {
+          "word": "I",
+          "start": 2.02,
+          "end": 2.14,
+          "score": 0.9798
+        },
+        {
+          "word": "bet",
+          "start": 2.14,
+          "end": 2.62,
+          "score": 0.9952
+        },
+        {
+          "word": "you're",
+          "start": 2.62,
+          "end": 3.02,
+          "score": 0.5823
+        },
+        {
+          "word": "stuck",
+          "start": 3.02,
+          "end": 3.28,
+          "score": 0.9734
+        },
+        {
+          "word": "on",
+          "start": 3.28,
+          "end": 3.48,
+          "score": 0.9894
+        },
+        {
+          "word": "level",
+          "start": 3.48,
+          "end": 3.66,
+          "score": 0.7875
+        },
+        {
+          "word": "one.",
+          "start": 3.66,
+          "end": 3.98,
+          "score": 0.5371
+        }
+      ]
+    },
+    {
+      "start": 4.18,
+      "end": 5.4,
+      "text": "But that's why I'm here.",
+      "words": [
+        {
+          "word": "But",
+          "start": 4.18,
+          "end": 4.26,
+          "score": 0.8776
+        },
+        {
+          "word": "that's",
+          "start": 4.26,
+          "end": 4.62,
+          "score": 0.9755
+        },
+        {
+          "word": "why",
+          "start": 4.62,
+          "end": 4.78,
+          "score": 0.9975
+        },
+        {
+          "word": "I'm",
+          "start": 4.78,
+          "end": 5.24,
+          "score": 0.9524
+        },
+        {
+          "word": "here.",
+          "start": 5.24,
+          "end": 5.4,
+          "score": 0.9986
+        }
+      ]
+    },
+    {
+      "start": 5.66,
+      "end": 9.02,
+      "text": "In the next 60 seconds, I will turn you into a Claude expert.",
+      "words": [
+        {
+          "word": "In",
+          "start": 5.66,
+          "end": 5.7,
+          "score": 0.9799
+        },
+        {
+          "word": "the",
+          "start": 5.7,
+          "end": 5.8,
+          "score": 0.9934
+        },
+        {
+          "word": "next",
+          "start": 5.8,
+          "end": 5.98,
+          "score": 0.9946
+        },
+        {
+          "word": "60",
+          "start": 5.98,
+          "end": 6.44,
+          "score": 0.9478
+        },
+        {
+          "word": "seconds,",
+          "start": 6.44,
+          "end": 6.88,
+          "score": 0.964
+        },
+        {
+          "word": "I",
+          "start": 7.0,
+          "end": 7.12,
+          "score": 0.9972
+        },
+        {
+          "word": "will",
+          "start": 7.12,
+          "end": 7.28,
+          "score": 0.875
+        },
+        {
+          "word": "turn",
+          "start": 7.28,
+          "end": 7.46,
+          "score": 0.9962
+        },
+        {
+          "word": "you",
+          "start": 7.46,
+          "end": 7.66,
+          "score": 0.9956
+        },
+        {
+          "word": "into",
+          "start": 7.66,
+          "end": 7.9,
+          "score": 0.9934
+        },
+        {
+          "word": "a",
+          "start": 7.9,
+          "end": 8.04,
+          "score": 0.9926
+        },
+        {
+          "word": "Claude",
+          "start": 8.04,
+          "end": 8.62,
+          "score": 0.994
+        },
+        {
+          "word": "expert.",
+          "start": 8.62,
+          "end": 9.02,
+          "score": 0.8445
+        }
+      ]
+    },
+    {
+      "start": 9.42,
+      "end": 12.3,
+      "text": "Level one is what everyone does, basic research.",
+      "words": [
+        {
+          "word": "Level",
+          "start": 9.42,
+          "end": 9.52,
+          "score": 0.8837
+        },
+        {
+          "word": "one",
+          "start": 9.52,
+          "end": 9.9,
+          "score": 0.7621
+        },
+        {
+          "word": "is",
+          "start": 9.9,
+          "end": 10.16,
+          "score": 0.9828
+        },
+        {
+          "word": "what",
+          "start": 10.16,
+          "end": 10.34,
+          "score": 0.9908
+        },
+        {
+          "word": "everyone",
+          "start": 10.34,
+          "end": 10.82,
+          "score": 0.9872
+        },
+        {
+          "word": "does,",
+          "start": 10.82,
+          "end": 11.12,
+          "score": 0.9953
+        },
+        {
+          "word": "basic",
+          "start": 11.5,
+          "end": 11.78,
+          "score": 0.9703
+        },
+        {
+          "word": "research.",
+          "start": 11.78,
+          "end": 12.3,
+          "score": 0.9982
+        }
+      ]
+    },
+    {
+      "start": 12.64,
+      "end": 14.36,
+      "text": "Asking questions, getting answers.",
+      "words": [
+        {
+          "word": "Asking",
+          "start": 12.64,
+          "end": 12.92,
+          "score": 0.777
+        },
+        {
+          "word": "questions,",
+          "start": 12.92,
+          "end": 13.36,
+          "score": 0.996
+        },
+        {
+          "word": "getting",
+          "start": 13.7,
+          "end": 13.92,
+          "score": 0.9741
+        },
+        {
+          "word": "answers.",
+          "start": 13.92,
+          "end": 14.36,
+          "score": 0.9963
+        }
+      ]
+    },
+    {
+      "start": 14.7,
+      "end": 17.4,
+      "text": "You're basically using it as a fancy search engine.",
+      "words": [
+        {
+          "word": "You're",
+          "start": 14.7,
+          "end": 14.84,
+          "score": 0.9689
+        },
+        {
+          "word": "basically",
+          "start": 14.84,
+          "end": 15.3,
+          "score": 0.9546
+        },
+        {
+          "word": "using",
+          "start": 15.3,
+          "end": 15.72,
+          "score": 0.9963
+        },
+        {
+          "word": "it",
+          "start": 15.72,
+          "end": 15.86,
+          "score": 0.9871
+        },
+        {
+          "word": "as",
+          "start": 15.86,
+          "end": 16.08,
+          "score": 0.9966
+        },
+        {
+          "word": "a",
+          "start": 16.08,
+          "end": 16.24,
+          "score": 0.9874
+        },
+        {
+          "word": "fancy",
+          "start": 16.24,
+          "end": 16.76,
+          "score": 0.9866
+        },
+        {
+          "word": "search",
+          "start": 16.76,
+          "end": 17.06,
+          "score": 0.9644
+        },
+        {
+          "word": "engine.",
+          "start": 17.06,
+          "end": 17.4,
+          "score": 0.9982
+        }
+      ]
+    },
+    {
+      "start": 17.7,
+      "end": 18.12,
+      "text": "That's it.",
+      "words": [
+        {
+          "word": "That's",
+          "start": 17.7,
+          "end": 18.02,
+          "score": 0.9468
+        },
+        {
+          "word": "it.",
+          "start": 18.02,
+          "end": 18.12,
+          "score": 0.9993
+        }
+      ]
+    },
+    {
+      "start": 18.26,
+      "end": 22.0,
+      "text": "But then comes level two, where things get interesting.",
+      "words": [
+        {
+          "word": "But",
+          "start": 18.26,
+          "end": 18.32,
+          "score": 0.9669
+        },
+        {
+          "word": "then",
+          "start": 18.32,
+          "end": 18.56,
+          "score": 0.9755
+        },
+        {
+          "word": "comes",
+          "start": 18.56,
+          "end": 19.0,
+          "score": 0.8984
+        },
+        {
+          "word": "level",
+          "start": 19.0,
+          "end": 19.9,
+          "score": 0.1122
+        },
+        {
+          "word": "two,",
+          "start": 19.9,
+          "end": 20.18,
+          "score": 0.7521
+        },
+        {
+          "word": "where",
+          "start": 20.56,
+          "end": 20.74,
+          "score": 0.7821
+        },
+        {
+          "word": "things",
+          "start": 20.74,
+          "end": 20.98,
+          "score": 0.8985
+        },
+        {
+          "word": "get",
+          "start": 20.98,
+          "end": 21.34,
+          "score": 0.9987
+        },
+        {
+          "word": "interesting.",
+          "start": 21.34,
+          "end": 22.0,
+          "score": 0.9829
+        }
+      ]
+    },
+    {
+      "start": 22.3,
+      "end": 27.32,
+      "text": "Now you can connect Claude to your actual tools, Gmail, Canva, Google Drive, Slack, whatever.",
+      "words": [
+        {
+          "word": "Now",
+          "start": 22.3,
+          "end": 22.42,
+          "score": 0.9787
+        },
+        {
+          "word": "you",
+          "start": 22.42,
+          "end": 22.64,
+          "score": 0.6301
+        },
+        {
+          "word": "can",
+          "start": 22.64,
+          "end": 22.82,
+          "score": 0.997
+        },
+        {
+          "word": "connect",
+          "start": 22.82,
+          "end": 23.12,
+          "score": 0.996
+        },
+        {
+          "word": "Claude",
+          "start": 23.12,
+          "end": 23.64,
+          "score": 0.9753
+        },
+        {
+          "word": "to",
+          "start": 23.64,
+          "end": 23.76,
+          "score": 0.993
+        },
+        {
+          "word": "your",
+          "start": 23.76,
+          "end": 23.86,
+          "score": 0.9928
+        },
+        {
+          "word": "actual",
+          "start": 23.86,
+          "end": 24.22,
+          "score": 0.9864
+        },
+        {
+          "word": "tools,",
+          "start": 24.22,
+          "end": 24.62,
+          "score": 0.9615
+        },
+        {
+          "word": "Gmail,",
+          "start": 24.92,
+          "end": 25.1,
+          "score": 0.855
+        },
+        {
+          "word": "Canva,",
+          "start": 25.38,
+          "end": 25.68,
+          "score": 0.696
+        },
+        {
+          "word": "Google",
+          "start": 25.98,
+          "end": 25.98,
+          "score": 0.979
+        },
+        {
+          "word": "Drive,",
+          "start": 25.98,
+          "end": 26.3,
+          "score": 0.9433
+        },
+        {
+          "word": "Slack,",
+          "start": 26.62,
+          "end": 26.7,
+          "score": 0.9898
+        },
+        {
+          "word": "whatever.",
+          "start": 26.98,
+          "end": 27.32,
+          "score": 0.9921
+        }
+      ]
+    },
+    {
+      "start": 27.32,
+      "end": 30.34,
+      "text": "Now it's reading your data and giving you real response.",
+      "words": [
+        {
+          "word": "Now",
+          "start": 27.32,
+          "end": 27.84,
+          "score": 0.45
+        },
+        {
+          "word": "it's",
+          "start": 27.84,
+          "end": 28.16,
+          "score": 0.7738
+        },
+        {
+          "word": "reading",
+          "start": 28.16,
+          "end": 28.36,
+          "score": 0.9891
+        },
+        {
+          "word": "your",
+          "start": 28.36,
+          "end": 28.6,
+          "score": 0.99
+        },
+        {
+          "word": "data",
+          "start": 28.6,
+          "end": 28.88,
+          "score": 0.9923
+        },
+        {
+          "word": "and",
+          "start": 28.88,
+          "end": 29.16,
+          "score": 0.9573
+        },
+        {
+          "word": "giving",
+          "start": 29.16,
+          "end": 29.46,
+          "score": 0.9838
+        },
+        {
+          "word": "you",
+          "start": 29.46,
+          "end": 29.74,
+          "score": 0.9861
+        },
+        {
+          "word": "real",
+          "start": 29.74,
+          "end": 29.98,
+          "score": 0.4573
+        },
+        {
+          "word": "response.",
+          "start": 29.98,
+          "end": 30.34,
+          "score": 0.9586
+        }
+      ]
+    },
+    {
+      "start": 30.8,
+      "end": 33.32,
+      "text": "Level three is where you start building skills and Claude.",
+      "words": [
+        {
+          "word": "Level",
+          "start": 30.8,
+          "end": 30.96,
+          "score": 0.9013
+        },
+        {
+          "word": "three",
+          "start": 30.96,
+          "end": 31.3,
+          "score": 0.2642
+        },
+        {
+          "word": "is",
+          "start": 31.3,
+          "end": 31.66,
+          "score": 0.9746
+        },
+        {
+          "word": "where",
+          "start": 31.66,
+          "end": 31.88,
+          "score": 0.9805
+        },
+        {
+          "word": "you",
+          "start": 31.88,
+          "end": 32.0,
+          "score": 0.9911
+        },
+        {
+          "word": "start",
+          "start": 32.0,
+          "end": 32.2,
+          "score": 0.9936
+        },
+        {
+          "word": "building",
+          "start": 32.2,
+          "end": 32.52,
+          "score": 0.9933
+        },
+        {
+          "word": "skills",
+          "start": 32.52,
+          "end": 32.82,
+          "score": 0.9902
+        },
+        {
+          "word": "and",
+          "start": 32.82,
+          "end": 33.02,
+          "score": 0.6649
+        },
+        {
+          "word": "Claude.",
+          "start": 33.02,
+          "end": 33.32,
+          "score": 0.5012
+        }
+      ]
+    },
+    {
+      "start": 33.44,
+      "end": 37.46,
+      "text": "Take any repeatable process your team does and turn it into a Claude skill.",
+      "words": [
+        {
+          "word": "Take",
+          "start": 33.44,
+          "end": 33.54,
+          "score": 0.9406
+        },
+        {
+          "word": "any",
+          "start": 33.54,
+          "end": 33.9,
+          "score": 0.9954
+        },
+        {
+          "word": "repeatable",
+          "start": 33.9,
+          "end": 34.4,
+          "score": 0.9752
+        },
+        {
+          "word": "process",
+          "start": 34.4,
+          "end": 34.74,
+          "score": 0.9955
+        },
+        {
+          "word": "your",
+          "start": 34.74,
+          "end": 35.0,
+          "score": 0.7752
+        },
+        {
+          "word": "team",
+          "start": 35.0,
+          "end": 35.2,
+          "score": 0.9456
+        },
+        {
+          "word": "does",
+          "start": 35.2,
+          "end": 35.4,
+          "score": 0.9864
+        },
+        {
+          "word": "and",
+          "start": 35.4,
+          "end": 35.74,
+          "score": 0.8153
+        },
+        {
+          "word": "turn",
+          "start": 35.74,
+          "end": 35.94,
+          "score": 0.9915
+        },
+        {
+          "word": "it",
+          "start": 35.94,
+          "end": 36.06,
+          "score": 0.9545
+        },
+        {
+          "word": "into",
+          "start": 36.06,
+          "end": 36.4,
+          "score": 0.9894
+        },
+        {
+          "word": "a",
+          "start": 36.4,
+          "end": 36.68,
+          "score": 0.9782
+        },
+        {
+          "word": "Claude",
+          "start": 36.68,
+          "end": 37.16,
+          "score": 0.9733
+        },
+        {
+          "word": "skill.",
+          "start": 37.16,
+          "end": 37.46,
+          "score": 0.7252
+        }
+      ]
+    },
+    {
+      "start": 37.76,
+      "end": 38.92,
+      "text": "Level four, Claude code.",
+      "words": [
+        {
+          "word": "Level",
+          "start": 37.76,
+          "end": 37.82,
+          "score": 0.8278
+        },
+        {
+          "word": "four,",
+          "start": 37.82,
+          "end": 38.22,
+          "score": 0.8148
+        },
+        {
+          "word": "Claude",
+          "start": 38.46,
+          "end": 38.74,
+          "score": 0.9934
+        },
+        {
+          "word": "code.",
+          "start": 38.74,
+          "end": 38.92,
+          "score": 0.7914
+        }
+      ]
+    },
+    {
+      "start": 39.16,
+      "end": 43.64,
+      "text": "Non-technical people can create websites and apps without writing a string the line of code.",
+      "words": [
+        {
+          "word": "Non",
+          "start": 39.16,
+          "end": 39.26,
+          "score": 0.9428
+        },
+        {
+          "word": "-technical",
+          "start": 39.26,
+          "end": 39.72,
+          "score": 0.8366
+        },
+        {
+          "word": "people",
+          "start": 39.72,
+          "end": 40.08,
+          "score": 0.962
+        },
+        {
+          "word": "can",
+          "start": 40.08,
+          "end": 40.38,
+          "score": 0.9934
+        },
+        {
+          "word": "create",
+          "start": 40.38,
+          "end": 40.74,
+          "score": 0.995
+        },
+        {
+          "word": "websites",
+          "start": 40.74,
+          "end": 41.22,
+          "score": 0.9327
+        },
+        {
+          "word": "and",
+          "start": 41.22,
+          "end": 41.48,
+          "score": 0.9405
+        },
+        {
+          "word": "apps",
+          "start": 41.48,
+          "end": 41.7,
+          "score": 0.5726
+        },
+        {
+          "word": "without",
+          "start": 41.7,
+          "end": 42.08,
+          "score": 0.9899
+        },
+        {
+          "word": "writing",
+          "start": 42.08,
+          "end": 42.46,
+          "score": 0.9741
+        },
+        {
+          "word": "a",
+          "start": 42.46,
+          "end": 42.66,
+          "score": 0.9324
+        },
+        {
+          "word": "string",
+          "start": 42.66,
+          "end": 42.92,
+          "score": 0.8574
+        },
+        {
+          "word": "the",
+          "start": 42.92,
+          "end": 43.1,
+          "score": 0.4294
+        },
+        {
+          "word": "line",
+          "start": 43.1,
+          "end": 43.28,
+          "score": 0.9928
+        },
+        {
+          "word": "of",
+          "start": 43.28,
+          "end": 43.46,
+          "score": 0.9859
+        },
+        {
+          "word": "code.",
+          "start": 43.46,
+          "end": 43.64,
+          "score": 0.8616
+        }
+      ]
+    },
+    {
+      "start": 43.92,
+      "end": 47.52,
+      "text": "You can connect all of your emails or sales data on SEO tools",
+      "words": [
+        {
+          "word": "You",
+          "start": 43.92,
+          "end": 44.02,
+          "score": 0.9944
+        },
+        {
+          "word": "can",
+          "start": 44.02,
+          "end": 44.16,
+          "score": 0.9929
+        },
+        {
+          "word": "connect",
+          "start": 44.16,
+          "end": 44.46,
+          "score": 0.9956
+        },
+        {
+          "word": "all",
+          "start": 44.46,
+          "end": 44.78,
+          "score": 0.9955
+        },
+        {
+          "word": "of",
+          "start": 44.78,
+          "end": 44.94,
+          "score": 0.9381
+        },
+        {
+          "word": "your",
+          "start": 44.94,
+          "end": 45.08,
+          "score": 0.9962
+        },
+        {
+          "word": "emails",
+          "start": 45.08,
+          "end": 45.42,
+          "score": 0.8761
+        },
+        {
+          "word": "or",
+          "start": 45.42,
+          "end": 45.78,
+          "score": 0.9832
+        },
+        {
+          "word": "sales",
+          "start": 45.78,
+          "end": 46.1,
+          "score": 0.9844
+        },
+        {
+          "word": "data",
+          "start": 46.1,
+          "end": 46.46,
+          "score": 0.997
+        },
+        {
+          "word": "on",
+          "start": 46.46,
+          "end": 46.78,
+          "score": 0.9892
+        },
+        {
+          "word": "SEO",
+          "start": 46.78,
+          "end": 47.14,
+          "score": 0.9816
+        },
+        {
+          "word": "tools",
+          "start": 47.14,
+          "end": 47.52,
+          "score": 0.9921
+        }
+      ]
+    },
+    {
+      "start": 47.52,
+      "end": 50.5,
+      "text": "and Claude identifies what your customers actually want.",
+      "words": [
+        {
+          "word": "and",
+          "start": 47.52,
+          "end": 47.78,
+          "score": 0.9046
+        },
+        {
+          "word": "Claude",
+          "start": 47.78,
+          "end": 48.14,
+          "score": 0.9803
+        },
+        {
+          "word": "identifies",
+          "start": 48.14,
+          "end": 48.52,
+          "score": 0.9839
+        },
+        {
+          "word": "what",
+          "start": 48.52,
+          "end": 48.94,
+          "score": 0.9907
+        },
+        {
+          "word": "your",
+          "start": 48.94,
+          "end": 49.06,
+          "score": 0.986
+        },
+        {
+          "word": "customers",
+          "start": 49.06,
+          "end": 49.44,
+          "score": 0.976
+        },
+        {
+          "word": "actually",
+          "start": 49.44,
+          "end": 50.24,
+          "score": 0.9648
+        },
+        {
+          "word": "want.",
+          "start": 50.24,
+          "end": 50.5,
+          "score": 0.9083
+        }
+      ]
+    },
+    {
+      "start": 50.76,
+      "end": 53.14,
+      "text": "Now the last level is absolutely insane.",
+      "words": [
+        {
+          "word": "Now",
+          "start": 50.76,
+          "end": 50.98,
+          "score": 0.9741
+        },
+        {
+          "word": "the",
+          "start": 50.98,
+          "end": 51.2,
+          "score": 0.6276
+        },
+        {
+          "word": "last",
+          "start": 51.2,
+          "end": 51.46,
+          "score": 0.9887
+        },
+        {
+          "word": "level",
+          "start": 51.46,
+          "end": 51.74,
+          "score": 0.9953
+        },
+        {
+          "word": "is",
+          "start": 51.74,
+          "end": 51.98,
+          "score": 0.9607
+        },
+        {
+          "word": "absolutely",
+          "start": 51.98,
+          "end": 52.78,
+          "score": 0.986
+        },
+        {
+          "word": "insane.",
+          "start": 52.78,
+          "end": 53.14,
+          "score": 0.9902
+        }
+      ]
+    },
+    {
+      "start": 53.14,
+      "end": 57.54,
+      "text": "Claude runs locally on your data so it learns how you make decisions over time.",
+      "words": [
+        {
+          "word": "Claude",
+          "start": 53.14,
+          "end": 53.66,
+          "score": 0.5208
+        },
+        {
+          "word": "runs",
+          "start": 53.66,
+          "end": 53.8,
+          "score": 0.9556
+        },
+        {
+          "word": "locally",
+          "start": 53.8,
+          "end": 54.2,
+          "score": 0.9963
+        },
+        {
+          "word": "on",
+          "start": 54.2,
+          "end": 54.5,
+          "score": 0.9943
+        },
+        {
+          "word": "your",
+          "start": 54.5,
+          "end": 54.64,
+          "score": 0.9813
+        },
+        {
+          "word": "data",
+          "start": 54.64,
+          "end": 54.94,
+          "score": 0.9884
+        },
+        {
+          "word": "so",
+          "start": 54.94,
+          "end": 55.24,
+          "score": 0.7931
+        },
+        {
+          "word": "it",
+          "start": 55.24,
+          "end": 55.34,
+          "score": 0.9789
+        },
+        {
+          "word": "learns",
+          "start": 55.34,
+          "end": 55.58,
+          "score": 0.9624
+        },
+        {
+          "word": "how",
+          "start": 55.58,
+          "end": 55.9,
+          "score": 0.9918
+        },
+        {
+          "word": "you",
+          "start": 55.9,
+          "end": 56.2,
+          "score": 0.9739
+        },
+        {
+          "word": "make",
+          "start": 56.2,
+          "end": 56.4,
+          "score": 0.9953
+        },
+        {
+          "word": "decisions",
+          "start": 56.4,
+          "end": 56.8,
+          "score": 0.9853
+        },
+        {
+          "word": "over",
+          "start": 56.8,
+          "end": 57.26,
+          "score": 0.9139
+        },
+        {
+          "word": "time.",
+          "start": 57.26,
+          "end": 57.54,
+          "score": 0.9995
+        }
+      ]
+    },
+    {
+      "start": 57.8,
+      "end": 60.24,
+      "text": "It's like having an employee that works 24-7.",
+      "words": [
+        {
+          "word": "It's",
+          "start": 57.8,
+          "end": 57.96,
+          "score": 0.9718
+        },
+        {
+          "word": "like",
+          "start": 57.96,
+          "end": 58.04,
+          "score": 0.9961
+        },
+        {
+          "word": "having",
+          "start": 58.04,
+          "end": 58.3,
+          "score": 0.9978
+        },
+        {
+          "word": "an",
+          "start": 58.3,
+          "end": 58.48,
+          "score": 0.9951
+        },
+        {
+          "word": "employee",
+          "start": 58.48,
+          "end": 58.8,
+          "score": 0.9761
+        },
+        {
+          "word": "that",
+          "start": 58.8,
+          "end": 59.02,
+          "score": 0.9895
+        },
+        {
+          "word": "works",
+          "start": 59.02,
+          "end": 59.24,
+          "score": 0.9906
+        },
+        {
+          "word": "24",
+          "start": 59.24,
+          "end": 59.72,
+          "score": 0.9886
+        },
+        {
+          "word": "-7.",
+          "start": 59.72,
+          "end": 60.24,
+          "score": 0.4958
+        }
+      ]
+    },
+    {
+      "start": 60.54,
+      "end": 64.08,
+      "text": "So now, save this reel and follow hook.exe for more such videos.",
+      "words": [
+        {
+          "word": "So",
+          "start": 60.54,
+          "end": 60.62,
+          "score": 0.9391
+        },
+        {
+          "word": "now,",
+          "start": 60.62,
+          "end": 60.88,
+          "score": 0.8702
+        },
+        {
+          "word": "save",
+          "start": 61.16,
+          "end": 61.32,
+          "score": 0.969
+        },
+        {
+          "word": "this",
+          "start": 61.32,
+          "end": 61.54,
+          "score": 0.9931
+        },
+        {
+          "word": "reel",
+          "start": 61.54,
+          "end": 61.74,
+          "score": 0.6604
+        },
+        {
+          "word": "and",
+          "start": 61.74,
+          "end": 61.92,
+          "score": 0.9333
+        },
+        {
+          "word": "follow",
+          "start": 61.92,
+          "end": 62.16,
+          "score": 0.9948
+        },
+        {
+          "word": "hook",
+          "start": 62.16,
+          "end": 62.46,
+          "score": 0.6914
+        },
+        {
+          "word": ".exe",
+          "start": 62.46,
+          "end": 63.16,
+          "score": 0.9185
+        },
+        {
+          "word": "for",
+          "start": 63.16,
+          "end": 63.4,
+          "score": 0.9635
+        },
+        {
+          "word": "more",
+          "start": 63.4,
+          "end": 63.56,
+          "score": 0.9972
+        },
+        {
+          "word": "such",
+          "start": 63.56,
+          "end": 63.84,
+          "score": 0.9853
+        },
+        {
+          "word": "videos.",
+          "start": 63.84,
+          "end": 64.08,
+          "score": 0.9923
+        }
+      ]
+    }
+  ]
+}

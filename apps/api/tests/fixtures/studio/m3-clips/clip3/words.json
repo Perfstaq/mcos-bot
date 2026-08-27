@@ -1,0 +1,1118 @@
+{
+  "language": "en",
+  "durationSec": 72.887,
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 6.74,
+      "text": "Most Enterprise AI is a mess of fragmented tools, isolated data, and unpredictable agents.",
+      "words": [
+        {
+          "word": "Most",
+          "start": 0.0,
+          "end": 0.62,
+          "score": 0.7874
+        },
+        {
+          "word": "Enterprise",
+          "start": 0.62,
+          "end": 1.16,
+          "score": 0.8732
+        },
+        {
+          "word": "AI",
+          "start": 1.16,
+          "end": 1.6,
+          "score": 0.8415
+        },
+        {
+          "word": "is",
+          "start": 1.6,
+          "end": 2.12,
+          "score": 0.9832
+        },
+        {
+          "word": "a",
+          "start": 2.12,
+          "end": 2.26,
+          "score": 0.9928
+        },
+        {
+          "word": "mess",
+          "start": 2.26,
+          "end": 2.54,
+          "score": 0.9927
+        },
+        {
+          "word": "of",
+          "start": 2.54,
+          "end": 2.9,
+          "score": 0.9883
+        },
+        {
+          "word": "fragmented",
+          "start": 2.9,
+          "end": 3.46,
+          "score": 0.9924
+        },
+        {
+          "word": "tools,",
+          "start": 3.46,
+          "end": 3.9,
+          "score": 0.9981
+        },
+        {
+          "word": "isolated",
+          "start": 4.22,
+          "end": 4.62,
+          "score": 0.9965
+        },
+        {
+          "word": "data,",
+          "start": 4.62,
+          "end": 5.06,
+          "score": 0.9974
+        },
+        {
+          "word": "and",
+          "start": 5.32,
+          "end": 5.48,
+          "score": 0.9982
+        },
+        {
+          "word": "unpredictable",
+          "start": 5.48,
+          "end": 6.08,
+          "score": 0.9926
+        },
+        {
+          "word": "agents.",
+          "start": 6.08,
+          "end": 6.74,
+          "score": 0.9976
+        }
+      ]
+    },
+    {
+      "start": 7.34,
+      "end": 12.0,
+      "text": "MetaWorks fixes this by unifying them into one orchestrated digital workforce.",
+      "words": [
+        {
+          "word": "MetaWorks",
+          "start": 7.34,
+          "end": 7.88,
+          "score": 0.833
+        },
+        {
+          "word": "fixes",
+          "start": 7.88,
+          "end": 8.3,
+          "score": 0.9928
+        },
+        {
+          "word": "this",
+          "start": 8.3,
+          "end": 8.56,
+          "score": 0.9984
+        },
+        {
+          "word": "by",
+          "start": 8.56,
+          "end": 8.9,
+          "score": 0.9855
+        },
+        {
+          "word": "unifying",
+          "start": 8.9,
+          "end": 9.44,
+          "score": 0.9966
+        },
+        {
+          "word": "them",
+          "start": 9.44,
+          "end": 9.68,
+          "score": 0.9986
+        },
+        {
+          "word": "into",
+          "start": 9.68,
+          "end": 10.02,
+          "score": 0.9954
+        },
+        {
+          "word": "one",
+          "start": 10.02,
+          "end": 10.46,
+          "score": 0.9851
+        },
+        {
+          "word": "orchestrated",
+          "start": 10.46,
+          "end": 11.18,
+          "score": 0.9896
+        },
+        {
+          "word": "digital",
+          "start": 11.18,
+          "end": 11.58,
+          "score": 0.9688
+        },
+        {
+          "word": "workforce.",
+          "start": 11.58,
+          "end": 12.0,
+          "score": 0.9732
+        }
+      ]
+    },
+    {
+      "start": 12.58,
+      "end": 16.16,
+      "text": "Here are its four pillars. First up, the master service.",
+      "words": [
+        {
+          "word": "Here",
+          "start": 12.58,
+          "end": 12.92,
+          "score": 0.9954
+        },
+        {
+          "word": "are",
+          "start": 12.92,
+          "end": 13.14,
+          "score": 0.9911
+        },
+        {
+          "word": "its",
+          "start": 13.14,
+          "end": 13.34,
+          "score": 0.9082
+        },
+        {
+          "word": "four",
+          "start": 13.34,
+          "end": 13.6,
+          "score": 0.9567
+        },
+        {
+          "word": "pillars.",
+          "start": 13.6,
+          "end": 13.9,
+          "score": 0.9948
+        },
+        {
+          "word": "First",
+          "start": 14.58,
+          "end": 14.7,
+          "score": 0.9922
+        },
+        {
+          "word": "up,",
+          "start": 14.7,
+          "end": 14.98,
+          "score": 0.9721
+        },
+        {
+          "word": "the",
+          "start": 15.2,
+          "end": 15.32,
+          "score": 0.9639
+        },
+        {
+          "word": "master",
+          "start": 15.32,
+          "end": 15.72,
+          "score": 0.5715
+        },
+        {
+          "word": "service.",
+          "start": 15.72,
+          "end": 16.16,
+          "score": 0.971
+        }
+      ]
+    },
+    {
+      "start": 16.6,
+      "end": 18.96,
+      "text": "You interact with just one simple chat interface,",
+      "words": [
+        {
+          "word": "You",
+          "start": 16.6,
+          "end": 16.78,
+          "score": 0.996
+        },
+        {
+          "word": "interact",
+          "start": 16.78,
+          "end": 17.12,
+          "score": 0.9996
+        },
+        {
+          "word": "with",
+          "start": 17.12,
+          "end": 17.36,
+          "score": 0.9994
+        },
+        {
+          "word": "just",
+          "start": 17.36,
+          "end": 17.5,
+          "score": 0.9879
+        },
+        {
+          "word": "one",
+          "start": 17.5,
+          "end": 17.88,
+          "score": 0.992
+        },
+        {
+          "word": "simple",
+          "start": 17.88,
+          "end": 18.28,
+          "score": 0.9958
+        },
+        {
+          "word": "chat",
+          "start": 18.28,
+          "end": 18.52,
+          "score": 0.9816
+        },
+        {
+          "word": "interface,",
+          "start": 18.52,
+          "end": 18.96,
+          "score": 0.9984
+        }
+      ]
+    },
+    {
+      "start": 19.28,
+      "end": 24.52,
+      "text": "while a master router silently classifies the request and delegates it to the perfect specialist.",
+      "words": [
+        {
+          "word": "while",
+          "start": 19.28,
+          "end": 19.54,
+          "score": 0.995
+        },
+        {
+          "word": "a",
+          "start": 19.54,
+          "end": 19.66,
+          "score": 0.9763
+        },
+        {
+          "word": "master",
+          "start": 19.66,
+          "end": 20.02,
+          "score": 0.9592
+        },
+        {
+          "word": "router",
+          "start": 20.02,
+          "end": 20.4,
+          "score": 0.9814
+        },
+        {
+          "word": "silently",
+          "start": 20.4,
+          "end": 21.02,
+          "score": 0.9815
+        },
+        {
+          "word": "classifies",
+          "start": 21.02,
+          "end": 21.68,
+          "score": 0.9919
+        },
+        {
+          "word": "the",
+          "start": 21.68,
+          "end": 21.88,
+          "score": 0.999
+        },
+        {
+          "word": "request",
+          "start": 21.88,
+          "end": 22.16,
+          "score": 0.995
+        },
+        {
+          "word": "and",
+          "start": 22.16,
+          "end": 22.58,
+          "score": 0.8939
+        },
+        {
+          "word": "delegates",
+          "start": 22.58,
+          "end": 22.96,
+          "score": 0.9449
+        },
+        {
+          "word": "it",
+          "start": 22.96,
+          "end": 23.24,
+          "score": 0.9955
+        },
+        {
+          "word": "to",
+          "start": 23.24,
+          "end": 23.4,
+          "score": 0.9973
+        },
+        {
+          "word": "the",
+          "start": 23.4,
+          "end": 23.5,
+          "score": 0.9938
+        },
+        {
+          "word": "perfect",
+          "start": 23.5,
+          "end": 23.98,
+          "score": 0.9912
+        },
+        {
+          "word": "specialist.",
+          "start": 23.98,
+          "end": 24.52,
+          "score": 0.9785
+        }
+      ]
+    },
+    {
+      "start": 25.08,
+      "end": 26.92,
+      "text": "Next, the private knowledge base.",
+      "words": [
+        {
+          "word": "Next,",
+          "start": 25.08,
+          "end": 25.48,
+          "score": 0.9938
+        },
+        {
+          "word": "the",
+          "start": 25.78,
+          "end": 25.86,
+          "score": 0.9962
+        },
+        {
+          "word": "private",
+          "start": 25.86,
+          "end": 26.24,
+          "score": 0.8028
+        },
+        {
+          "word": "knowledge",
+          "start": 26.24,
+          "end": 26.64,
+          "score": 0.9795
+        },
+        {
+          "word": "base.",
+          "start": 26.64,
+          "end": 26.92,
+          "score": 0.9894
+        }
+      ]
+    },
+    {
+      "start": 26.92,
+      "end": 31.14,
+      "text": "The platform automatically syncs with your connected Google or OneDrive accounts.",
+      "words": [
+        {
+          "word": "The",
+          "start": 26.92,
+          "end": 27.6,
+          "score": 0.1679
+        },
+        {
+          "word": "platform",
+          "start": 27.6,
+          "end": 27.9,
+          "score": 0.9497
+        },
+        {
+          "word": "automatically",
+          "start": 27.9,
+          "end": 28.58,
+          "score": 0.9949
+        },
+        {
+          "word": "syncs",
+          "start": 28.58,
+          "end": 29.06,
+          "score": 0.9171
+        },
+        {
+          "word": "with",
+          "start": 29.06,
+          "end": 29.22,
+          "score": 0.9976
+        },
+        {
+          "word": "your",
+          "start": 29.22,
+          "end": 29.36,
+          "score": 0.9815
+        },
+        {
+          "word": "connected",
+          "start": 29.36,
+          "end": 29.7,
+          "score": 0.9487
+        },
+        {
+          "word": "Google",
+          "start": 29.7,
+          "end": 30.08,
+          "score": 0.9842
+        },
+        {
+          "word": "or",
+          "start": 30.08,
+          "end": 30.4,
+          "score": 0.9174
+        },
+        {
+          "word": "OneDrive",
+          "start": 30.4,
+          "end": 30.78,
+          "score": 0.9613
+        },
+        {
+          "word": "accounts.",
+          "start": 30.78,
+          "end": 31.14,
+          "score": 0.9771
+        }
+      ]
+    },
+    {
+      "start": 31.52,
+      "end": 37.16,
+      "text": "It uses hybrid search, so the AI only pulls answers from your proprietary secure documents.",
+      "words": [
+        {
+          "word": "It",
+          "start": 31.52,
+          "end": 31.7,
+          "score": 0.9939
+        },
+        {
+          "word": "uses",
+          "start": 31.7,
+          "end": 31.98,
+          "score": 0.9981
+        },
+        {
+          "word": "hybrid",
+          "start": 31.98,
+          "end": 32.44,
+          "score": 0.8994
+        },
+        {
+          "word": "search,",
+          "start": 32.44,
+          "end": 32.84,
+          "score": 0.9813
+        },
+        {
+          "word": "so",
+          "start": 32.94,
+          "end": 33.08,
+          "score": 0.9946
+        },
+        {
+          "word": "the",
+          "start": 33.08,
+          "end": 33.2,
+          "score": 0.8848
+        },
+        {
+          "word": "AI",
+          "start": 33.2,
+          "end": 33.46,
+          "score": 0.9663
+        },
+        {
+          "word": "only",
+          "start": 33.46,
+          "end": 33.92,
+          "score": 0.9792
+        },
+        {
+          "word": "pulls",
+          "start": 33.92,
+          "end": 34.18,
+          "score": 0.9749
+        },
+        {
+          "word": "answers",
+          "start": 34.18,
+          "end": 34.6,
+          "score": 0.9952
+        },
+        {
+          "word": "from",
+          "start": 34.6,
+          "end": 34.94,
+          "score": 0.9833
+        },
+        {
+          "word": "your",
+          "start": 34.94,
+          "end": 35.32,
+          "score": 0.9925
+        },
+        {
+          "word": "proprietary",
+          "start": 35.32,
+          "end": 35.98,
+          "score": 0.998
+        },
+        {
+          "word": "secure",
+          "start": 35.98,
+          "end": 36.62,
+          "score": 0.8923
+        },
+        {
+          "word": "documents.",
+          "start": 36.62,
+          "end": 37.16,
+          "score": 0.9954
+        }
+      ]
+    },
+    {
+      "start": 37.86,
+      "end": 43.62,
+      "text": "Third, the action service. Heavy jobs like deep research reports are offloaded to background processes.",
+      "words": [
+        {
+          "word": "Third,",
+          "start": 37.86,
+          "end": 38.02,
+          "score": 0.9354
+        },
+        {
+          "word": "the",
+          "start": 38.4,
+          "end": 38.5,
+          "score": 0.9744
+        },
+        {
+          "word": "action",
+          "start": 38.5,
+          "end": 38.86,
+          "score": 0.5504
+        },
+        {
+          "word": "service.",
+          "start": 38.86,
+          "end": 39.28,
+          "score": 0.9874
+        },
+        {
+          "word": "Heavy",
+          "start": 39.82,
+          "end": 40.02,
+          "score": 0.9773
+        },
+        {
+          "word": "jobs",
+          "start": 40.02,
+          "end": 40.3,
+          "score": 0.9869
+        },
+        {
+          "word": "like",
+          "start": 40.3,
+          "end": 40.62,
+          "score": 0.9415
+        },
+        {
+          "word": "deep",
+          "start": 40.62,
+          "end": 40.86,
+          "score": 0.8427
+        },
+        {
+          "word": "research",
+          "start": 40.86,
+          "end": 41.28,
+          "score": 0.9927
+        },
+        {
+          "word": "reports",
+          "start": 41.28,
+          "end": 41.64,
+          "score": 0.999
+        },
+        {
+          "word": "are",
+          "start": 41.64,
+          "end": 41.96,
+          "score": 0.9948
+        },
+        {
+          "word": "offloaded",
+          "start": 41.96,
+          "end": 42.62,
+          "score": 0.9095
+        },
+        {
+          "word": "to",
+          "start": 42.62,
+          "end": 42.72,
+          "score": 0.9972
+        },
+        {
+          "word": "background",
+          "start": 42.72,
+          "end": 43.06,
+          "score": 0.9857
+        },
+        {
+          "word": "processes.",
+          "start": 43.06,
+          "end": 43.62,
+          "score": 0.9951
+        }
+      ]
+    },
+    {
+      "start": 44.14,
+      "end": 48.98,
+      "text": "This streams live progress updates back to you, keeping your main chat instantly responsive.",
+      "words": [
+        {
+          "word": "This",
+          "start": 44.14,
+          "end": 44.36,
+          "score": 0.9968
+        },
+        {
+          "word": "streams",
+          "start": 44.36,
+          "end": 44.74,
+          "score": 0.8404
+        },
+        {
+          "word": "live",
+          "start": 44.74,
+          "end": 45.08,
+          "score": 0.984
+        },
+        {
+          "word": "progress",
+          "start": 45.08,
+          "end": 45.5,
+          "score": 0.9515
+        },
+        {
+          "word": "updates",
+          "start": 45.5,
+          "end": 45.84,
+          "score": 0.9873
+        },
+        {
+          "word": "back",
+          "start": 45.84,
+          "end": 46.2,
+          "score": 0.9947
+        },
+        {
+          "word": "to",
+          "start": 46.2,
+          "end": 46.38,
+          "score": 0.9979
+        },
+        {
+          "word": "you,",
+          "start": 46.38,
+          "end": 46.54,
+          "score": 0.9972
+        },
+        {
+          "word": "keeping",
+          "start": 46.88,
+          "end": 47.04,
+          "score": 0.9978
+        },
+        {
+          "word": "your",
+          "start": 47.04,
+          "end": 47.26,
+          "score": 0.9963
+        },
+        {
+          "word": "main",
+          "start": 47.26,
+          "end": 47.48,
+          "score": 0.9751
+        },
+        {
+          "word": "chat",
+          "start": 47.48,
+          "end": 47.76,
+          "score": 0.9682
+        },
+        {
+          "word": "instantly",
+          "start": 47.76,
+          "end": 48.44,
+          "score": 0.9683
+        },
+        {
+          "word": "responsive.",
+          "start": 48.44,
+          "end": 48.98,
+          "score": 0.9943
+        }
+      ]
+    },
+    {
+      "start": 49.58,
+      "end": 54.18,
+      "text": "Finally, the skills engine. You can author multi-step custom automations",
+      "words": [
+        {
+          "word": "Finally,",
+          "start": 49.58,
+          "end": 50.04,
+          "score": 0.9909
+        },
+        {
+          "word": "the",
+          "start": 50.4,
+          "end": 50.48,
+          "score": 0.9751
+        },
+        {
+          "word": "skills",
+          "start": 50.48,
+          "end": 50.84,
+          "score": 0.7556
+        },
+        {
+          "word": "engine.",
+          "start": 50.84,
+          "end": 51.12,
+          "score": 0.9645
+        },
+        {
+          "word": "You",
+          "start": 51.58,
+          "end": 51.86,
+          "score": 0.9972
+        },
+        {
+          "word": "can",
+          "start": 51.86,
+          "end": 52.02,
+          "score": 0.9988
+        },
+        {
+          "word": "author",
+          "start": 52.02,
+          "end": 52.34,
+          "score": 0.875
+        },
+        {
+          "word": "multi",
+          "start": 52.34,
+          "end": 52.78,
+          "score": 0.9387
+        },
+        {
+          "word": "-step",
+          "start": 52.78,
+          "end": 53.12,
+          "score": 0.968
+        },
+        {
+          "word": "custom",
+          "start": 53.12,
+          "end": 53.56,
+          "score": 0.9786
+        },
+        {
+          "word": "automations",
+          "start": 53.56,
+          "end": 54.18,
+          "score": 0.937
+        }
+      ]
+    },
+    {
+      "start": 54.18,
+      "end": 59.5,
+      "text": "like drafting and queuing emails. But critically, they pause and wait for your manual approval",
+      "words": [
+        {
+          "word": "like",
+          "start": 54.18,
+          "end": 54.66,
+          "score": 0.8185
+        },
+        {
+          "word": "drafting",
+          "start": 54.66,
+          "end": 55.08,
+          "score": 0.9956
+        },
+        {
+          "word": "and",
+          "start": 55.08,
+          "end": 55.36,
+          "score": 0.9872
+        },
+        {
+          "word": "queuing",
+          "start": 55.36,
+          "end": 55.66,
+          "score": 0.9293
+        },
+        {
+          "word": "emails.",
+          "start": 55.66,
+          "end": 55.98,
+          "score": 0.9755
+        },
+        {
+          "word": "But",
+          "start": 56.5,
+          "end": 56.62,
+          "score": 0.9897
+        },
+        {
+          "word": "critically,",
+          "start": 56.62,
+          "end": 57.06,
+          "score": 0.9341
+        },
+        {
+          "word": "they",
+          "start": 57.3,
+          "end": 57.38,
+          "score": 0.9978
+        },
+        {
+          "word": "pause",
+          "start": 57.38,
+          "end": 57.74,
+          "score": 0.988
+        },
+        {
+          "word": "and",
+          "start": 57.74,
+          "end": 58.06,
+          "score": 0.9911
+        },
+        {
+          "word": "wait",
+          "start": 58.06,
+          "end": 58.32,
+          "score": 0.9949
+        },
+        {
+          "word": "for",
+          "start": 58.32,
+          "end": 58.54,
+          "score": 0.998
+        },
+        {
+          "word": "your",
+          "start": 58.54,
+          "end": 58.68,
+          "score": 0.9939
+        },
+        {
+          "word": "manual",
+          "start": 58.68,
+          "end": 59.04,
+          "score": 0.989
+        },
+        {
+          "word": "approval",
+          "start": 59.04,
+          "end": 59.5,
+          "score": 0.9995
+        }
+      ]
+    },
+    {
+      "start": 59.5,
+      "end": 65.18,
+      "text": "before taking irreversible actions. MetaWorks becomes your secure digital workforce,",
+      "words": [
+        {
+          "word": "before",
+          "start": 59.5,
+          "end": 60.02,
+          "score": 0.9571
+        },
+        {
+          "word": "taking",
+          "start": 60.02,
+          "end": 60.5,
+          "score": 0.9976
+        },
+        {
+          "word": "irreversible",
+          "start": 60.5,
+          "end": 61.26,
+          "score": 0.9834
+        },
+        {
+          "word": "actions.",
+          "start": 61.26,
+          "end": 61.64,
+          "score": 0.9933
+        },
+        {
+          "word": "MetaWorks",
+          "start": 62.5,
+          "end": 63.04,
+          "score": 0.8427
+        },
+        {
+          "word": "becomes",
+          "start": 63.04,
+          "end": 63.32,
+          "score": 0.9789
+        },
+        {
+          "word": "your",
+          "start": 63.32,
+          "end": 63.76,
+          "score": 0.9932
+        },
+        {
+          "word": "secure",
+          "start": 63.76,
+          "end": 64.34,
+          "score": 0.9335
+        },
+        {
+          "word": "digital",
+          "start": 64.34,
+          "end": 64.76,
+          "score": 0.934
+        },
+        {
+          "word": "workforce,",
+          "start": 64.76,
+          "end": 65.18,
+          "score": 0.9459
+        }
+      ]
+    },
+    {
+      "start": 65.7,
+      "end": 70.6,
+      "text": "handling the heavy lifting in the background, but leaving final control entirely in your hands.",
+      "words": [
+        {
+          "word": "handling",
+          "start": 65.7,
+          "end": 65.98,
+          "score": 0.9901
+        },
+        {
+          "word": "the",
+          "start": 65.98,
+          "end": 66.24,
+          "score": 0.9982
+        },
+        {
+          "word": "heavy",
+          "start": 66.24,
+          "end": 66.46,
+          "score": 0.9989
+        },
+        {
+          "word": "lifting",
+          "start": 66.46,
+          "end": 66.82,
+          "score": 0.9886
+        },
+        {
+          "word": "in",
+          "start": 66.82,
+          "end": 66.96,
+          "score": 0.9605
+        },
+        {
+          "word": "the",
+          "start": 66.96,
+          "end": 67.04,
+          "score": 0.9986
+        },
+        {
+          "word": "background,",
+          "start": 67.04,
+          "end": 67.4,
+          "score": 0.9975
+        },
+        {
+          "word": "but",
+          "start": 67.86,
+          "end": 67.92,
+          "score": 0.9972
+        },
+        {
+          "word": "leaving",
+          "start": 67.92,
+          "end": 68.14,
+          "score": 0.9952
+        },
+        {
+          "word": "final",
+          "start": 68.14,
+          "end": 68.6,
+          "score": 0.9841
+        },
+        {
+          "word": "control",
+          "start": 68.6,
+          "end": 69.0,
+          "score": 0.9991
+        },
+        {
+          "word": "entirely",
+          "start": 69.0,
+          "end": 69.74,
+          "score": 0.9978
+        },
+        {
+          "word": "in",
+          "start": 69.74,
+          "end": 70.08,
+          "score": 0.9986
+        },
+        {
+          "word": "your",
+          "start": 70.08,
+          "end": 70.22,
+          "score": 0.9954
+        },
+        {
+          "word": "hands.",
+          "start": 70.22,
+          "end": 70.6,
+          "score": 0.9981
+        }
+      ]
+    }
+  ]
+}

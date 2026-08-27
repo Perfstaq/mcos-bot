@@ -1,0 +1,1503 @@
+{
+  "language": "en",
+  "durationSec": 70.008,
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 0.82,
+      "text": "Hey, welcome to the team.",
+      "words": [
+        {
+          "word": "Hey,",
+          "start": 0.0,
+          "end": 0.16,
+          "score": 0.9029
+        },
+        {
+          "word": "welcome",
+          "start": 0.26,
+          "end": 0.4,
+          "score": 0.99
+        },
+        {
+          "word": "to",
+          "start": 0.4,
+          "end": 0.54,
+          "score": 0.9956
+        },
+        {
+          "word": "the",
+          "start": 0.54,
+          "end": 0.6,
+          "score": 0.9882
+        },
+        {
+          "word": "team.",
+          "start": 0.6,
+          "end": 0.82,
+          "score": 0.9934
+        }
+      ]
+    },
+    {
+      "start": 1.18,
+      "end": 3.06,
+      "text": "If you're joining the platform side of things,",
+      "words": [
+        {
+          "word": "If",
+          "start": 1.18,
+          "end": 1.26,
+          "score": 0.9957
+        },
+        {
+          "word": "you're",
+          "start": 1.26,
+          "end": 1.38,
+          "score": 0.9931
+        },
+        {
+          "word": "joining",
+          "start": 1.38,
+          "end": 1.74,
+          "score": 0.9977
+        },
+        {
+          "word": "the",
+          "start": 1.74,
+          "end": 1.94,
+          "score": 0.9977
+        },
+        {
+          "word": "platform",
+          "start": 1.94,
+          "end": 2.38,
+          "score": 0.9257
+        },
+        {
+          "word": "side",
+          "start": 2.38,
+          "end": 2.68,
+          "score": 0.987
+        },
+        {
+          "word": "of",
+          "start": 2.68,
+          "end": 2.84,
+          "score": 0.9885
+        },
+        {
+          "word": "things,",
+          "start": 2.84,
+          "end": 3.06,
+          "score": 0.9972
+        }
+      ]
+    },
+    {
+      "start": 3.34,
+      "end": 4.88,
+      "text": "you are in the exact right spot.",
+      "words": [
+        {
+          "word": "you",
+          "start": 3.34,
+          "end": 3.46,
+          "score": 0.9971
+        },
+        {
+          "word": "are",
+          "start": 3.46,
+          "end": 3.66,
+          "score": 0.9931
+        },
+        {
+          "word": "in",
+          "start": 3.66,
+          "end": 3.82,
+          "score": 0.999
+        },
+        {
+          "word": "the",
+          "start": 3.82,
+          "end": 3.94,
+          "score": 0.9988
+        },
+        {
+          "word": "exact",
+          "start": 3.94,
+          "end": 4.22,
+          "score": 0.9917
+        },
+        {
+          "word": "right",
+          "start": 4.22,
+          "end": 4.54,
+          "score": 0.9929
+        },
+        {
+          "word": "spot.",
+          "start": 4.54,
+          "end": 4.88,
+          "score": 0.9969
+        }
+      ]
+    },
+    {
+      "start": 5.28,
+      "end": 7.88,
+      "text": "Today, we're doing a rapid, rock solid onboarding",
+      "words": [
+        {
+          "word": "Today,",
+          "start": 5.28,
+          "end": 5.48,
+          "score": 0.9979
+        },
+        {
+          "word": "we're",
+          "start": 5.64,
+          "end": 5.78,
+          "score": 0.9955
+        },
+        {
+          "word": "doing",
+          "start": 5.78,
+          "end": 5.98,
+          "score": 0.9983
+        },
+        {
+          "word": "a",
+          "start": 5.98,
+          "end": 6.12,
+          "score": 0.9981
+        },
+        {
+          "word": "rapid,",
+          "start": 6.12,
+          "end": 6.5,
+          "score": 0.9424
+        },
+        {
+          "word": "rock",
+          "start": 6.78,
+          "end": 6.9,
+          "score": 0.9762
+        },
+        {
+          "word": "solid",
+          "start": 6.9,
+          "end": 7.28,
+          "score": 0.7012
+        },
+        {
+          "word": "onboarding",
+          "start": 7.28,
+          "end": 7.88,
+          "score": 0.983
+        }
+      ]
+    },
+    {
+      "start": 7.88,
+      "end": 9.5,
+      "text": "to the MetaWorks Master Service.",
+      "words": [
+        {
+          "word": "to",
+          "start": 7.88,
+          "end": 8.02,
+          "score": 0.9813
+        },
+        {
+          "word": "the",
+          "start": 8.02,
+          "end": 8.12,
+          "score": 0.9942
+        },
+        {
+          "word": "MetaWorks",
+          "start": 8.12,
+          "end": 8.74,
+          "score": 0.8315
+        },
+        {
+          "word": "Master",
+          "start": 8.74,
+          "end": 9.1,
+          "score": 0.6675
+        },
+        {
+          "word": "Service.",
+          "start": 9.1,
+          "end": 9.5,
+          "score": 0.6233
+        }
+      ]
+    },
+    {
+      "start": 9.92,
+      "end": 11.36,
+      "text": "Basically, in this explainer,",
+      "words": [
+        {
+          "word": "Basically,",
+          "start": 9.92,
+          "end": 10.34,
+          "score": 0.9973
+        },
+        {
+          "word": "in",
+          "start": 10.62,
+          "end": 10.7,
+          "score": 0.9975
+        },
+        {
+          "word": "this",
+          "start": 10.7,
+          "end": 10.88,
+          "score": 0.9989
+        },
+        {
+          "word": "explainer,",
+          "start": 10.88,
+          "end": 11.36,
+          "score": 0.9401
+        }
+      ]
+    },
+    {
+      "start": 11.46,
+      "end": 13.82,
+      "text": "we're popping the hood on the absolute beating heart",
+      "words": [
+        {
+          "word": "we're",
+          "start": 11.46,
+          "end": 11.56,
+          "score": 0.9964
+        },
+        {
+          "word": "popping",
+          "start": 11.56,
+          "end": 11.82,
+          "score": 0.9945
+        },
+        {
+          "word": "the",
+          "start": 11.82,
+          "end": 12.04,
+          "score": 0.9983
+        },
+        {
+          "word": "hood",
+          "start": 12.04,
+          "end": 12.18,
+          "score": 0.9977
+        },
+        {
+          "word": "on",
+          "start": 12.18,
+          "end": 12.38,
+          "score": 0.9934
+        },
+        {
+          "word": "the",
+          "start": 12.38,
+          "end": 12.5,
+          "score": 0.9973
+        },
+        {
+          "word": "absolute",
+          "start": 12.5,
+          "end": 13.06,
+          "score": 0.9813
+        },
+        {
+          "word": "beating",
+          "start": 13.06,
+          "end": 13.52,
+          "score": 0.9049
+        },
+        {
+          "word": "heart",
+          "start": 13.52,
+          "end": 13.82,
+          "score": 0.9948
+        }
+      ]
+    },
+    {
+      "start": 13.82,
+      "end": 15.74,
+      "text": "of our AI orchestration platform.",
+      "words": [
+        {
+          "word": "of",
+          "start": 13.82,
+          "end": 14.06,
+          "score": 0.9981
+        },
+        {
+          "word": "our",
+          "start": 14.06,
+          "end": 14.24,
+          "score": 0.9987
+        },
+        {
+          "word": "AI",
+          "start": 14.24,
+          "end": 14.54,
+          "score": 0.9559
+        },
+        {
+          "word": "orchestration",
+          "start": 14.54,
+          "end": 15.18,
+          "score": 0.9544
+        },
+        {
+          "word": "platform.",
+          "start": 15.18,
+          "end": 15.74,
+          "score": 0.9992
+        }
+      ]
+    },
+    {
+      "start": 16.16,
+      "end": 17.82,
+      "text": "So let's just jump right in.",
+      "words": [
+        {
+          "word": "So",
+          "start": 16.16,
+          "end": 16.38,
+          "score": 0.989
+        },
+        {
+          "word": "let's",
+          "start": 16.38,
+          "end": 16.8,
+          "score": 0.7165
+        },
+        {
+          "word": "just",
+          "start": 16.8,
+          "end": 16.96,
+          "score": 0.9942
+        },
+        {
+          "word": "jump",
+          "start": 16.96,
+          "end": 17.26,
+          "score": 0.9973
+        },
+        {
+          "word": "right",
+          "start": 17.26,
+          "end": 17.6,
+          "score": 0.9966
+        },
+        {
+          "word": "in.",
+          "start": 17.6,
+          "end": 17.82,
+          "score": 0.9992
+        }
+      ]
+    },
+    {
+      "start": 18.44,
+      "end": 20.66,
+      "text": "Okay, so our unbreakable golden rule",
+      "words": [
+        {
+          "word": "Okay,",
+          "start": 18.44,
+          "end": 18.72,
+          "score": 0.5324
+        },
+        {
+          "word": "so",
+          "start": 19.0,
+          "end": 19.2,
+          "score": 0.9914
+        },
+        {
+          "word": "our",
+          "start": 19.2,
+          "end": 19.32,
+          "score": 0.9932
+        },
+        {
+          "word": "unbreakable",
+          "start": 19.32,
+          "end": 20.0,
+          "score": 0.9206
+        },
+        {
+          "word": "golden",
+          "start": 20.0,
+          "end": 20.4,
+          "score": 0.8108
+        },
+        {
+          "word": "rule",
+          "start": 20.4,
+          "end": 20.66,
+          "score": 0.9966
+        }
+      ]
+    },
+    {
+      "start": 20.66,
+      "end": 21.88,
+      "text": "is right here on the screen.",
+      "words": [
+        {
+          "word": "is",
+          "start": 20.66,
+          "end": 21.08,
+          "score": 0.9788
+        },
+        {
+          "word": "right",
+          "start": 21.08,
+          "end": 21.28,
+          "score": 0.9971
+        },
+        {
+          "word": "here",
+          "start": 21.28,
+          "end": 21.46,
+          "score": 0.9984
+        },
+        {
+          "word": "on",
+          "start": 21.46,
+          "end": 21.58,
+          "score": 0.9969
+        },
+        {
+          "word": "the",
+          "start": 21.58,
+          "end": 21.68,
+          "score": 0.9951
+        },
+        {
+          "word": "screen.",
+          "start": 21.68,
+          "end": 21.88,
+          "score": 0.9992
+        }
+      ]
+    },
+    {
+      "start": 22.9,
+      "end": 24.38,
+      "text": "The Master Service is the brain.",
+      "words": [
+        {
+          "word": "The",
+          "start": 22.9,
+          "end": 22.98,
+          "score": 0.9807
+        },
+        {
+          "word": "Master",
+          "start": 22.98,
+          "end": 23.3,
+          "score": 0.7199
+        },
+        {
+          "word": "Service",
+          "start": 23.3,
+          "end": 23.76,
+          "score": 0.8316
+        },
+        {
+          "word": "is",
+          "start": 23.76,
+          "end": 24.02,
+          "score": 0.9945
+        },
+        {
+          "word": "the",
+          "start": 24.02,
+          "end": 24.14,
+          "score": 0.9973
+        },
+        {
+          "word": "brain.",
+          "start": 24.14,
+          "end": 24.38,
+          "score": 0.9408
+        }
+      ]
+    },
+    {
+      "start": 24.86,
+      "end": 25.9,
+      "text": "It is not the front door.",
+      "words": [
+        {
+          "word": "It",
+          "start": 24.86,
+          "end": 25.04,
+          "score": 0.9972
+        },
+        {
+          "word": "is",
+          "start": 25.04,
+          "end": 25.14,
+          "score": 0.9918
+        },
+        {
+          "word": "not",
+          "start": 25.14,
+          "end": 25.34,
+          "score": 0.9974
+        },
+        {
+          "word": "the",
+          "start": 25.34,
+          "end": 25.52,
+          "score": 0.9976
+        },
+        {
+          "word": "front",
+          "start": 25.52,
+          "end": 25.7,
+          "score": 0.997
+        },
+        {
+          "word": "door.",
+          "start": 25.7,
+          "end": 25.9,
+          "score": 0.9965
+        }
+      ]
+    },
+    {
+      "start": 26.46,
+      "end": 28.36,
+      "text": "If you take away just one thing",
+      "words": [
+        {
+          "word": "If",
+          "start": 26.46,
+          "end": 26.98,
+          "score": 0.4058
+        },
+        {
+          "word": "you",
+          "start": 26.98,
+          "end": 27.16,
+          "score": 0.9914
+        },
+        {
+          "word": "take",
+          "start": 27.16,
+          "end": 27.38,
+          "score": 0.9814
+        },
+        {
+          "word": "away",
+          "start": 27.38,
+          "end": 27.58,
+          "score": 0.9913
+        },
+        {
+          "word": "just",
+          "start": 27.58,
+          "end": 27.8,
+          "score": 0.9566
+        },
+        {
+          "word": "one",
+          "start": 27.8,
+          "end": 28.14,
+          "score": 0.9896
+        },
+        {
+          "word": "thing",
+          "start": 28.14,
+          "end": 28.36,
+          "score": 0.9883
+        }
+      ]
+    },
+    {
+      "start": 28.36,
+      "end": 30.58,
+      "text": "from this whole overview, let it be that.",
+      "words": [
+        {
+          "word": "from",
+          "start": 28.36,
+          "end": 28.58,
+          "score": 0.9878
+        },
+        {
+          "word": "this",
+          "start": 28.58,
+          "end": 28.74,
+          "score": 0.9873
+        },
+        {
+          "word": "whole",
+          "start": 28.74,
+          "end": 29.0,
+          "score": 0.9909
+        },
+        {
+          "word": "overview,",
+          "start": 29.0,
+          "end": 29.64,
+          "score": 0.991
+        },
+        {
+          "word": "let",
+          "start": 29.92,
+          "end": 30.12,
+          "score": 0.9914
+        },
+        {
+          "word": "it",
+          "start": 30.12,
+          "end": 30.24,
+          "score": 0.9956
+        },
+        {
+          "word": "be",
+          "start": 30.24,
+          "end": 30.36,
+          "score": 0.9972
+        },
+        {
+          "word": "that.",
+          "start": 30.36,
+          "end": 30.58,
+          "score": 0.9953
+        }
+      ]
+    },
+    {
+      "start": 31.12,
+      "end": 34.04,
+      "text": "It only expects pristine, fully authenticated requests",
+      "words": [
+        {
+          "word": "It",
+          "start": 31.12,
+          "end": 31.4,
+          "score": 0.9675
+        },
+        {
+          "word": "only",
+          "start": 31.4,
+          "end": 31.58,
+          "score": 0.9819
+        },
+        {
+          "word": "expects",
+          "start": 31.58,
+          "end": 31.96,
+          "score": 0.9935
+        },
+        {
+          "word": "pristine,",
+          "start": 31.96,
+          "end": 32.48,
+          "score": 0.8328
+        },
+        {
+          "word": "fully",
+          "start": 32.78,
+          "end": 33.06,
+          "score": 0.9985
+        },
+        {
+          "word": "authenticated",
+          "start": 33.06,
+          "end": 33.66,
+          "score": 0.9622
+        },
+        {
+          "word": "requests",
+          "start": 33.66,
+          "end": 34.04,
+          "score": 0.9183
+        }
+      ]
+    },
+    {
+      "start": 34.04,
+      "end": 35.46,
+      "text": "to arrive from upstream.",
+      "words": [
+        {
+          "word": "to",
+          "start": 34.04,
+          "end": 34.56,
+          "score": 0.9735
+        },
+        {
+          "word": "arrive",
+          "start": 34.56,
+          "end": 34.84,
+          "score": 0.981
+        },
+        {
+          "word": "from",
+          "start": 34.84,
+          "end": 35.04,
+          "score": 0.9945
+        },
+        {
+          "word": "upstream.",
+          "start": 35.04,
+          "end": 35.46,
+          "score": 0.9801
+        }
+      ]
+    },
+    {
+      "start": 35.94,
+      "end": 38.44,
+      "text": "And that frees it up to do what it's actually meant to do,",
+      "words": [
+        {
+          "word": "And",
+          "start": 35.94,
+          "end": 36.2,
+          "score": 0.9475
+        },
+        {
+          "word": "that",
+          "start": 36.2,
+          "end": 36.32,
+          "score": 0.995
+        },
+        {
+          "word": "frees",
+          "start": 36.32,
+          "end": 36.7,
+          "score": 0.9339
+        },
+        {
+          "word": "it",
+          "start": 36.7,
+          "end": 36.8,
+          "score": 0.9891
+        },
+        {
+          "word": "up",
+          "start": 36.8,
+          "end": 36.9,
+          "score": 0.9957
+        },
+        {
+          "word": "to",
+          "start": 36.9,
+          "end": 37.08,
+          "score": 0.9819
+        },
+        {
+          "word": "do",
+          "start": 37.08,
+          "end": 37.24,
+          "score": 0.9602
+        },
+        {
+          "word": "what",
+          "start": 37.24,
+          "end": 37.34,
+          "score": 0.9911
+        },
+        {
+          "word": "it's",
+          "start": 37.34,
+          "end": 37.5,
+          "score": 0.9478
+        },
+        {
+          "word": "actually",
+          "start": 37.5,
+          "end": 37.88,
+          "score": 0.9879
+        },
+        {
+          "word": "meant",
+          "start": 37.88,
+          "end": 38.04,
+          "score": 0.9994
+        },
+        {
+          "word": "to",
+          "start": 38.04,
+          "end": 38.2,
+          "score": 0.9942
+        },
+        {
+          "word": "do,",
+          "start": 38.2,
+          "end": 38.44,
+          "score": 0.9977
+        }
+      ]
+    },
+    {
+      "start": 38.64,
+      "end": 39.92,
+      "text": "which is orchestrating AI.",
+      "words": [
+        {
+          "word": "which",
+          "start": 38.64,
+          "end": 38.9,
+          "score": 0.998
+        },
+        {
+          "word": "is",
+          "start": 38.9,
+          "end": 39.04,
+          "score": 0.997
+        },
+        {
+          "word": "orchestrating",
+          "start": 39.04,
+          "end": 39.54,
+          "score": 0.9958
+        },
+        {
+          "word": "AI.",
+          "start": 39.54,
+          "end": 39.92,
+          "score": 0.9686
+        }
+      ]
+    },
+    {
+      "start": 40.64,
+      "end": 41.76,
+      "text": "All right, here's our quick roadmap.",
+      "words": [
+        {
+          "word": "All",
+          "start": 40.64,
+          "end": 40.84,
+          "score": 0.622
+        },
+        {
+          "word": "right,",
+          "start": 40.84,
+          "end": 40.94,
+          "score": 0.998
+        },
+        {
+          "word": "here's",
+          "start": 41.02,
+          "end": 41.2,
+          "score": 0.9916
+        },
+        {
+          "word": "our",
+          "start": 41.2,
+          "end": 41.28,
+          "score": 0.9957
+        },
+        {
+          "word": "quick",
+          "start": 41.28,
+          "end": 41.44,
+          "score": 0.7287
+        },
+        {
+          "word": "roadmap.",
+          "start": 41.44,
+          "end": 41.76,
+          "score": 0.6948
+        }
+      ]
+    },
+    {
+      "start": 42.12,
+      "end": 43.68,
+      "text": "One, the five-minute mental model.",
+      "words": [
+        {
+          "word": "One,",
+          "start": 42.12,
+          "end": 42.26,
+          "score": 0.8865
+        },
+        {
+          "word": "the",
+          "start": 42.56,
+          "end": 42.64,
+          "score": 0.9857
+        },
+        {
+          "word": "five",
+          "start": 42.64,
+          "end": 42.9,
+          "score": 0.7796
+        },
+        {
+          "word": "-minute",
+          "start": 42.9,
+          "end": 43.08,
+          "score": 0.8876
+        },
+        {
+          "word": "mental",
+          "start": 43.08,
+          "end": 43.42,
+          "score": 0.9754
+        },
+        {
+          "word": "model.",
+          "start": 43.42,
+          "end": 43.68,
+          "score": 0.9972
+        }
+      ]
+    },
+    {
+      "start": 43.96,
+      "end": 45.32,
+      "text": "Two, what it does not do.",
+      "words": [
+        {
+          "word": "Two,",
+          "start": 43.96,
+          "end": 44.14,
+          "score": 0.9909
+        },
+        {
+          "word": "what",
+          "start": 44.36,
+          "end": 44.58,
+          "score": 0.9959
+        },
+        {
+          "word": "it",
+          "start": 44.58,
+          "end": 44.66,
+          "score": 0.9833
+        },
+        {
+          "word": "does",
+          "start": 44.66,
+          "end": 44.8,
+          "score": 0.9958
+        },
+        {
+          "word": "not",
+          "start": 44.8,
+          "end": 45.06,
+          "score": 0.9954
+        },
+        {
+          "word": "do.",
+          "start": 45.06,
+          "end": 45.32,
+          "score": 0.9985
+        }
+      ]
+    },
+    {
+      "start": 45.66,
+      "end": 47.16,
+      "text": "Three, inside the code anatomy.",
+      "words": [
+        {
+          "word": "Three,",
+          "start": 45.66,
+          "end": 45.86,
+          "score": 0.9836
+        },
+        {
+          "word": "inside",
+          "start": 46.36,
+          "end": 46.52,
+          "score": 0.9931
+        },
+        {
+          "word": "the",
+          "start": 46.52,
+          "end": 46.72,
+          "score": 0.9973
+        },
+        {
+          "word": "code",
+          "start": 46.72,
+          "end": 46.86,
+          "score": 0.6955
+        },
+        {
+          "word": "anatomy.",
+          "start": 46.86,
+          "end": 47.16,
+          "score": 0.9941
+        }
+      ]
+    },
+    {
+      "start": 47.52,
+      "end": 49.18,
+      "text": "Four, the chat request lifecycle.",
+      "words": [
+        {
+          "word": "Four,",
+          "start": 47.52,
+          "end": 47.82,
+          "score": 0.9652
+        },
+        {
+          "word": "the",
+          "start": 48.16,
+          "end": 48.24,
+          "score": 0.9958
+        },
+        {
+          "word": "chat",
+          "start": 48.24,
+          "end": 48.44,
+          "score": 0.9403
+        },
+        {
+          "word": "request",
+          "start": 48.44,
+          "end": 48.72,
+          "score": 0.6503
+        },
+        {
+          "word": "lifecycle.",
+          "start": 48.72,
+          "end": 49.18,
+          "score": 0.7843
+        }
+      ]
+    },
+    {
+      "start": 49.72,
+      "end": 51.66,
+      "text": "Five, databases and data ownership.",
+      "words": [
+        {
+          "word": "Five,",
+          "start": 49.72,
+          "end": 49.94,
+          "score": 0.9852
+        },
+        {
+          "word": "databases",
+          "start": 50.38,
+          "end": 50.6,
+          "score": 0.847
+        },
+        {
+          "word": "and",
+          "start": 50.6,
+          "end": 51.04,
+          "score": 0.8213
+        },
+        {
+          "word": "data",
+          "start": 51.04,
+          "end": 51.22,
+          "score": 0.9944
+        },
+        {
+          "word": "ownership.",
+          "start": 51.22,
+          "end": 51.66,
+          "score": 0.989
+        }
+      ]
+    },
+    {
+      "start": 51.66,
+      "end": 54.38,
+      "text": "And finally, six, service integration contracts.",
+      "words": [
+        {
+          "word": "And",
+          "start": 51.66,
+          "end": 52.0,
+          "score": 0.9929
+        },
+        {
+          "word": "finally,",
+          "start": 52.0,
+          "end": 52.38,
+          "score": 0.9588
+        },
+        {
+          "word": "six,",
+          "start": 52.62,
+          "end": 52.88,
+          "score": 0.9853
+        },
+        {
+          "word": "service",
+          "start": 53.26,
+          "end": 53.38,
+          "score": 0.9887
+        },
+        {
+          "word": "integration",
+          "start": 53.38,
+          "end": 53.84,
+          "score": 0.9879
+        },
+        {
+          "word": "contracts.",
+          "start": 53.84,
+          "end": 54.38,
+          "score": 0.9906
+        }
+      ]
+    },
+    {
+      "start": 55.06,
+      "end": 58.16,
+      "text": "Let's start with section one, the five-minute mental model.",
+      "words": [
+        {
+          "word": "Let's",
+          "start": 55.06,
+          "end": 55.58,
+          "score": 0.7906
+        },
+        {
+          "word": "start",
+          "start": 55.58,
+          "end": 55.74,
+          "score": 0.9859
+        },
+        {
+          "word": "with",
+          "start": 55.74,
+          "end": 55.94,
+          "score": 0.9963
+        },
+        {
+          "word": "section",
+          "start": 55.94,
+          "end": 56.28,
+          "score": 0.3384
+        },
+        {
+          "word": "one,",
+          "start": 56.28,
+          "end": 56.56,
+          "score": 0.6024
+        },
+        {
+          "word": "the",
+          "start": 56.82,
+          "end": 56.94,
+          "score": 0.9688
+        },
+        {
+          "word": "five",
+          "start": 56.94,
+          "end": 57.3,
+          "score": 0.4661
+        },
+        {
+          "word": "-minute",
+          "start": 57.3,
+          "end": 57.5,
+          "score": 0.8568
+        },
+        {
+          "word": "mental",
+          "start": 57.5,
+          "end": 57.84,
+          "score": 0.9286
+        },
+        {
+          "word": "model.",
+          "start": 57.84,
+          "end": 58.16,
+          "score": 0.9947
+        }
+      ]
+    },
+    {
+      "start": 58.84,
+      "end": 60.94,
+      "text": "So remember how I just said the Master Service",
+      "words": [
+        {
+          "word": "So",
+          "start": 58.84,
+          "end": 59.12,
+          "score": 0.9359
+        },
+        {
+          "word": "remember",
+          "start": 59.12,
+          "end": 59.46,
+          "score": 0.8532
+        },
+        {
+          "word": "how",
+          "start": 59.46,
+          "end": 59.66,
+          "score": 0.978
+        },
+        {
+          "word": "I",
+          "start": 59.66,
+          "end": 59.74,
+          "score": 0.9911
+        },
+        {
+          "word": "just",
+          "start": 59.74,
+          "end": 59.88,
+          "score": 0.9814
+        },
+        {
+          "word": "said",
+          "start": 59.88,
+          "end": 60.1,
+          "score": 0.9955
+        },
+        {
+          "word": "the",
+          "start": 60.1,
+          "end": 60.24,
+          "score": 0.8768
+        },
+        {
+          "word": "Master",
+          "start": 60.24,
+          "end": 60.5,
+          "score": 0.2807
+        },
+        {
+          "word": "Service",
+          "start": 60.5,
+          "end": 60.94,
+          "score": 0.5146
+        }
+      ]
+    },
+    {
+      "start": 60.94,
+      "end": 61.82,
+      "text": "isn't the front door?",
+      "words": [
+        {
+          "word": "isn't",
+          "start": 60.94,
+          "end": 61.34,
+          "score": 0.9755
+        },
+        {
+          "word": "the",
+          "start": 61.34,
+          "end": 61.46,
+          "score": 0.9944
+        },
+        {
+          "word": "front",
+          "start": 61.46,
+          "end": 61.6,
+          "score": 0.9599
+        },
+        {
+          "word": "door?",
+          "start": 61.6,
+          "end": 61.82,
+          "score": 0.9746
+        }
+      ]
+    },
+    {
+      "start": 62.22,
+      "end": 65.18,
+      "text": "Well, that's because our BFF or back end for front end",
+      "words": [
+        {
+          "word": "Well,",
+          "start": 62.22,
+          "end": 62.34,
+          "score": 0.9827
+        },
+        {
+          "word": "that's",
+          "start": 62.54,
+          "end": 62.82,
+          "score": 0.9978
+        },
+        {
+          "word": "because",
+          "start": 62.82,
+          "end": 63.02,
+          "score": 0.9962
+        },
+        {
+          "word": "our",
+          "start": 63.02,
+          "end": 63.18,
+          "score": 0.9889
+        },
+        {
+          "word": "BFF",
+          "start": 63.18,
+          "end": 63.58,
+          "score": 0.9585
+        },
+        {
+          "word": "or",
+          "start": 63.58,
+          "end": 63.98,
+          "score": 0.426
+        },
+        {
+          "word": "back",
+          "start": 63.98,
+          "end": 64.28,
+          "score": 0.3909
+        },
+        {
+          "word": "end",
+          "start": 64.28,
+          "end": 64.52,
+          "score": 0.8284
+        },
+        {
+          "word": "for",
+          "start": 64.52,
+          "end": 64.7,
+          "score": 0.9497
+        },
+        {
+          "word": "front",
+          "start": 64.7,
+          "end": 64.9,
+          "score": 0.9068
+        },
+        {
+          "word": "end",
+          "start": 64.9,
+          "end": 65.18,
+          "score": 0.9164
+        }
+      ]
+    },
+    {
+      "start": 65.18,
+      "end": 66.36,
+      "text": "acts as our bouncer.",
+      "words": [
+        {
+          "word": "acts",
+          "start": 65.18,
+          "end": 65.64,
+          "score": 0.2676
+        },
+        {
+          "word": "as",
+          "start": 65.64,
+          "end": 65.84,
+          "score": 0.8819
+        },
+        {
+          "word": "our",
+          "start": 65.84,
+          "end": 65.96,
+          "score": 0.9959
+        },
+        {
+          "word": "bouncer.",
+          "start": 65.96,
+          "end": 66.36,
+          "score": 0.7081
+        }
+      ]
+    },
+    {
+      "start": 66.8,
+      "end": 68.32,
+      "text": "The browser actually talks directly",
+      "words": [
+        {
+          "word": "The",
+          "start": 66.8,
+          "end": 66.92,
+          "score": 0.9806
+        },
+        {
+          "word": "browser",
+          "start": 66.92,
+          "end": 67.14,
+          "score": 0.9772
+        },
+        {
+          "word": "actually",
+          "start": 67.14,
+          "end": 67.58,
+          "score": 0.9849
+        },
+        {
+          "word": "talks",
+          "start": 67.58,
+          "end": 67.84,
+          "score": 0.9953
+        },
+        {
+          "word": "directly",
+          "start": 67.84,
+          "end": 68.32,
+          "score": 0.9973
+        }
+      ]
+    },
+    {
+      "start": 68.32,
+      "end": 69.98,
+      "text": "to this next JS inner.",
+      "words": [
+        {
+          "word": "to",
+          "start": 68.32,
+          "end": 68.66,
+          "score": 0.9992
+        },
+        {
+          "word": "this",
+          "start": 68.66,
+          "end": 68.86,
+          "score": 0.994
+        },
+        {
+          "word": "next",
+          "start": 68.86,
+          "end": 69.14,
+          "score": 0.9531
+        },
+        {
+          "word": "JS",
+          "start": 69.14,
+          "end": 69.56,
+          "score": 0.6746
+        },
+        {
+          "word": "inner.",
+          "start": 69.56,
+          "end": 69.98,
+          "score": 0.4054
+        }
+      ]
+    }
+  ]
+}
