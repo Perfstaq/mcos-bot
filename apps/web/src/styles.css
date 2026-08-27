@@ -421,7 +421,9 @@ button, input, textarea, select { font: inherit; color: inherit; }
   margin-bottom: 18px;
 }
 .evidence .eyebrow { display: flex; align-items: center; gap: 6px; color: var(--faint); margin-bottom: 8px; }
-.evidence blockquote { margin: 0 0 10px; font-size: 15px; line-height: 1.55; font-style: italic; color: var(--ink); }
+/* Monospaced on purpose: this is the transcript's own words, not ours, and it
+   should not read as prose the product wrote. */
+.evidence blockquote { margin: 0 0 10px; font-size: 13.5px; line-height: 1.6; color: var(--ink); }
 .evidence .attribution { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; color: var(--muted); }
 .evidence .attribution .speaker { font-weight: 600; color: var(--ink-2); }
 
@@ -463,6 +465,180 @@ button, input, textarea, select { font: inherit; color: inherit; }
   box-shadow: 0 0 0 3px var(--orange-soft);
   margin: 10px 0 18px;
 }
+
+/* The proposal stays visible while it is rewritten. An edit you cannot compare
+   against the original is a retype. */
+.edit-original {
+  margin: 10px 0 8px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--faint);
+  text-decoration: line-through;
+  text-decoration-color: var(--line-strong);
+}
+
+/* ============================================================ review gate */
+
+.progress {
+  display: inline-block;
+  width: 90px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+  overflow: hidden;
+  flex: none;
+}
+.progress i { display: block; height: 100%; background: var(--orange); transition: width 200ms ease; }
+
+/* One keystroke keeps everything the model was sure about. What it was not
+   sure about is listed, by name, right next to the button — a bulk action
+   whose exclusions are invisible is a bulk action nobody can audit. */
+.bulk-bar {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 22px;
+  border-bottom: 1px solid var(--line);
+  background: var(--pane-2);
+}
+.bulk-flagged-toggle {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--muted);
+  font-family: "Geist Mono", monospace;
+  font-size: 11px;
+  cursor: pointer;
+}
+.bulk-flagged-toggle:hover { color: var(--ink); }
+.bulk-flagged {
+  flex-basis: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.bulk-flagged li { display: flex; gap: 10px; align-items: baseline; font-size: 12px; color: var(--muted); }
+.bulk-flagged .pct { flex: none; width: 34px; color: var(--orange); font-size: 11px; }
+.bulk-flagged .what { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.group-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px 5px;
+  border-bottom: 1px solid var(--line-soft);
+  background: var(--pane);
+  color: var(--faint);
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.group-head .n { margin-left: auto; color: var(--muted); }
+
+.conf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: "Geist Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--faint);
+  white-space: nowrap;
+}
+.conf-chip.high { color: var(--green); }
+.conf-chip.medium { color: var(--orange); }
+.conf-chip.low { color: var(--red); }
+.conf-chip .meter i { background: currentColor; }
+
+.pane.rail-audit { width: 232px; flex: none; background: var(--pane-2); }
+.audit-empty { margin: 0; padding: 20px 14px; color: var(--faint); font-size: 12px; line-height: 1.5; }
+.audit-row {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  border-left: 2px solid var(--line);
+  animation: audit-in 220ms ease both;
+}
+.audit-row.approve { border-left-color: var(--green); }
+.audit-row.edit_approve { border-left-color: var(--orange); }
+.audit-row.reject { border-left-color: var(--red); }
+.audit-row.undo { border-left-color: var(--faint); }
+.audit-row .audit-top { display: flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+.audit-row .audit-top .grow { flex: 1; }
+.audit-row .audit-top .what { color: var(--ink-2); font-weight: 600; }
+.audit-row .audit-top .when { color: var(--faint); }
+.audit-row .audit-text {
+  margin: 4px 0 3px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.audit-row .audit-who { color: var(--faint); font-size: 10px; overflow: hidden; text-overflow: ellipsis; }
+@keyframes audit-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+/* The decision is already on the server. This is a way back, not a delay —
+   pressing Undo writes a compensating decision, it does not erase the first. */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 9px 10px 9px 15px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--rail);
+  color: var(--rail-ink);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+  animation: toast-in 160ms ease both;
+}
+.toast .what { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.toast-undo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  padding: 5px 12px;
+  border: 1px solid var(--rail-line);
+  border-radius: 999px;
+  background: var(--rail-hover);
+  color: var(--rail-ink);
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+}
+.toast-undo:hover { background: rgba(255, 255, 255, 0.14); }
+.toast-undo .key {
+  padding: 0 4px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.16);
+  font-family: "Geist Mono", monospace;
+  font-size: 10px;
+}
+@keyframes toast-in { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+.completion { padding: 48px 28px; max-width: 46ch; margin: 0 auto; text-align: center; }
+.completion h3 { margin: 0 0 10px; font-size: 20px; font-weight: 600; letter-spacing: -0.015em; }
+.completion .tally { font-size: 15px; color: var(--ink-2); margin: 0 0 14px; }
+.completion .tally b { color: var(--ink); }
+.completion p { color: var(--muted); font-size: 13px; line-height: 1.55; margin: 0 0 20px; }
+.btn.lg { padding: 10px 18px; font-size: 14px; }
 
 .kv { display: grid; grid-template-columns: 118px 1fr; gap: 7px 14px; align-items: baseline; }
 .kv dt { color: var(--faint); font-family: "Geist Mono", monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
@@ -514,7 +690,16 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .version-item:hover { background: var(--line-soft); }
 .version-item.active { background: var(--pane); border-left-color: var(--orange); }
 .version-item .vn { font-weight: 600; font-size: 13px; }
+.version-item .vsource {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .version-item .vmeta { color: var(--faint); display: flex; gap: 8px; margin-top: 3px; }
+.version-item .vmeta .grow { flex: 1; }
 .version-item .plus { color: var(--green); }
 .version-item .tilde { color: var(--orange); }
 .version-item .minus { color: var(--red); }
@@ -542,6 +727,55 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .doc-claim .cite { margin-top: 5px; color: var(--faint); display: flex; flex-wrap: wrap; gap: 9px; align-items: baseline; }
 .doc-claim .cite q { color: var(--muted); font-style: italic; }
 .doc-claim.redacted .cite q { color: var(--faint); font-style: normal; }
+
+/* The source chip: which call said this, and when. */
+.doc-claim .src-chip {
+  padding: 1px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--pane-2);
+  color: var(--muted);
+}
+
+/* The verbatim quote is the evidence a reviewer vouched for, so it stays out
+   of the way until asked for — hover, or keyboard focus on the row. */
+.doc-claim .quote-reveal {
+  display: none;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-left: 2px solid var(--orange-line);
+  background: var(--pane-2);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+}
+.doc-claim:hover .quote-reveal,
+.doc-claim:focus-within .quote-reveal,
+.doc-claim:focus .quote-reveal { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; }
+.doc-claim .quote-reveal q { color: var(--ink-2); font-style: italic; font-size: 13px; }
+.doc-claim .quote-reveal .mono { color: var(--faint); }
+.doc-claim:focus { outline: none; }
+.doc-claim:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; border-radius: var(--r-sm); }
+
+/* Diff marks, applied to the document in place rather than in a separate view. */
+.doc-claim .mark {
+  display: inline-block;
+  margin-bottom: 4px;
+  padding: 1px 6px;
+  border-radius: var(--r-sm);
+  font-family: "Geist Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+.doc-claim .mark.new { color: var(--orange); background: var(--orange-soft); }
+.doc-claim .mark.gone { color: var(--red); background: var(--red-soft); }
+.doc-claim .mark.changed { color: var(--blue); background: var(--blue-soft); }
+
+.doc-claim.is-new { background: var(--orange-soft); box-shadow: inset 2px 0 0 var(--orange); padding-left: 10px; }
+.doc-claim.is-edited { box-shadow: inset 2px 0 0 var(--blue); padding-left: 10px; }
+.doc-claim.is-gone { opacity: 0.62; box-shadow: inset 2px 0 0 var(--red); padding-left: 10px; }
+.doc-claim.is-gone .assertion { text-decoration: line-through; text-decoration-color: var(--red); }
+.doc-claim .was { color: var(--muted); text-decoration: line-through; font-size: 14px; line-height: 1.45; }
+.doc-claim .assertion.now { margin-top: 3px; }
 
 .diff-block { padding: 12px 14px; border-radius: var(--r); border: 1px solid var(--line); border-left: 3px solid var(--line-strong); margin-bottom: 8px; background: var(--pane-2); }
 .diff-block.added { border-left-color: var(--green); }
@@ -579,6 +813,12 @@ button, input, textarea, select { font: inherit; color: inherit; }
    the three, so it collapses into a select in the queue header instead. */
 .only-narrow { display: none; }
 
+/* The audit rail is a witness, not a workspace: it is the first thing to go
+   when the panes start competing for the width the decision needs. */
+@media (max-width: 1440px) {
+  .pane.rail-audit { display: none; }
+}
+
 @media (max-width: 1240px) {
   .pane.rail-types { display: none; }
   .pane.list { width: 322px; }
@@ -602,7 +842,10 @@ button, input, textarea, select { font: inherit; color: inherit; }
   .rail-link { margin: 0; white-space: nowrap; }
   .rail-link.active::before { left: 0; right: 0; top: auto; bottom: -1px; width: auto; height: 2px; border-radius: 2px 2px 0 0; }
   .panes { flex-direction: column; }
-  .pane, .pane.list, .pane.rail-types, .pane.versions { width: auto; border-right: none; border-bottom: 1px solid var(--line); }
+  .pane, .pane.list, .pane.rail-types, .pane.versions, .pane.rail-audit { width: auto; border-right: none; border-bottom: 1px solid var(--line); }
+  .bulk-bar { padding: 10px 16px; }
+  .toast { left: 16px; right: 16px; bottom: 16px; max-width: none; transform: none; }
+  @keyframes toast-in { from { opacity: 0; } to { opacity: 1; } }
   .pane.rail-types .pane-body { display: flex; overflow-x: auto; }
   .type-item { width: auto; white-space: nowrap; border-left: none; border-bottom: 2px solid transparent; }
   .type-item.active { border-left-color: transparent; border-bottom-color: var(--orange); }

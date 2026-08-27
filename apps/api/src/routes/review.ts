@@ -1,9 +1,10 @@
 import type { FastifyInstance } from "fastify";
-import { ClaimStatus, ClaimType, MeetingStatus, ReviewAction } from "@prisma/client";
+import { ClaimStatus, ClaimType } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../db.js";
 import { ApiError, requireCtx } from "../http.js";
-import { CLAIM_TYPE_LABEL } from "../domain/claims.js";
+import { CLAIM_TYPE_LABEL, confidenceBand } from "../domain/claims.js";
+import { bulkApprove, recordDecision } from "../domain/review-gate.js";
 import { formatTimestamp } from "../domain/transcript.js";
 
 const querySchema = z.object({
@@ -13,16 +14,28 @@ const querySchema = z.object({
   limit: z.coerce.number().int().min(1).max(500).default(200),
 });
 
+const decisionsQuerySchema = z.object({
+  meeting_id: z.string().uuid().optional(),
+  limit: z.coerce.number().int().min(1).max(500).default(100),
+});
+
 const noteSchema = z.object({ note: z.string().trim().max(1000).optional() }).default({});
 const editSchema = z.object({
   text: z.string().trim().min(3).max(2000),
   note: z.string().trim().max(1000).optional(),
 });
+const bulkSchema = z.object({
+  claim_ids: z.array(z.string().uuid()).min(1).max(200),
+  note: z.string().trim().max(1000).optional(),
+});
 
 /**
- * The review gate. This is the only write path into context memory, and every
- * decision that passes through it lands in review_decisions — an append-only
- * audit log that is never updated and never deleted.
+ * The review gate's HTTP surface.
+ *
+ * Every route here is a thin shell around `domain/review-gate.ts`, which is the
+ * only code path in the service allowed to write a claim's status. Keeping the
+ * routes dumb is what makes that claim checkable — see the static assertion in
+ * tests/review-gate.test.ts.
  */
 export async function reviewRoutes(app: FastifyInstance): Promise<void> {
   app.get("/review-queue", async (request) => {
@@ -47,7 +60,7 @@ export async function reviewRoutes(app: FastifyInstance): Promise<void> {
 
     const byType = await prisma.candidateClaim.groupBy({
       by: ["type"],
-      where: { status: ClaimStatus.proposed },
+      where: { status: ClaimStatus.proposed, ...(meeting_id ? { meetingId: meeting_id } : {}) },
       _count: { _all: true },
     });
 
@@ -64,11 +77,10 @@ export async function reviewRoutes(app: FastifyInstance): Promise<void> {
     const parsed = noteSchema.safeParse(request.body ?? {});
     if (!parsed.success) throw ApiError.badRequest("Invalid body", parsed.error.flatten());
 
-    return decide({
+    return recordDecision({
       claimId: id,
       reviewer: ctx.reviewer,
-      action: ReviewAction.approve,
-      status: ClaimStatus.approved,
+      action: "approve",
       note: parsed.data.note,
     });
   });
@@ -79,22 +91,18 @@ export async function reviewRoutes(app: FastifyInstance): Promise<void> {
     const parsed = noteSchema.safeParse(request.body ?? {});
     if (!parsed.success) throw ApiError.badRequest("Invalid body", parsed.error.flatten());
 
-    return decide({
+    return recordDecision({
       claimId: id,
       reviewer: ctx.reviewer,
-      action: ReviewAction.reject,
-      status: ClaimStatus.rejected,
+      action: "reject",
       note: parsed.data.note,
     });
   });
 
   /**
-   * Edit-then-approve is ONE action, not two.
-   *
-   * A reviewer who rewrites a claim has already decided to keep it; making
-   * them press approve afterwards adds a step and invites half-finished edits
-   * sitting in the queue looking approved. The audit row records both the text
-   * they were shown and the text they wrote.
+   * Edit-then-approve is ONE action, not two. The gate writes the rewrite as a
+   * new approved claim and supersedes the original, so the text a human was
+   * shown survives alongside the text they wrote.
    */
   app.patch("/claims/:id", async (request) => {
     const ctx = requireCtx(request);
@@ -102,25 +110,76 @@ export async function reviewRoutes(app: FastifyInstance): Promise<void> {
     const parsed = editSchema.safeParse(request.body);
     if (!parsed.success) throw ApiError.badRequest("Invalid edit", parsed.error.flatten());
 
-    return decide({
+    return recordDecision({
       claimId: id,
       reviewer: ctx.reviewer,
-      action: ReviewAction.edit_approve,
-      status: ClaimStatus.edited,
+      action: "edit_approve",
+      text: parsed.data.text,
       note: parsed.data.note,
-      editedText: parsed.data.text,
     });
+  });
+
+  /**
+   * Undo. Not a delete — a second decision that reverses the first, with both
+   * kept. Registered before `/claims/:id/...` siblings is unnecessary in
+   * Fastify's radix router, but the shape matters: this is a write, so it is a
+   * POST, and it goes through the same gate as everything else.
+   */
+  app.post("/claims/:id/undo", async (request) => {
+    const ctx = requireCtx(request);
+    const { id } = request.params as { id: string };
+    const parsed = noteSchema.safeParse(request.body ?? {});
+    if (!parsed.success) throw ApiError.badRequest("Invalid body", parsed.error.flatten());
+
+    return recordDecision({
+      claimId: id,
+      reviewer: ctx.reviewer,
+      action: "undo",
+      note: parsed.data.note,
+    });
+  });
+
+  /**
+   * Keep every high-confidence claim in one action.
+   *
+   * Answers 200 with both halves rather than failing the batch: the reviewer
+   * needs to know which ones were held back and why, and a 4xx that discards
+   * thirteen good approvals over one flagged claim is not an improvement.
+   */
+  app.post("/claims/bulk-approve", async (request) => {
+    const ctx = requireCtx(request);
+    const parsed = bulkSchema.safeParse(request.body);
+    if (!parsed.success) throw ApiError.badRequest("Invalid batch", parsed.error.flatten());
+
+    const result = await bulkApprove({
+      claimIds: parsed.data.claim_ids,
+      reviewer: ctx.reviewer,
+      note: parsed.data.note,
+    });
+
+    return {
+      ...result,
+      approved_count: result.approved.length,
+      error_count: result.errors.length,
+    };
   });
 
   /** The audit log, readable. Append-only, newest first. */
   app.get("/review-decisions", async (request) => {
     requireCtx(request);
-    const limit = Math.min(Number((request.query as { limit?: string }).limit ?? 100), 500);
+    const parsed = decisionsQuerySchema.safeParse(request.query);
+    if (!parsed.success) throw ApiError.badRequest("Invalid query", parsed.error.flatten());
+    const { meeting_id, limit } = parsed.data;
+
     const decisions = await prisma.reviewDecision.findMany({
-      orderBy: { createdAt: "desc" },
+      where: meeting_id ? { claim: { meetingId: meeting_id } } : {},
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: limit,
-      include: { claim: { select: { id: true, type: true, text: true, meetingId: true } } },
+      include: {
+        claim: { select: { id: true, type: true, text: true, editedText: true, meetingId: true } },
+      },
     });
+
     return {
       decisions: decisions.map((d) => ({
         id: d.id,
@@ -130,73 +189,15 @@ export async function reviewRoutes(app: FastifyInstance): Promise<void> {
         note: d.note,
         previous_text: d.previousText,
         edited_text: d.editedText,
-        claim: d.claim,
+        result_claim_id: d.resultClaimId,
+        claim: {
+          id: d.claim.id,
+          type: d.claim.type,
+          type_label: CLAIM_TYPE_LABEL[d.claim.type],
+          text: d.claim.editedText ?? d.claim.text,
+          meeting_id: d.claim.meetingId,
+        },
       })),
-    };
-  });
-}
-
-async function decide(args: {
-  claimId: string;
-  reviewer: string;
-  action: ReviewAction;
-  status: ClaimStatus;
-  note?: string;
-  editedText?: string;
-}) {
-  return prisma.$transaction(async (tx) => {
-    const claim = await tx.candidateClaim.findUnique({
-      where: { id: args.claimId },
-      include: { meeting: { select: { id: true, status: true } } },
-    });
-    if (!claim) throw ApiError.notFound(`Claim ${args.claimId} not found`);
-
-    const previousText = claim.editedText ?? claim.text;
-
-    const updated = await tx.candidateClaim.update({
-      where: { id: claim.id },
-      data: {
-        status: args.status,
-        decidedAt: new Date(),
-        ...(args.editedText ? { editedText: args.editedText } : {}),
-        // A re-decision after a merge makes the claim eligible for the next
-        // brief version, which is how an edit reaches the brief as a delta.
-        ...(claim.mergedAt ? { mergedAt: null } : {}),
-      },
-    });
-
-    await tx.reviewDecision.create({
-      data: {
-        tenantId: claim.tenantId,
-        claimId: claim.id,
-        action: args.action,
-        reviewer: args.reviewer,
-        previousText,
-        editedText: args.editedText ?? null,
-        note: args.note ?? null,
-      },
-    });
-
-    // Once nothing is left proposed, the meeting has been fully reviewed.
-    const remaining = await tx.candidateClaim.count({
-      where: { meetingId: claim.meetingId, status: ClaimStatus.proposed },
-    });
-    if (remaining === 0 && claim.meeting.status === MeetingStatus.in_review) {
-      await tx.meeting.update({
-        where: { id: claim.meetingId },
-        data: { updatedAt: new Date() },
-      });
-    }
-
-    return {
-      claim: {
-        id: updated.id,
-        type: updated.type,
-        status: updated.status,
-        text: updated.editedText ?? updated.text,
-        decided_at: updated.decidedAt?.toISOString() ?? null,
-      },
-      remaining_in_meeting: remaining,
     };
   });
 }
@@ -211,6 +212,7 @@ type ClaimRow = {
   verbatimQuote: string;
   speaker: string;
   timestampMs: number;
+  editedFromId: string | null;
   createdAt: Date;
   meeting: { id: string; title: string | null; meetingUrl: string; startedAt: Date | null };
   segments: Array<{ segment: { id: string; idx: number; speaker: string; startMs: number; text: string } }>;
@@ -229,7 +231,9 @@ function serializeClaim(claim: ClaimRow) {
     text: claim.editedText ?? claim.text,
     original_text: claim.text,
     confidence: claim.confidence,
+    confidence_band: confidenceBand(claim.confidence),
     status: claim.status,
+    edited_from: claim.editedFromId,
     created_at: claim.createdAt.toISOString(),
     evidence: {
       verbatim_quote: claim.verbatimQuote,

@@ -7,8 +7,9 @@ import { RETRY_STAGE_FOR_STATUS, transition } from "../domain/state.js";
 import { createBot } from "../integrations/recall.js";
 import { deleteObjects, presignGet } from "../integrations/r2.js";
 import { extractQueue, ingestRecordingQueue } from "../queue.js";
-
-const REDACTED = "[evidence redacted]";
+// The append-only guard decides what counts as a redaction, so it owns the
+// sentinel: a purge writing any other value would be refused as a rewrite.
+import { REDACTED } from "../domain/append-only.js";
 
 const createSchema = z.object({
   meeting_url: z.string().url("meeting_url must be a URL the bot can join"),
@@ -297,6 +298,7 @@ const emptyCounts = (): Counts => ({
   approved: 0,
   rejected: 0,
   edited: 0,
+  superseded: 0,
   total: 0,
 });
 

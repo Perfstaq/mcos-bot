@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { currentContext } from "./context.js";
+import { assertAppendOnly } from "./domain/append-only.js";
 
 /**
  * Row-level tenancy.
@@ -66,6 +67,10 @@ export const prisma = base.$extends({
   query: {
     $allModels: {
       async $allOperations({ model, operation, args, query }) {
+        // Checked before tenancy and before the exemptions below, because
+        // append-only is not a property of who is asking. See domain/append-only.ts.
+        assertAppendOnly(model, operation, args);
+
         const ctx = currentContext();
         if (!ctx || UNSCOPED.has(model)) return query(args);
 

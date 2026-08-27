@@ -614,6 +614,7 @@ const emptyClaimCounts = (): ClaimCounts => ({
   approved: 0,
   rejected: 0,
   edited: 0,
+  superseded: 0,
   total: 0,
 });
 
