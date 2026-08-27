@@ -330,34 +330,51 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
         </button>
       </header>
 
-      {highConfidence.length > 0 && (
-        <div className="bulk-bar">
-          <button
-            className="btn approve"
-            disabled={busy === "bulk"}
-            onClick={() => void keepAllHighConfidence()}
-          >
-            <IconCheck /> {busy === "bulk" ? "Keeping…" : `Keep all ${highConfidence.length} high-confidence`}
-          </button>
-          {flagged.length > 0 && (
-            <>
-              <button className="bulk-flagged-toggle" onClick={() => setShowFlagged((v) => !v)}>
-                {flagged.length} flagged for a read {showFlagged ? "▴" : "▾"}
-              </button>
-              {showFlagged && (
-                <ul className="bulk-flagged">
-                  {flagged.map((claim) => (
-                    <li key={claim.id}>
-                      <span className="pct mono">{Math.round(claim.confidence * 100)}%</span>
-                      <span className="what">{claim.text}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </>
-          )}
-        </div>
-      )}
+      {/* Both slots below are always rendered, min-height reserved (see
+          styles.css), rather than mounted only once the condition is true.
+          Both conditions turn true on the SAME re-render that swaps the row
+          skeletons for real rows — omitting the wrapper until then would
+          insert a whole new element's height into the page after the
+          reviewer has already started looking at it, which is exactly the
+          layout shift a loading skeleton exists to prevent. */}
+      <div className="digest-banner-slot">
+        {current?.meeting.digest && (
+          <div className="banner info" role="note">
+            <strong>{current.meeting.title ?? "This call"}</strong> — {current.meeting.digest}
+          </div>
+        )}
+      </div>
+
+      <div className="bulk-bar-slot">
+        {highConfidence.length > 0 && (
+          <div className="bulk-bar">
+            <button
+              className="btn approve"
+              disabled={busy === "bulk"}
+              onClick={() => void keepAllHighConfidence()}
+            >
+              <IconCheck /> {busy === "bulk" ? "Keeping…" : `Keep all ${highConfidence.length} high-confidence`}
+            </button>
+            {flagged.length > 0 && (
+              <>
+                <button className="bulk-flagged-toggle" onClick={() => setShowFlagged((v) => !v)}>
+                  {flagged.length} flagged for a read {showFlagged ? "▴" : "▾"}
+                </button>
+                {showFlagged && (
+                  <ul className="bulk-flagged">
+                    {flagged.map((claim) => (
+                      <li key={claim.id}>
+                        <span className="pct mono">{Math.round(claim.confidence * 100)}%</span>
+                        <span className="what">{claim.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
 
       <div className="panes">
         <nav className="pane rail-types">
@@ -397,7 +414,7 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
             <span>j / k</span>
           </div>
           <div className="pane-body scroll">
-            {claims === null && <><div className="skeleton" /><div className="skeleton" /><div className="skeleton" /></>}
+            {claims === null && <><div className="skeleton row-lg" /><div className="skeleton row-lg" /><div className="skeleton row-lg" /></>}
 
             {nothingLeft && decided === 0 && (
               <div className="empty">

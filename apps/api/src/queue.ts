@@ -19,12 +19,17 @@ export const QUEUE = {
   extract: "extract",
   calendarSync: "calendar-sync",
   suggestActions: "suggest-actions",
+  digest: "digest",
 } as const;
 
 export type WebhookJob = { webhookEventId: string };
 export type IngestRecordingJob = { meetingId: string; tenantId: string; recordingId: string };
 export type IngestTranscriptJob = { meetingId: string; tenantId: string; transcriptId: string };
 export type ExtractJob = { meetingId: string; tenantId: string };
+/** Rides the same trigger as extraction (transcript_ready) but not the same
+ *  queue: a stalled or slow digest call must never hold back extraction, and
+ *  a failed one must never look like the pipeline broke — see jobs/digest.ts. */
+export type DigestJob = { meetingId: string; tenantId: string };
 /** A targeted sync carries both ids; a bare `{}` means "sweep every active
  *  connection". The shape mirrors jobs/calendar-sync.ts, which owns the work. */
 export type CalendarSyncJob = { connectionId?: string; tenantId?: string };
@@ -79,6 +84,15 @@ export const suggestActionsQueue = new Queue<SuggestActionsJob>(QUEUE.suggestAct
   defaultJobOptions: { ...defaultJobOptions, attempts: 2 },
 });
 
+export const digestQueue = new Queue<DigestJob>(QUEUE.digest, {
+  connection,
+  // Same posture as suggestActionsQueue: a convenience layered on top of an
+  // already-processed meeting. Two attempts, then quiet — jobs/digest.ts
+  // already treats every failure as non-fatal, so a worker-level retry storm
+  // would just delay the fallback the job already provides for free.
+  defaultJobOptions: { ...defaultJobOptions, attempts: 2 },
+});
+
 export const allQueues = [
   webhookQueue,
   ingestRecordingQueue,
@@ -86,6 +100,7 @@ export const allQueues = [
   extractQueue,
   calendarSyncQueue,
   suggestActionsQueue,
+  digestQueue,
 ];
 
 export async function closeQueues(): Promise<void> {

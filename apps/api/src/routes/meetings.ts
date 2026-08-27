@@ -332,6 +332,7 @@ async function lastNonFailedStatus(meetingId: string): Promise<MeetingStatus> {
 function serializeMeeting(m: {
   id: string;
   title: string | null;
+  digest: string | null;
   meetingUrl: string;
   joinAt: Date | null;
   status: MeetingStatus;
@@ -346,6 +347,7 @@ function serializeMeeting(m: {
   return {
     id: m.id,
     title: m.title,
+    digest: m.digest,
     meeting_url: m.meetingUrl,
     join_at: m.joinAt?.toISOString() ?? null,
     status: m.status,

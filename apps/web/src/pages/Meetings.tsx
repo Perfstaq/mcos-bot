@@ -128,7 +128,7 @@ export function Meetings() {
           )}
 
           <div className="pane-body scroll">
-            {meetings === null && <><div className="skeleton" /><div className="skeleton" /></>}
+            {meetings === null && <><div className="skeleton row-lg" /><div className="skeleton row-lg" /></>}
 
             {meetings?.length === 0 && (
               <div className="empty">
@@ -154,6 +154,18 @@ export function Meetings() {
                   {meeting.claim_counts.proposed > 0 && <span style={{ color: "var(--orange)" }}>{meeting.claim_counts.proposed} to review</span>}
                   {meeting.claim_counts.total > 0 && meeting.claim_counts.proposed === 0 && <span>{meeting.claim_counts.total} claims</span>}
                 </div>
+                {/* Always rendered, never conditionally omitted: the digest
+                    arrives on the same fetch as everything else here, but a
+                    background digest job can also fill it in on a meeting the
+                    list is already showing (the 5s poll re-fetches while a
+                    meeting is in flight). A row whose height changed by
+                    itself, later, for a reason the reviewer took no action on,
+                    is a layout shift either way — reserving the line always
+                    keeps every row's height the same whether or not it has
+                    one yet. */}
+                <div className="row-digest" style={{ color: "var(--faint)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {meeting.digest ?? ""}
+                </div>
               </button>
             ))}
           </div>
@@ -178,9 +190,13 @@ export function Meetings() {
                 <h2 style={{ margin: "6px 0 4px", fontSize: 20, fontWeight: 600, letterSpacing: "-0.02em" }}>
                   {detail.title ?? hostOf(detail.meeting_url)}
                 </h2>
-                <div className="mono" style={{ color: "var(--faint)", marginBottom: 20, wordBreak: "break-all" }}>
+                <div className="mono" style={{ color: "var(--faint)", marginBottom: 8, wordBreak: "break-all" }}>
                   {detail.meeting_url}
                 </div>
+
+                {detail.digest && (
+                  <p style={{ color: "var(--muted)", marginBottom: 20, maxWidth: 640 }}>{detail.digest}</p>
+                )}
 
                 {detail.status === "failed" && detail.failure_reason && (
                   <div className="banner error" style={{ margin: "0 0 18px" }}>

@@ -17,6 +17,7 @@
     "db:seed": "tsx src/seed.ts",
     "db:studio": "prisma studio",
     "seed:golden": "tsx src/seed-golden.ts",
+    "demo:reset": "tsx src/demo-reset.ts",
     "eval:extraction": "tsx tests/eval/run.ts"
   },
   "dependencies": {

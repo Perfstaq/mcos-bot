@@ -58,6 +58,7 @@ export type ConfidenceBand = "high" | "medium" | "low";
 export type Meeting = {
   id: string;
   title: string | null;
+  digest: string | null;
   meeting_url: string;
   join_at: string | null;
   status: MeetingStatus;
@@ -111,7 +112,13 @@ export type Claim = {
   edited_from: string | null;
   created_at: string;
   evidence: Evidence;
-  meeting: { id: string; title: string | null; meeting_url: string; started_at: string | null };
+  meeting: {
+    id: string;
+    title: string | null;
+    digest: string | null;
+    meeting_url: string;
+    started_at: string | null;
+  };
 };
 
 export type ReviewAction = "approve" | "reject" | "edit_approve" | "undo";

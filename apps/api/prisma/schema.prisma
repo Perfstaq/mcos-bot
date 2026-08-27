@@ -90,6 +90,18 @@ model Meeting {
   meetingUrl String    @map("meeting_url")
   joinAt     DateTime? @map("join_at")
 
+  // A cheap one-line digest generated once the transcript lands, so the
+  // meetings list and review queue have something better than the raw URL to
+  // show. Best-effort: a failure here never touches `status`, and it never
+  // overwrites a title a human already gave the meeting — see jobs/digest.ts.
+  digest              String?   @db.Text
+  digestModel         String?   @map("digest_model")
+  // Which prompt/schema version of jobs/digest.ts produced this digest — the
+  // same reasoning as extraction_runs.prompt_version: a digest nobody can
+  // trace to the harness that wrote it is a digest nobody can debug.
+  digestPromptVersion String?   @map("digest_prompt_version")
+  digestGeneratedAt   DateTime? @map("digest_generated_at")
+
   status        MeetingStatus @default(draft)
   failureReason String?       @map("failure_reason")
   failedStage   String?       @map("failed_stage")

@@ -7,6 +7,7 @@ import {
   connection,
   type CalendarSyncJob,
   type SuggestActionsJob,
+  type DigestJob,
   type ExtractJob,
   type IngestRecordingJob,
   type IngestTranscriptJob,
@@ -18,6 +19,7 @@ import { failTranscriptIngest, ingestTranscript } from "./jobs/ingest-transcript
 import { failExtraction, runExtraction } from "./jobs/extract.js";
 import { syncActiveConnections, syncCalendarConnection } from "./jobs/calendar-sync.js";
 import { runActionItemSuggestions } from "./jobs/suggest-action-items.js";
+import { runDigest } from "./jobs/digest.js";
 import { disconnect } from "./db.js";
 import { logger } from "./logger.js";
 import { env } from "./env.js";
@@ -70,6 +72,15 @@ const workers = [
     (job) => runActionItemSuggestions(job.data).then(() => undefined),
     { connection, concurrency: 2 },
   ),
+
+  // runDigest already catches and logs every failure itself (see
+  // jobs/digest.ts) — this worker's own `failed` handler below never needs a
+  // case for it, which is what keeps a digest failure from ever marking a
+  // meeting failed.
+  new Worker<DigestJob>(QUEUE.digest, (job) => runDigest(job.data), {
+    connection,
+    concurrency: 2,
+  }),
 ];
 
 for (const worker of workers) {

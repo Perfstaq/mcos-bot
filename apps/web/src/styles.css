@@ -174,7 +174,13 @@ button, input, textarea, select { font: inherit; color: inherit; }
 
 /* ================================================================== screen */
 
-.screen { display: flex; flex-direction: column; min-width: 0; height: 100%; }
+/* min-height: 0 overrides the flex-item default of `auto`, which would
+   otherwise let .screen grow to its content's height instead of being
+   constrained to the grid row's 100% — the exact reason a pane's own
+   `.scroll` region (below) could grow past the viewport instead of
+   scrolling: a flex/grid item cannot shrink below `min-height:auto`
+   (its content size) unless told to. */
+.screen { display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100%; }
 
 .screen-head {
   display: flex;
@@ -195,7 +201,11 @@ button, input, textarea, select { font: inherit; color: inherit; }
 
 .panes { display: flex; flex: 1; min-height: 0; }
 
-.pane { display: flex; flex-direction: column; min-width: 0; border-right: 1px solid var(--line); }
+/* Same fix, same reason as .screen above: without min-height: 0 a pane
+   grows to fit its content (e.g. a long list) instead of staying within
+   .screen's height, which pushes the overflow onto the page — the one
+   place `.scroll` is never supposed to be needed. */
+.pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; border-right: 1px solid var(--line); }
 .pane:last-child { border-right: none; }
 .pane-head {
   display: flex;
@@ -349,6 +359,18 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .skeleton { height: 52px; margin: 8px 14px; border-radius: var(--r-sm); background: linear-gradient(90deg, var(--pane-2) 25%, var(--line-soft) 50%, var(--pane-2) 75%); background-size: 200% 100%; animation: shimmer 1.3s infinite; }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
+/* 100px (116px with the margins above) — measured against a real row in the
+   two list screens that use this variant for row placeholders (ReviewQueue's
+   claim rows render at ~122px, Meetings' at ~82-90px including the reserved
+   digest line above). Scoped to those two call sites only: the bare
+   `.skeleton` default above stays a general-purpose 52px because most of its
+   ~28 other call sites are NOT sized against a 122px row — e.g. Brief.tsx's
+   version-history skeleton stands in for a real `.version-item`, which is
+   ~55-60px, not 100px. Applying this row-lg height there would have
+   reintroduced the exact loading-to-loaded shift this class exists to
+   prevent, just at a different site. */
+.skeleton.row-lg { height: 100px; }
+
 /* =========================================================== type rail (B) */
 
 .type-item {
@@ -401,6 +423,11 @@ button, input, textarea, select { font: inherit; color: inherit; }
 }
 .row.selected .row-text { font-weight: 600; }
 .row .row-meta { margin-top: 5px; display: flex; gap: 8px; color: var(--faint); }
+/* Always rendered (see Meetings.tsx), so a meeting's row is the same height
+   whether or not it has a digest yet — one line at this font size, reserved
+   rather than left to appear and push the row (and everything below it)
+   taller once a background digest job finishes. */
+.row-digest { min-height: 17px; margin-top: 3px; font-size: 12px; }
 
 .meter { display: inline-block; width: 26px; height: 3px; border-radius: 2px; background: var(--line); overflow: hidden; flex: none; }
 .meter i { display: block; height: 100%; background: var(--orange); }
@@ -489,6 +516,19 @@ button, input, textarea, select { font: inherit; color: inherit; }
   flex: none;
 }
 .progress i { display: block; height: 100%; background: var(--orange); transition: width 200ms ease; }
+
+/* Reserved so the review queue's own conditional content (whether this
+   meeting has a digest yet, whether anything qualifies for the bulk-keep
+   bar) never inserts a new element's height into the page after the
+   reviewer is already looking at it — see the JSX comment above these two
+   slots in ReviewQueue.tsx. Measured against the app's own rendered output,
+   not guessed: .bulk-bar-slot matches a real bulk bar (~56.5px); the digest
+   banner's real height varies with how the three-sentence digest wraps, so
+   its reservation is a deliberately conservative ~2-line estimate rather
+   than a hard cap — a very long digest can still cause some shift, which is
+   the honest limit of a CSS-only fix here. */
+.digest-banner-slot { min-height: 44px; }
+.bulk-bar-slot { min-height: 57px; }
 
 /* One keystroke keeps everything the model was sure about. What it was not
    sure about is listed, by name, right next to the button — a bulk action
