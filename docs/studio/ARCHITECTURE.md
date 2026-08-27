@@ -995,3 +995,33 @@ template adds — stays bound on all four edges.
 checks horizontal only, which is exactly why the violation shipped), with the banner exemption
 written as an explicit named carve-out rather than an absent assertion. An exemption that nothing
 tests is indistinguishable from a bug.
+
+### 12.8 The planner soft-penalises a missed beat; §4.2 said hard-reject
+
+§4.2 specifies "hard-reject beyond 150ms". M implemented a large soft penalty instead: a hard
+reject makes the problem infeasible wherever no locked path exists, returning `plan_infeasible` on
+clips a slightly-bent rhythm would serve. The penalty is derived at runtime (`missWeightFloor`) to
+exceed the worst rhythm cost any in-bounds shot can incur, so a miss is never the cheaper option —
+the ordering §4.2 wanted, without the cliff. 100% lock on all six M-3 clips is therefore an
+outcome of the optimisation, not an artefact of arithmetic.
+
+### 12.9 Accent colour means EMPHASIS only — ruling on the 02 §2.2 / §3 collision
+
+`02 §2.2` says the *active* (currently spoken) karaoke word is accent-coloured; `02 §3` says the
+*emphasis* word is accent-coloured. Same hue, two meanings — and on a one-word chunk the active
+word is accent for its entire life on screen, so a deliberately UN-emphasised stopword becomes
+indistinguishable from the payload of an approved claim. Caught by looking at a rendered frame
+(the word "IT" in accent orange), not by any test.
+
+Worth recording how the diagnosis went, because it generalises: the visible symptom was a
+stopword rendered as if emphasised, and the obvious suspect was the emphasis scorer bypassing its
+threshold on a single-candidate chunk. That was wrong. The scorer had correctly scored "it" at
+−0.77 against a 1.0 bar and recorded `isEmphasis: false`; the plan was right and the renderer was
+wrong. **A frame is evidence about the renderer, not about the thing the renderer drew from** —
+check the plan before blaming the planner.
+
+**Ruling: accent colour is reserved for emphasis. The active word is carried by opacity.** Agent
+M's resolution stands, on its grounds: `01 §4` measures the reference's karaoke layer as plain
+white with only the *banner* two-tone; `01 §8` forbids adding effects the reference does not have;
+and `02 §2.1`'s own argument — "two coloured words halves the emphasis" — applies with more force
+to two coloured words that mean different things. `02 §2.2`'s active-word colouring is superseded.
