@@ -4,6 +4,8 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { RenderPlanSchema, cutTimesMs, type RenderPlan } from "@mcos/render/plan";
+import { gateG1a, FINGERPRINT_ACCEPTANCE_FLOOR, REFERENCE_BEAT_LOCK_RATIO } from "@mcos/render/gates/g1a";
+import type { GateResult } from "@mcos/render/gates/types";
 
 /**
  * qc-render.ts — 07_QUALITY_GATES §1, ADR-8.
@@ -36,18 +38,41 @@ import { RenderPlanSchema, cutTimesMs, type RenderPlan } from "@mcos/render/plan
  *     [--prev-checksum <sha256>] [--out <qc.json>]
  */
 
-// Calibrated on the reference under THIS pinned harness (ARCHITECTURE §4.1 /
-// ADR-8): tempo 112.347bpm, beat_lock_ratio 0.821, grid_quality 2.2003 —
-// measured directly by this milestone's own services/analyzer (see the
-// commit history / M-1..M-4 measurement report), not copied from the doc's
-// pixel-re-detection number (which the doc itself says not to trust as a
-// stable target — ARCHITECTURE §10).
-const REFERENCE_BEAT_LOCK_RATIO = 0.821;
-const REFERENCE_GRID_QUALITY = 2.2003;
-const FINGERPRINT_ACCEPTANCE_FLOOR = REFERENCE_BEAT_LOCK_RATIO - 0.02; // ≥0.80 today (§4.1)
+// REFERENCE_BEAT_LOCK_RATIO/REFERENCE_GRID_QUALITY/FINGERPRINT_ACCEPTANCE_FLOOR
+// and gateG1a itself now live in @mcos/render/gates/g1a — imported above, not
+// duplicated here. That module's own header comment has the full rationale
+// (ADR-8 requires G1a evaluated at `plan.build`, inside apps/api; this file
+// stays the audit re-check on the finished render, importing the exact same
+// function rather than a second copy of the gate math).
+
+/**
+ * Repo root, found by walking up from wherever this file actually runs from
+ * — NOT a fixed number of `..` hops. This file runs from two different
+ * depths depending on how it's invoked: `scripts/qc-render.ts` directly
+ * (tsx, dev/local) is one level below repo root, but its COMPILED output
+ * (`scripts/dist/qc-render.js`, what jobs/render-qc.ts and Dockerfile.media
+ * actually run — no tsx in production, see render-qc.ts's comment on C1) is
+ * two levels below. A fixed `path.resolve(here, "..")` silently pointed at
+ * the wrong directory once the build step existed — caught by the
+ * Dockerfile.media smoke test, not by typecheck (both paths type-check
+ * fine; only one resolves at runtime).
+ */
+function findRepoRoot(startDir: string): string {
+  let dir = startDir;
+  for (;;) {
+    if (existsSync(path.join(dir, "package-lock.json")) && existsSync(path.join(dir, "services", "analyzer"))) {
+      return dir;
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) {
+      throw new Error(`could not locate the repo root walking up from ${startDir}`);
+    }
+    dir = parent;
+  }
+}
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(here, "..");
+const repoRoot = findRepoRoot(here);
 
 function analyzerPython(): string {
   if (process.env.ANALYZER_PYTHON) return process.env.ANALYZER_PYTHON;
@@ -62,17 +87,6 @@ function qcSceneDetectScript(): string {
   return process.env.QC_SCENE_DETECT_SCRIPT ?? path.join(repoRoot, "services/analyzer/qc_scene_detect.py");
 }
 
-export type GateResult = {
-  id: string;
-  name: string;
-  hard: boolean; // counts toward overall pass/fail when computable
-  computable: boolean;
-  pass: boolean | null; // null only when computable === false
-  measured: unknown;
-  target: string;
-  note?: string;
-};
-
 function detectCutTimesMs(mp4Path: string): number[] {
   const out = execFileSync(analyzerPython(), [qcSceneDetectScript(), "--input", mp4Path], { encoding: "utf8" });
   return (JSON.parse(out) as { cutTimesMs: number[] }).cutTimesMs;
@@ -83,47 +97,11 @@ function nearestDistanceMs(t: number, others: number[]): number | null {
   return Math.min(...others.map((o) => Math.abs(o - t)));
 }
 
-// --- G1a: musical intent (plan vs its own embedded grid) --------------------
-export function gateG1a(plan: RenderPlan): GateResult {
-  const id = "G1a";
-  const name = "Beat lock — musical intent";
-  const cuts = cutTimesMs(plan);
-  const beats = plan.beatGrid.beatTimesMs;
-
-  if (plan.beatGrid.method === "constant_grid") {
-    return {
-      id,
-      name,
-      hard: true,
-      computable: true,
-      pass: false,
-      measured: { method: "constant_grid" },
-      target: "≥85% of cuts within 150ms of the embedded beat grid",
-      note: "a constant_grid plan can never pass G1a for merge evidence (ARCHITECTURE §4 fallback ladder, rung 3).",
-    };
-  }
-  if (!cuts.length || !beats.length) {
-    return { id, name, hard: true, computable: true, pass: false, measured: { cuts: cuts.length, beats: beats.length }, target: "≥85% within 150ms", note: "empty cut list or empty beat grid" };
-  }
-
-  const distances = cuts.map((c) => nearestDistanceMs(c, beats)!);
-  const withinCount = distances.filter((d) => d <= 150).length;
-  const ratio = withinCount / cuts.length;
-
-  const gq = plan.beatGrid.gridQuality;
-  const gridQualityOk = gq === null ? null : gq >= REFERENCE_GRID_QUALITY * 0.8;
-
-  const pass = ratio >= 0.85 && gridQualityOk !== false;
-  return {
-    id,
-    name,
-    hard: true,
-    computable: true,
-    pass,
-    measured: { ratio: Math.round(ratio * 1000) / 1000, withinCount, totalCuts: cuts.length, gridQuality: gq, gridQualityOk },
-    target: "≥85% within 150ms of the embedded grid, AND grid_quality ≥ 80% of the reference's 2.2003 (guards a degraded grid gaming the gate)",
-  };
-}
+// G1a is imported from @mcos/render/gates/g1a (see the import above) — not
+// defined here. re-export it so existing consumers of this module (tests,
+// jobs/render-qc.ts) can keep importing gateG1a from "qc-render.js" as
+// before, without caring that its definition moved.
+export { gateG1a };
 
 // --- G1b: render fidelity (output vs plan's known cut times) ---------------
 export function gateG1b(plan: RenderPlan, detectedCutsMs: number[]): GateResult {
@@ -237,14 +215,34 @@ export function gateG10(plan: RenderPlan, wordsFile: WordsFile | null): GateResu
 }
 
 // --- G11/G12: ffmpeg/ffprobe on the rendered output -------------------------
-export function measureLoudnessLufs(mp4Path: string): number | null {
+/**
+ * I4: G11 has no legitimate "not computable" case the way G7/G9 do (those
+ * are real, permanent contract gaps — the plan schema has no motion/caption-
+ * geometry fields yet). A rendered MP4 either HAS a measurable loudness or
+ * something in the environment is broken (ffmpeg missing, a future ffmpeg
+ * version changing its log format so the regex misses). Either failure mode
+ * THROWS — surfacing as a crashed QC run (`failedStage: "qc"`), never as a
+ * silent `computable: false` that would let the render pass QC unmeasured.
+ */
+export function measureLoudnessLufs(mp4Path: string): number {
   // ffmpeg writes filter output (including ebur128's summary) to stderr, not
   // stdout, regardless of exit code — spawnSync (not execFileSync) is what
   // actually surfaces stderr on the SUCCESS path, not just on throw.
   const result = spawnSync("ffmpeg", ["-nostats", "-i", mp4Path, "-af", "ebur128", "-f", "null", "-"], {
     encoding: "utf8",
   });
-  return parseIntegratedLufs(result.stderr ?? "");
+  if (result.error) {
+    throw new Error(`G11: ffmpeg failed to run (${result.error.message}) — cannot measure loudness`);
+  }
+  const lufs = parseIntegratedLufs(result.stderr ?? "");
+  if (lufs === null) {
+    throw new Error(
+      `G11: could not parse an "Integrated loudness" line from ffmpeg's ebur128 output — ` +
+        "either the render has no audio, or ffmpeg's log format changed and the parser needs updating. " +
+        `First 500 chars of stderr: ${(result.stderr ?? "").slice(0, 500)}`,
+    );
+  }
+  return lufs;
 }
 
 export function parseIntegratedLufs(ffmpegOutput: string): number | null {
@@ -258,8 +256,8 @@ export function gateG11(mp4Path: string): GateResult {
     id: "G11",
     name: "Loudness",
     hard: true,
-    computable: lufs !== null,
-    pass: lufs === null ? null : lufs >= -15 && lufs <= -13,
+    computable: true,
+    pass: lufs >= -15 && lufs <= -13,
     measured: lufs,
     target: "-14 ±1 LUFS integrated",
   };
@@ -432,4 +430,14 @@ async function main(): Promise<void> {
   if (!report.overallPass) process.exit(1);
 }
 
-if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) main();
+if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((e: unknown) => {
+    // A gate function throwing (G11 on an unmeasurable render, G10's
+    // isLegal scan hitting bad data, etc.) means the environment/inputs are
+    // broken, not that a gate failed — no qc.json is written, and this
+    // process exits non-zero so the caller (jobs/render-qc.ts) sees "no
+    // report produced" and fails the job with failedStage: "qc" (I4).
+    console.error(`qc-render: CRASHED (not a QC verdict) — ${e instanceof Error ? e.stack : String(e)}`);
+    process.exit(1);
+  });
+}

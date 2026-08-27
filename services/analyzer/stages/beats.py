@@ -3,10 +3,13 @@
 librosa `beat.beat_track` on the sidecar is the source of truth. This is the
 SAME method `scripts/qc-render.ts` measures against (ADR-8 §4.1's pinned
 harness): 22050Hz mono, ffmpeg-demuxed WAV (soundfile/librosa cannot open
-MP4/MOV directly), default hop 512, `units="time"`. Using one shared grid for
-both the planner and QC is the whole point — a two-estimator split is what
-made the ported `detectBeats`/`buildBeatGrid` unusable as the gate's ruler
-(see M-1/M-4 measurements).
+MP4/MOV directly), default hop 512. Called with `units="frames"` (not
+"time" — frame indices are what `librosa.frames_to_time` below converts),
+so the pinned quantity is the hop length, not the units argument's literal
+value. Using one shared grid for both the planner and QC is the whole
+point — a two-estimator split is what made the ported
+`detectBeats`/`buildBeatGrid` unusable as the gate's ruler (see M-1/M-4
+measurements).
 
 Ladder position 1 of 3 (ARCHITECTURE §4's fallback ladder): `beat_track` is
 the production path. `onset_env` (speech-only, no bed) and `constant_grid`

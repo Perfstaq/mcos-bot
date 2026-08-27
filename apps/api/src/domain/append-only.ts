@@ -60,8 +60,9 @@ export class AppendOnlyViolationError extends Error {
   ) {
     super(
       `${model} is append-only: ${operation} is not a thing that may happen to it. ` +
-        "A brief version records what the workspace believed at a moment in time; " +
-        "changing that record is not an update, it is a forgery. Merge a new version instead.",
+        "A row here records a fact as it stood at a moment in time — a workspace's belief " +
+        "(BriefVersion/BriefClaim) or a render's exact reproducible inputs (RenderPlan). " +
+        "Changing it in place is not an update, it is a forgery of that record. Insert a new row instead.",
     );
     this.name = "AppendOnlyViolationError";
   }

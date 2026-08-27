@@ -1,8 +1,9 @@
-import { execFileSync } from "node:child_process";
+import { execFile } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 import { MediaAnalysisStatus } from "@prisma/client";
 import { prisma } from "../db.js";
 import { env } from "../env.js";
@@ -18,11 +19,30 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 // apps/api/src/jobs -> repo root
 const repoRoot = path.resolve(here, "../../../..");
 
+// 03_RENDER_PIPELINE §3's media.analyze timeout (queue.ts's table comment).
+// A wedged faster-whisper process must eventually die (SIGKILL, not a signal
+// it could catch/ignore) rather than block this slot forever — and, since
+// `execFileSync` blocks the whole worker process's event loop while it runs,
+// promisified `execFile` is what makes `worker-media.ts`'s concurrency:2
+// real concurrency rather than fiction (a sync call serializes every job on
+// the process, timeout or not).
+const MEDIA_ANALYZE_TIMEOUT_MS = 15 * 60 * 1000;
+const execFileAsync = promisify(execFile);
+
+async function runAnalyzer(python: string, args: string[]): Promise<string> {
+  const { stdout } = await execFileAsync(python, args, {
+    timeout: MEDIA_ANALYZE_TIMEOUT_MS,
+    killSignal: "SIGKILL",
+    maxBuffer: 1024 * 1024 * 16,
+  });
+  return stdout;
+}
+
 /**
  * Resolve the sidecar's python + script path. Same discipline as
  * founder-journey's transcribe.ts checking `.venv` exists before shelling out
  * — a missing venv is a named startup-shaped error, not a cryptic ENOENT deep
- * in execFileSync.
+ * in execFile.
  */
 function analyzerPython(): string {
   if (env.ANALYZER_PYTHON) return env.ANALYZER_PYTHON;
@@ -42,8 +62,8 @@ function analyzerScript(): string {
 
 type AnalyzerVersions = { analyzerVersion: string; fasterWhisper: string; librosa: string; numpy: string };
 
-function analyzerVersionString(v: AnalyzerVersions): string {
-  return `${v.analyzerVersion}+faster-whisper${v.fasterWhisper}+librosa${v.librosa}`;
+function analyzerVersionString(v: AnalyzerVersions, modelSize: string): string {
+  return `${v.analyzerVersion}+faster-whisper${v.fasterWhisper}+librosa${v.librosa}+whisper-model-${modelSize}`;
 }
 
 /**
@@ -68,14 +88,21 @@ export async function runMediaAnalyze(job: MediaAnalyzeJob): Promise<void> {
 
       const python = analyzerPython();
       const script = analyzerScript();
+      const modelSize = env.WHISPER_MODEL_SIZE;
 
-      const versions = JSON.parse(
-        execFileSync(python, [script, "--print-versions"], { encoding: "utf8" }),
-      ) as AnalyzerVersions;
+      const versions = JSON.parse(await runAnalyzer(python, [script, "--print-versions"])) as AnalyzerVersions;
 
-      execFileSync(python, [script, "--input", localInput, "--out", workDir, "--stages", "words,beats"], {
-        stdio: "pipe",
-      });
+      await runAnalyzer(python, [
+        script,
+        "--input",
+        localInput,
+        "--out",
+        workDir,
+        "--stages",
+        "words,beats",
+        "--model",
+        modelSize,
+      ]);
 
       const words = assertValidWordsResult(
         JSON.parse(readFileSync(path.join(workDir, "words.json"), "utf8")),
@@ -94,7 +121,7 @@ export async function runMediaAnalyze(job: MediaAnalyzeJob): Promise<void> {
           beats,
           tempoBpm: beats.tempoBpm,
           beatMethod: beats.method,
-          analyzerVersion: analyzerVersionString(versions),
+          analyzerVersion: analyzerVersionString(versions, modelSize),
           finishedAt: new Date(),
         },
       });

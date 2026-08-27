@@ -20,6 +20,14 @@ import { detectBeats as portedDetectBeats } from "./ported-beat-grid.js";
  * derived proxy for it) — M-1 reports the median across tracks, M-4 the p95
  * (the fallback's worst realistic case, not its typical case).
  *
+ * Caveat on the offset numbers: "nearest beat to t in each grid, then the
+ * gap between those two beats" is a metric that SATURATES at roughly one
+ * beat period — once true accumulated drift exceeds ~half a period, the
+ * two grids' phases can wrap back into apparent alignment even though the
+ * underlying tempo/phase error is larger. So a reported offset (and its p95)
+ * is a LOWER BOUND on the true drift, not an exact ceiling — report it as
+ * "≥ measured", never as the worst case that could possibly occur.
+ *
  * Usage: npx tsx scripts/measurements/m1-m4.ts <track1.mp3> <track2.mp3> ...
  */
 
@@ -148,10 +156,10 @@ async function main(): Promise<void> {
   console.log(`ported detectBeats returned null bpm on: ${nullTempoCount}/${results.length} tracks`);
   console.log(`median Δtempo: ${median(deltas)?.toFixed(2) ?? "n/a"} bpm`);
   console.log(`mean Δtempo:   ${deltas.length ? (deltas.reduce((a, b) => a + b, 0) / deltas.length).toFixed(2) : "n/a"} bpm`);
-  console.log(`median offset-at-t: ${median(offsets)?.toFixed(0) ?? "n/a"} ms`);
+  console.log(`median offset-at-t: ≥${median(offsets)?.toFixed(0) ?? "n/a"} ms (saturating metric — see header comment)`);
 
   console.log("\n=== M-4: fallback ceiling ===");
-  console.log(`p95 offset-at-t (|beat_track - constant_grid| at t≈55s): ${p95(offsets)?.toFixed(0) ?? "n/a"} ms`);
+  console.log(`p95 offset-at-t (|beat_track - constant_grid| at t≈55s): ≥${p95(offsets)?.toFixed(0) ?? "n/a"} ms (saturating metric — see header comment)`);
 }
 
 main();
