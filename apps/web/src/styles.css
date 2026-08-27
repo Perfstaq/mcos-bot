@@ -174,7 +174,13 @@ button, input, textarea, select { font: inherit; color: inherit; }
 
 /* ================================================================== screen */
 
-.screen { display: flex; flex-direction: column; min-width: 0; height: 100%; }
+/* min-height: 0 overrides the flex-item default of `auto`, which would
+   otherwise let .screen grow to its content's height instead of being
+   constrained to the grid row's 100% — the exact reason a pane's own
+   `.scroll` region (below) could grow past the viewport instead of
+   scrolling: a flex/grid item cannot shrink below `min-height:auto`
+   (its content size) unless told to. */
+.screen { display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100%; }
 
 .screen-head {
   display: flex;
@@ -195,7 +201,11 @@ button, input, textarea, select { font: inherit; color: inherit; }
 
 .panes { display: flex; flex: 1; min-height: 0; }
 
-.pane { display: flex; flex-direction: column; min-width: 0; border-right: 1px solid var(--line); }
+/* Same fix, same reason as .screen above: without min-height: 0 a pane
+   grows to fit its content (e.g. a long list) instead of staying within
+   .screen's height, which pushes the overflow onto the page — the one
+   place `.scroll` is never supposed to be needed. */
+.pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; border-right: 1px solid var(--line); }
 .pane:last-child { border-right: none; }
 .pane-head {
   display: flex;
