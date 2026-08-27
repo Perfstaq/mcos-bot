@@ -18,6 +18,23 @@ describe("framework catalogue", () => {
     }
   });
 
+  /**
+   * Owning an archetype is not the same as being able to generate it.
+   * `hook_taxonomies` once listed `listicle` with an empty `favoredClaimTypes`
+   * — a framework that structurally cannot ever be fed real signal, which
+   * made `listicle` ungeneratable no matter what a brief's claims looked
+   * like (found in review, not by this catalogue-shape test alone). Every
+   * archetype needs at least one OWNING framework with non-empty
+   * `favoredClaimTypes`, so real claim signal can always make it feasible.
+   */
+  it("gives every archetype an owning framework that can actually be fed real claim signal", () => {
+    for (const archetype of ALL_ARCHETYPES) {
+      const owners = FRAMEWORKS.filter((f) => f.archetypes.includes(archetype));
+      const feasible = owners.some((f) => f.favoredClaimTypes.length > 0);
+      expect(feasible, `every owner of ${archetype} has an empty favoredClaimTypes`).toBe(true);
+    }
+  });
+
   it("names every tier-A framework 05 §2 requires", () => {
     const tierA = FRAMEWORKS.filter((f) => f.evidenceTier === "A").map((f) => f.id);
     expect(tierA).toEqual(
@@ -56,6 +73,16 @@ describe("scoreFrameworks", () => {
     // signal present, sixty_forty must win on tier weight.
     const { recommended } = scoreFrameworks({ claimTypes: ["proof_point"] });
     expect(recommended.evidenceTier).toBe("A");
+  });
+
+  it("listicle is genuinely reachable with real claim signal, not just tier-weight fallback (ruling 6)", () => {
+    const { recommended, scored } = scoreFrameworks({
+      claimTypes: ["pain_point", "proof_point", "icp_fact"],
+      archetype: "listicle",
+    });
+    expect(recommended.id).toBe("hook_taxonomies");
+    const own = scored.find((s) => s.framework.id === "hook_taxonomies")!;
+    expect(own.matchedClaimTypes.length).toBeGreaterThan(0);
   });
 
   it("gives an archetype match a bonus that can tip a close score", () => {

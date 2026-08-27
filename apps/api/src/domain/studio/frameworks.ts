@@ -102,9 +102,17 @@ export const FRAMEWORKS: readonly Framework[] = [
     name: "Short-form Hook Taxonomies",
     evidenceTier: "C",
     whenToUse:
-      "No other framework's claim signal is strong. A generic attention-first hook pattern, used " +
-      "as the last-resort fallback so recommendation never comes back empty.",
-    favoredClaimTypes: [],
+      "The brief has several concrete, enumerable claims (a pain point, a proof point, an ICP " +
+      "fact) rather than one strong positioning argument — the raw material an N-things format " +
+      "needs, and otherwise the fallback when no other framework's signal is strong.",
+    // `listicle` is the ONLY archetype this framework's catalogue entry
+    // shares with no other framework — an empty list here would make
+    // `listicle` structurally ungeneratable (a bug found in review, not a
+    // deliberate "always fall back" design: the fallback role is about
+    // outranking, via lower tier weight, not about having zero signal of its
+    // own). These three are what an "N reasons/things" format is actually
+    // built from.
+    favoredClaimTypes: ["pain_point", "proof_point", "icp_fact"],
     archetypes: ["listicle", "contrarian", "myth_bust"],
   },
 ] as const;
