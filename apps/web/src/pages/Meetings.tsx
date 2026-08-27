@@ -128,7 +128,7 @@ export function Meetings() {
           )}
 
           <div className="pane-body scroll">
-            {meetings === null && <><div className="skeleton" /><div className="skeleton" /></>}
+            {meetings === null && <><div className="skeleton row-lg" /><div className="skeleton row-lg" /></>}
 
             {meetings?.length === 0 && (
               <div className="empty">

@@ -356,16 +356,20 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .banner.error { color: var(--red); border-color: color-mix(in srgb, var(--red) 30%, var(--line)); background: var(--red-soft); }
 .banner.info { color: var(--blue); border-color: color-mix(in srgb, var(--blue) 30%, var(--line)); background: var(--blue-soft); }
 
-/* 100px (116px with the margins below) — measured against a real row in the
-   two list screens that use this for row placeholders (ReviewQueue's claim
-   rows render at ~122px, Meetings' at ~82-90px including the reserved
-   digest line above), not the old 52px guess that made every list's
-   loading-to-loaded swap its biggest layout shift. Pages that use `.skeleton`
-   for other shapes (a document body, a card) already override the height
-   per instance — e.g. Brief.tsx and Library.tsx pass `style={{ height }}` —
-   which still wins over this default. */
-.skeleton { height: 100px; margin: 8px 14px; border-radius: var(--r-sm); background: linear-gradient(90deg, var(--pane-2) 25%, var(--line-soft) 50%, var(--pane-2) 75%); background-size: 200% 100%; animation: shimmer 1.3s infinite; }
+.skeleton { height: 52px; margin: 8px 14px; border-radius: var(--r-sm); background: linear-gradient(90deg, var(--pane-2) 25%, var(--line-soft) 50%, var(--pane-2) 75%); background-size: 200% 100%; animation: shimmer 1.3s infinite; }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* 100px (116px with the margins above) — measured against a real row in the
+   two list screens that use this variant for row placeholders (ReviewQueue's
+   claim rows render at ~122px, Meetings' at ~82-90px including the reserved
+   digest line above). Scoped to those two call sites only: the bare
+   `.skeleton` default above stays a general-purpose 52px because most of its
+   ~28 other call sites are NOT sized against a 122px row — e.g. Brief.tsx's
+   version-history skeleton stands in for a real `.version-item`, which is
+   ~55-60px, not 100px. Applying this row-lg height there would have
+   reintroduced the exact loading-to-loaded shift this class exists to
+   prevent, just at a different site. */
+.skeleton.row-lg { height: 100px; }
 
 /* =========================================================== type rail (B) */
 

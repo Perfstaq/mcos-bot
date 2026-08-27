@@ -414,7 +414,7 @@ export function ReviewQueue({ onCountChange }: { onCountChange: (n: number) => v
             <span>j / k</span>
           </div>
           <div className="pane-body scroll">
-            {claims === null && <><div className="skeleton" /><div className="skeleton" /><div className="skeleton" /></>}
+            {claims === null && <><div className="skeleton row-lg" /><div className="skeleton row-lg" /><div className="skeleton row-lg" /></>}
 
             {nothingLeft && decided === 0 && (
               <div className="empty">
