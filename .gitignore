@@ -54,3 +54,4 @@ packages/render/out/
 # each MP4's sha256 + the commit it came from, which is what makes the
 # committed artifacts checkable without the video itself.
 docs/studio/evidence/**/*.mp4
+docs/studio/evidence/**/.props.json
