@@ -268,6 +268,11 @@ export const DIGEST_PROMPT_VERSION = "meeting_digest/v1-openai";
 export type MeetingDigest = {
   title: string;
   digest: string;
+  /** The model actually used for this call — `args.model` when the caller
+   *  overrode it, otherwise `env.DIGEST_MODEL` — so a caller recording
+   *  provenance stores what really answered, not what the env default
+   *  happened to be at storage time. */
+  model: string;
   inputTokens: number;
   outputTokens: number;
 };
@@ -325,13 +330,23 @@ export async function generateMeetingDigest(args: {
   existingTitle: string | null;
   model?: string;
 }): Promise<MeetingDigest> {
+  // `jobs/digest.ts` never overwrites a title a human (or an earlier working
+  // title) already gave the meeting — `meeting.title ?? result.title` only
+  // ever reaches for `result.title` when there is none. So when
+  // `existingTitle` is set, this call's own `title` output is guaranteed to
+  // be discarded by its caller; the header says so rather than asking the
+  // model to do work ("replace it with something better") that can never
+  // land. The schema still requires `title` — this just stops the prompt
+  // from promising an effect the code doesn't have.
   const header = args.existingTitle
-    ? `The meeting was created with the working title "${args.existingTitle}" — replace it ` +
-      `with something more specific if the transcript supports one.\n\n`
+    ? `For context only: this meeting already has the title "${args.existingTitle}", which is ` +
+      `never overwritten by what you write here — "title" below is still required by the ` +
+      `schema, but only used for a meeting that has no title yet.\n\n`
     : "";
 
+  const model = args.model ?? env.DIGEST_MODEL;
   const response = await client.responses.create({
-    model: args.model ?? env.DIGEST_MODEL,
+    model,
     input: [
       { role: "system", content: DIGEST_SYSTEM_PROMPT },
       {
@@ -359,6 +374,7 @@ export async function generateMeetingDigest(args: {
 
   return {
     ...parsed,
+    model,
     inputTokens: response.usage?.input_tokens ?? 0,
     outputTokens: response.usage?.output_tokens ?? 0,
   };

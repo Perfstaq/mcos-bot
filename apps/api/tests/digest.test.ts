@@ -1,7 +1,8 @@
 import { EvidenceKind, MeetingStatus } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { runWithContext } from "../src/context.js";
-import { runDigest } from "../src/jobs/digest.js";
+import { env } from "../src/env.js";
+import { buildExcerpt, runDigest } from "../src/jobs/digest.js";
 import { db, resetDb, seedTenant } from "./helpers.js";
 
 /**
@@ -69,6 +70,11 @@ describe("runDigest", () => {
     mockDigest.mockResolvedValue({
       title: "Acme renewal risk and the pricing objection",
       digest: "The team discussed a Q3 renewal risk on the Acme account. Pricing was raised again as the sticking point. No next step was recorded in this excerpt.",
+      // env.DIGEST_MODEL, not a hardcoded model id: this asserts jobs/digest.ts
+      // stores the model generateMeetingDigest says it actually used, not
+      // whatever env.DIGEST_MODEL happens to be at storage time — those two
+      // are only guaranteed to match because nothing here overrides `model`.
+      model: env.DIGEST_MODEL,
       inputTokens: 400,
       outputTokens: 60,
     });
@@ -81,7 +87,7 @@ describe("runDigest", () => {
     const meeting = await db.meeting.findUniqueOrThrow({ where: { id: meetingId } });
     expect(meeting.title).toBe("Acme renewal risk and the pricing objection");
     expect(meeting.digest).toContain("Acme account");
-    expect(meeting.digestModel).toBe("gpt-5.6-luna");
+    expect(meeting.digestModel).toBe(env.DIGEST_MODEL);
     expect(meeting.digestPromptVersion).toBe("meeting_digest/v1-openai");
     expect(meeting.digestGeneratedAt).not.toBeNull();
     expect(meeting.status).toBe(MeetingStatus.transcript_ready);
@@ -93,6 +99,7 @@ describe("runDigest", () => {
     mockDigest.mockResolvedValue({
       title: "A model-invented title",
       digest: "Three sentences of summary go here for the excerpt provided in this fixture today.",
+      model: env.DIGEST_MODEL,
       inputTokens: 400,
       outputTokens: 60,
     });
@@ -167,5 +174,33 @@ describe("runDigest", () => {
     );
 
     expect(mockDigest).not.toHaveBeenCalled();
+  });
+});
+
+describe("buildExcerpt", () => {
+  it("still returns a non-empty excerpt when the first segment alone exceeds the cap", () => {
+    // Regression test: the loop used to compare `length + line.length` against
+    // the cap and `break` on the first line that didn't fit — for a single
+    // segment longer than the whole 8,000-char cap (one person talking
+    // uninterrupted, no natural break), that comparison fails on the very
+    // first iteration, before anything was ever pushed, producing an empty
+    // excerpt rather than a truncated one.
+    const huge = "word ".repeat(3_000); // ~15,000 chars, well over the cap
+    const excerpt = buildExcerpt([{ speaker: "Priya Raman", startMs: 0, text: huge }]);
+
+    expect(excerpt.length).toBeGreaterThan(0);
+    expect(excerpt).toContain("Priya Raman");
+  });
+
+  it("stops before a line that doesn't fit once at least one line is already in", () => {
+    const first = "word ".repeat(50); // small, fits easily
+    const huge = "word ".repeat(3_000); // would not fit alongside `first`
+    const excerpt = buildExcerpt([
+      { speaker: "Priya Raman", startMs: 0, text: first },
+      { speaker: "Daniel Okafor", startMs: 4_000, text: huge },
+    ]);
+
+    expect(excerpt).toContain("Priya Raman");
+    expect(excerpt).not.toContain("Daniel Okafor");
   });
 });

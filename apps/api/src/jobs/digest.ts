@@ -1,5 +1,4 @@
 import { prisma } from "../db.js";
-import { env } from "../env.js";
 import { DIGEST_PROMPT_VERSION, generateMeetingDigest } from "../integrations/openai.js";
 import { formatTimestamp } from "../domain/transcript.js";
 import { logger } from "../logger.js";
@@ -60,7 +59,11 @@ async function generateAndStore(meetingId: string): Promise<void> {
       // Never override a title a human already typed when they sent the bot.
       title: meeting.title ?? result.title,
       digest: result.digest,
-      digestModel: env.DIGEST_MODEL,
+      // The model that actually answered, not env.DIGEST_MODEL — identical
+      // today (no caller passes an override), but recording the env default
+      // instead of what the call actually used would silently go stale the
+      // moment one did.
+      digestModel: result.model,
       digestPromptVersion: DIGEST_PROMPT_VERSION,
       digestGeneratedAt: new Date(),
     },
@@ -77,12 +80,22 @@ const EXCERPT_CHAR_LIMIT = 8_000;
 
 type ExcerptSegment = { speaker: string; startMs: number; text: string };
 
-function buildExcerpt(segments: ExcerptSegment[]): string {
+export function buildExcerpt(segments: ExcerptSegment[]): string {
   const lines: string[] = [];
   let length = 0;
   for (const segment of segments) {
     const line = `[${formatTimestamp(segment.startMs)}] ${segment.speaker}: ${segment.text}`;
-    if (length + line.length > EXCERPT_CHAR_LIMIT) break;
+    if (length + line.length > EXCERPT_CHAR_LIMIT) {
+      // A single segment longer than the whole cap (one person talking
+      // uninterrupted for 8,000+ characters, with no natural break) must
+      // not turn into an empty excerpt just because nothing fit "cleanly" —
+      // an empty excerpt sends generateMeetingDigest a transcript excerpt of
+      // "", not a shorter one. Only truncate-and-stop when this is still the
+      // first line; once at least one full line is in, stopping without it
+      // is the intended "that's the cap" behavior.
+      if (lines.length === 0) lines.push(line.slice(0, EXCERPT_CHAR_LIMIT));
+      break;
+    }
     lines.push(line);
     length += line.length + 1;
   }
