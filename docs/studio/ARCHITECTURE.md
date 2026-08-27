@@ -1193,3 +1193,48 @@ match, which is Sathvik's call, not an agent's. Recorded so it is not mistaken f
 intended. Candidate fixes when ruled: multiply by tier rather than adding it; exclude the fallback
 from scoring unless every other framework scores zero; or widen the tier-A frameworks'
 `favoredClaimTypes`, which are currently narrow enough to lose to a catch-all.
+
+### 12.16 §11.1 R2's guarantee was wrong, and finding 2 explains why — framing ruling
+
+Agent T rendered three templates and found the `center` caption sitting **on the subject's mouth**
+in all three, on real footage. That falsifies the guarantee I gave in §11.1 R2 — that letterbox
+captions "structurally cannot occlude a face", which is what justified descoping face detection.
+The guarantee assumed a fixed frame; `camera.ts`'s `REFRAME_STEP` zooms odd shots 18%, moving the
+face below the line §12.5 placed the caption on. My ruling, my error.
+
+**T's second finding is the root cause, and it dissolves the first.** The reference's content
+region is 720×800 — 62.5% of frame height (§12.4). Ours letterboxes 16:9 at full width:
+1080/(16/9) = 607px of 1920 = **31.6% video, 68% black bars**. We have been benchmarking against a
+frame we do not produce, and the cramped video band is why there is no room below a face for a
+caption.
+
+The reference does not letterbox 16:9 at full width. To get 720×800 from 16:9 source it **zooms in
+roughly 2× and crops the sides** — which is why the subject's head fills the frame. That is
+ordinary reel practice and we simply did not do it.
+
+**Ruling: v1 crops source footage to a ~0.9:1 content region (≈62.5% of frame height), full
+width — it does not letterboxed-fit 16:9.** Consequences:
+
+1. **The caption problem largely dissolves.** A 62.5% video band leaves real estate below a seated
+   subject's face, which is what §12.5's `center` placement assumed all along.
+2. **Still no face detection.** The crop offset is static per template (centred by default,
+   overridable), which is sufficient for the locked-off interview footage this milestone targets —
+   the subject does not move. §11.1 R2's *conclusion* survives; only its stated reason was wrong.
+3. **The reframe must not undo it.** `REFRAME_STEP` may not push the face below the caption line —
+   reduce the step, or anchor the zoom toward the top of the content region so the face stays put.
+   Framing and caption placement are one decision, not two, exactly as T said.
+4. **The `mid_left` handle (y=0.5) moves out of the video band** into a bar, for the same reason.
+
+**Re-verify by rendering and looking**, not by re-reading the plan: this ruling exists because two
+plausible-sounding rules composed into a caption across someone's mouth, and only a frame showed it.
+
+### 12.17 Credit where the discipline worked
+
+T saw the word "NOT" rendered in accent orange and suspected a repeat of §12.9's stopword bug.
+Instead of reporting it, it checked the plan and the scorer first and found `"not"` is in
+`CONTRAST_WORDS` (+0.8, the same class as "never"), correctly emphasised per `02 §3`. §12.9's
+lesson — a frame is evidence about the renderer, not about what the renderer drew from — applied
+correctly by the next agent to hit it. Also worth recording: T's evidence harness caught four bugs
+in itself before shipping, including a frame labelled "caption rotation" that contained no caption
+(it sampled 200ms into 160ms chunks), and it fixed a containment-test flag by moving the renderer
+invocation behind the boundary rather than exempting the file.
