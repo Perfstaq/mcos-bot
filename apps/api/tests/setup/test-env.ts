@@ -60,6 +60,8 @@ export function applyTestEnv(): void {
   process.env.OPENAI_API_KEY = "test-openai-key";
   process.env.OPENAI_MODEL = "gpt-5.6-terra";
   process.env.OPENAI_REASONING_EFFORT = "low";
+  process.env.CONTENT_BRIEF_MODEL = "gpt-5.6-sol";
+  process.env.CONTENT_BRIEF_FALLBACK = "gpt-5.6-terra";
   // The pipeline suite is about webhooks, artifacts and the review gate, not
   // about logging in. Header identity keeps those tests testing one thing.
   process.env.AUTH_DEV_HEADERS = "true";

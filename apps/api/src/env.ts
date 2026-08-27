@@ -63,6 +63,15 @@ const schema = z.object({
   // judgement, so it defaults to the cheapest one. Still its own knob, and
   // still OpenAI: this milestone does not switch providers.
   DIGEST_MODEL: z.string().default("gpt-5.6-luna"),
+  // ContentBrief generation (05_BRIEF_INTEGRATION.md §2; ARCHITECTURE.md §11.2
+  // R5). The spec named an Anthropic model here ("06 §1"); CLAUDE.md's "do
+  // not switch LLM provider this milestone" wins, so this is an OpenAI model
+  // id like every other knob in this file, not a claude-* one. Generation is
+  // judgement-heavy and low-volume (choosing a framework, writing a hook), so
+  // it defaults to the flagship tier; the fallback is one tier down, in its
+  // own env var so it can be swapped in ops without touching the primary.
+  CONTENT_BRIEF_MODEL: z.string().default("gpt-5.6-sol"),
+  CONTENT_BRIEF_FALLBACK: z.string().default("gpt-5.6-terra"),
 
   // --- Authentication ------------------------------------------------------
   // Better Auth requires >=32 chars. Rotating it invalidates every session and
