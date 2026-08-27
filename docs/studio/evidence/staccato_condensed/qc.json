@@ -27,9 +27,9 @@
         "matchedRatio": 0.121,
         "matched": 4,
         "totalPlanCuts": 33,
-        "detectedCuts": 28,
+        "detectedCuts": 29,
         "windowMs": 66,
-        "informationalPixelBeatLockRatio": 0.786,
+        "informationalPixelBeatLockRatio": 0.724,
         "referenceBaseline": 0.821
       },
       "target": "≥90% of the plan's cut times have a detected cut within ±2 frames (66ms). Pixel-derived ratio is informational only, never gated."
@@ -134,7 +134,7 @@
       "computable": true,
       "pass": null,
       "measured": {
-        "checksum": "sha256:7224cda24e124dc1baadc06b47beaf96e6d1064e63e13326552202ebf592ad13"
+        "checksum": "sha256:ebb927599e6712b1c4275176d45529e78e0d2daa414cf38dd1401566cb2e1aeb"
       },
       "target": "same plan+footage ⇒ identical checksum",
       "note": "no --prev-checksum given — recorded for a future comparison, not scored this run"
@@ -175,10 +175,11 @@
       "measured": {
         "violations": 0,
         "bannerTopExemptionRatio": 0.08,
+        "faceFloorRatio": 0.717,
         "bannerLines": 1,
         "examples": []
       },
-      "target": "0 text blocks within 12% of the left/right/bottom edge; banner top exempt to 8% (ARCHITECTURE §12.7)"
+      "target": "0 text blocks within 12% of the left/right/bottom edge; banner top exempt to 8% (ARCHITECTURE §12.7); 0 karaoke blocks whose top is above the face floor at 0.717 (ARCHITECTURE §12.19)"
     }
   ],
   "overallPass": false,

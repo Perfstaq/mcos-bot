@@ -24,7 +24,7 @@
         "spring": "drift",
         "durationInFrames": 80,
         "originX": 0.5,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -40,7 +40,7 @@
         "spring": "drift",
         "durationInFrames": 45,
         "originX": 0.5361109881848097,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -56,7 +56,7 @@
         "spring": "drift",
         "durationInFrames": 34,
         "originX": 0.5,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -72,7 +72,7 @@
         "spring": "drift",
         "durationInFrames": 25,
         "originX": 0.5191101785376668,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -88,7 +88,7 @@
         "spring": "drift",
         "durationInFrames": 46,
         "originX": 0.5,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -104,7 +104,7 @@
         "spring": "drift",
         "durationInFrames": 103,
         "originX": 0.5275986077077687,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -120,7 +120,7 @@
         "spring": "drift",
         "durationInFrames": 85,
         "originX": 0.5,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -136,7 +136,7 @@
         "spring": "drift",
         "durationInFrames": 33,
         "originX": 0.5149871314689517,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -152,7 +152,7 @@
         "spring": "drift",
         "durationInFrames": 29,
         "originX": 0.5,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -168,7 +168,7 @@
         "spring": "drift",
         "durationInFrames": 35,
         "originX": 0.46974875262007115,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -184,7 +184,7 @@
         "spring": "drift",
         "durationInFrames": 34,
         "originX": 0.5,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -200,7 +200,7 @@
         "spring": "drift",
         "durationInFrames": 31,
         "originX": 0.5166597042232752,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -216,7 +216,7 @@
         "spring": "drift",
         "durationInFrames": 78,
         "originX": 0.5,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -232,7 +232,7 @@
         "spring": "drift",
         "durationInFrames": 82,
         "originX": 0.4733609550818801,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -248,7 +248,7 @@
         "spring": "drift",
         "durationInFrames": 28,
         "originX": 0.5,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -264,7 +264,7 @@
         "spring": "drift",
         "durationInFrames": 34,
         "originX": 0.4615679969638586,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -280,7 +280,7 @@
         "spring": "drift",
         "durationInFrames": 33,
         "originX": 0.5,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -296,7 +296,7 @@
         "spring": "drift",
         "durationInFrames": 28,
         "originX": 0.4851048584654927,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -312,7 +312,7 @@
         "spring": "drift",
         "durationInFrames": 19,
         "originX": 0.5,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -328,7 +328,7 @@
         "spring": "drift",
         "durationInFrames": 106,
         "originX": 0.4701640539057553,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -344,7 +344,7 @@
         "spring": "drift",
         "durationInFrames": 131,
         "originX": 0.5,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -360,7 +360,7 @@
         "spring": "drift",
         "durationInFrames": 32,
         "originX": 0.5231160307303071,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -376,7 +376,7 @@
         "spring": "drift",
         "durationInFrames": 35,
         "originX": 0.5,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -392,7 +392,7 @@
         "spring": "drift",
         "durationInFrames": 31,
         "originX": 0.47489696092903616,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -408,7 +408,7 @@
         "spring": "drift",
         "durationInFrames": 125,
         "originX": 0.5,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -424,7 +424,7 @@
         "spring": "drift",
         "durationInFrames": 84,
         "originX": 0.5029260354861617,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -440,7 +440,7 @@
         "spring": "drift",
         "durationInFrames": 49,
         "originX": 0.5,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -456,7 +456,7 @@
         "spring": "drift",
         "durationInFrames": 32,
         "originX": 0.4723135536909103,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -472,7 +472,7 @@
         "spring": "drift",
         "durationInFrames": 31,
         "originX": 0.5,
-        "originY": 0.5
+        "originY": 0.8472
       }
     },
     {
@@ -488,7 +488,7 @@
         "spring": "drift",
         "durationInFrames": 109,
         "originX": 0.5349175152927637,
-        "originY": 0.5
+        "originY": 0.8472
       }
     }
   ],
