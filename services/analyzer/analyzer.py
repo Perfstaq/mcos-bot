@@ -39,9 +39,14 @@ import sys
 # regardless of caller cwd.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-ANALYZER_VERSION = "studio-analyzer@0.2.0"  # 0.2.0: words stage gains per-word RMS (ARCHITECTURE §11.1 R1)
+ANALYZER_VERSION = "studio-analyzer@0.3.0"  # 0.3.0: fingerprint stage (04_STYLE_TRANSFER §3)
 
-IMPLEMENTED_STAGES = {"words", "beats"}
+IMPLEMENTED_STAGES = {"words", "beats", "fingerprint"}
+# `scenes`/`motion`/`faces` stay reserved. The `fingerprint` stage measures
+# shots and motion internally (04_STYLE_TRANSFER §3 needs both), but it emits
+# ONE EditFingerprint object for a reference reel — it is not the per-signal
+# `MediaAnalysis.scenes`/`.motion` payload those stage names are reserved for,
+# and `faces` remains v2's problem with `fill` framing (§11.1 R2).
 KNOWN_UNIMPLEMENTED_STAGES = {"scenes", "motion", "faces"}
 
 
@@ -98,9 +103,32 @@ def run_beats(args: argparse.Namespace, out_dir: str) -> None:
         eprint("[analyzer] beats: no clear tempo — grid is empty, beat_method should fall back downstream")
 
 
+def run_fingerprint(args: argparse.Namespace, out_dir: str) -> None:
+    from stages.fingerprint import extract_fingerprint
+
+    eprint(f"[analyzer] fingerprint: analyzing {args.input} (04_STYLE_TRANSFER §3)")
+    fp = extract_fingerprint(args.input, source_asset_id=args.asset_id)
+    out_path = os.path.join(out_dir, "fingerprint.json")
+    with open(out_path, "w") as f:
+        json.dump(fp, f, indent=2)
+
+    zeroed = sorted(k for k, v in fp["confidence"].items() if v == 0.0)
+    eprint(
+        f"[analyzer] fingerprint: {fp['rhythm']['shotCount']} shots / "
+        f"{fp['rhythm']['cutCount']} cuts, {fp['rhythm']['cutsPerMin']}/min, "
+        f"tempo={fp['audio']['tempoBpm']}, beat_lock={fp['audio']['beatLockRatio']}, "
+        f"framing={fp['framing']}, layers={fp['captions']['layers']} -> {out_path}"
+    )
+    if zeroed:
+        # Never silent: a field at confidence 0 is one the mapping will fill
+        # from the template default (04 §3), and a reviewer should see which.
+        eprint(f"[analyzer] fingerprint: NOT measured (confidence 0, template default applies): {zeroed}")
+
+
 STAGE_RUNNERS = {
     "words": run_words,
     "beats": run_beats,
+    "fingerprint": run_fingerprint,
 }
 
 
@@ -108,7 +136,12 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--input", help="media file to analyze (audio or video; any format ffmpeg reads)")
     ap.add_argument("--out", help="output directory — one <stage>.json per requested stage")
-    ap.add_argument("--stages", default="words,beats", help="comma-separated: words,beats (scenes,motion,faces not yet implemented)")
+    ap.add_argument(
+        "--stages",
+        default="words,beats",
+        help="comma-separated: words,beats,fingerprint (scenes,motion,faces not yet implemented)",
+    )
+    ap.add_argument("--asset-id", default=None, help="recorded as fingerprint.sourceAssetId")
     ap.add_argument("--model", default="base", help="faster-whisper model size (words stage)")
     ap.add_argument("--device", default="cpu")
     ap.add_argument("--compute-type", default="int8")
