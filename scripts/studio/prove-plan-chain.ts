@@ -161,8 +161,8 @@ async function main(): Promise<void> {
     return brief.id;
   }
 
-  async function http(method: "POST", url: string, payload: unknown = {}) {
-    return app.inject({ method, url, headers: HOME, payload });
+  async function http(url: string, payload: Record<string, unknown> = {}) {
+    return app.inject({ method: "POST", url, headers: HOME, payload });
   }
 
   async function waitFor(planId: string, timeoutMs = 90_000) {
@@ -179,10 +179,10 @@ async function main(): Promise<void> {
   process.stdout.write("\n── run 1 · approved brief → plan.build → RenderPlan ──\n");
 
   const briefId = await seedProposedBrief();
-  const approved = await http("POST", `/api/v1/content/briefs/${briefId}/approve`);
+  const approved = await http(`/api/v1/content/briefs/${briefId}/approve`);
   log("approve (real gate, HTTP)", `${approved.statusCode} · status=${approved.json().brief.status}`);
 
-  const planned = await http("POST", "/api/v1/content/plans", {
+  const planned = await http("/api/v1/content/plans", {
     content_brief_id: briefId,
     template_id: template.id,
     footage_asset_id: footage.id,
@@ -219,11 +219,11 @@ async function main(): Promise<void> {
   await worker.pause();
 
   const briefId2 = await seedProposedBrief();
-  await http("POST", `/api/v1/content/briefs/${briefId2}/approve`);
+  await http(`/api/v1/content/briefs/${briefId2}/approve`);
 
   // Enqueued while approved — the route's own check passes, which is the
   // whole point: enqueue-time validation is not the guarantee.
-  const planned2 = await http("POST", "/api/v1/content/plans", {
+  const planned2 = await http("/api/v1/content/plans", {
     content_brief_id: briefId2,
     template_id: template.id,
     footage_asset_id: footage.id,
@@ -231,7 +231,7 @@ async function main(): Promise<void> {
   const planId2 = planned2.json().id as string;
   log("POST /content/plans", `${planned2.statusCode} · enqueued while approved · plan ${planId2}`);
 
-  const undone = await http("POST", `/api/v1/content/briefs/${briefId2}/undo`);
+  const undone = await http(`/api/v1/content/briefs/${briefId2}/undo`);
   log("undo (real gate, HTTP)", `${undone.statusCode} · status=${undone.json().brief.status}`);
 
   worker.resume();
@@ -255,7 +255,7 @@ async function main(): Promise<void> {
   // because a guard nobody has exercised is a guard nobody knows the state of.
   process.stdout.write("\n── run 2b · the reverse order · plan committed, THEN undo ──\n");
 
-  const undoAfter = await http("POST", `/api/v1/content/briefs/${briefId}/undo`);
+  const undoAfter = await http(`/api/v1/content/briefs/${briefId}/undo`);
   const briefAfter = await db.contentBrief.findUniqueOrThrow({ where: { id: briefId } });
   const plansOnIt = await db.renderPlan.count({ where: { contentBriefId: briefId } });
   log("undo after materialization", `${undoAfter.statusCode} (409 = guard held)`);

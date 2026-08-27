@@ -422,6 +422,37 @@ describe("plan.build — ADR-8: G1a is evaluated before the plan is persisted", 
     expect(await db.renderPlan.count({ where: { id: job.planId } })).toBe(0);
   });
 
+  it("rejects a constant_grid plan, which can never be merge evidence", () => {
+    // ARCHITECTURE §4's fallback ladder, rung 3: `constant_grid` means the
+    // analyzer found no real beat structure and fell back to a metronome.
+    // gateG1a refuses to score it at all rather than reporting a ratio, so
+    // this is a differently-shaped failure from "measured and too low" and
+    // has to read differently to an operator.
+    let thrown: unknown;
+    try {
+      buildApprovedRenderPlan({
+        templateId: "statement_serif",
+        words: WORDS.segments.flatMap((s: { words: unknown[] }) => s.words),
+        durationSec: WORDS.durationSec,
+        beats: { ...BEATS, method: "constant_grid" as const },
+        seed: 42,
+        hookText: "THE POWER OF OBSESSION",
+        emphasisWord: "OBSESSION",
+        claimTexts: ["working harder"],
+        handleText: "@PERFSTAQ",
+        footage: { assetId: "a", r2Key: "k" },
+      });
+    } catch (e) {
+      thrown = e;
+    }
+
+    expect(thrown).toBeInstanceOf(PlanInfeasibleError);
+    expect((thrown as PlanInfeasibleError).code).toBe("g1a_below_gate");
+    // No invented percentage where the gate reported none.
+    expect((thrown as Error).message).toMatch(/cannot be scored against G1a/);
+    expect((thrown as Error).message).not.toMatch(/NaN|undefined/);
+  });
+
   it("uses the ONE gate — the same gateG1a the QC script imports, not a local copy", async () => {
     // §12.19: "there is exactly one ruler". If plan.build ever grew its own
     // beat-lock arithmetic, this is the test that would notice.

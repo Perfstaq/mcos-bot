@@ -380,17 +380,23 @@ export function buildApprovedRenderPlan(input: BuildRenderPlanInput): BuiltPlan 
   const built = buildRenderPlan(input);
   if (!built.g1a.pass) {
     const measured = built.g1a.measured as Record<string, unknown>;
+    const ratio = measured["ratio"];
+    // Two shapes of failure, and they read differently: a measured ratio
+    // under the gate, versus a grid G1a refuses to score at all (an empty
+    // grid, or `constant_grid` — ARCHITECTURE §4's rung-3 fallback, which
+    // can never be merge evidence). Collapsing them into one sentence with a
+    // missing number would tell an operator the least useful version of both.
+    const lead =
+      typeof ratio === "number"
+        ? `the best plan locks ${(ratio * 100).toFixed(2)}% of its cuts within 150ms of the embedded beat grid, ` +
+          "under G1a's 85% gate"
+        : "the plan's beat grid cannot be scored against G1a at all";
     throw new PlanInfeasibleError(
       "g1a_below_gate",
-      `the best plan locks ${formatPct(measured["ratio"])} of its cuts within 150ms of the embedded beat grid, ` +
-        `under G1a's 85% gate${built.g1a.note ? ` (${built.g1a.note})` : ""} — rejected at plan.build so it never ` +
-        "costs a render (ADR-8).",
+      `${lead}${built.g1a.note ? ` — ${built.g1a.note}` : ""}. Rejected at plan.build so it never costs a render ` +
+        "(ADR-8).",
       { ...measured, lockPct: built.planner.lockPct },
     );
   }
   return built;
-}
-
-function formatPct(ratio: unknown): string {
-  return typeof ratio === "number" ? `${(ratio * 100).toFixed(2)}%` : "an unmeasurable share of";
 }

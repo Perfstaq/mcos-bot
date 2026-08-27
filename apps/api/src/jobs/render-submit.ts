@@ -116,10 +116,10 @@ export function resolveRenderBackend(): LocalBackend {
     // of degrading to local behind the operator's back.
     throw new RenderFailedError(
       "lambda_unavailable",
-      "the Remotion Lambda submit path is not implemented. ADR-5 confines every `remotion`/`@remotion/*` import " +
-        "to packages/render (enforced by tests/render-containment.test.ts), and no module there wraps " +
-        "@remotion/lambda yet — the package is not installed. Until packages/render exports a Lambda submit " +
-        "function, use RENDER_BACKEND=local. Deliberately a hard failure, not a fallback.",
+      "the Remotion Lambda submit path is not implemented. ADR-5 confines every Remotion import to " +
+        "packages/render (enforced by tests/render-containment.test.ts), that package does not depend on the " +
+        "Lambda SDK, and no module there wraps it. Until packages/render exports a Lambda submit function, use " +
+        "RENDER_BACKEND=local. Deliberately a hard failure, not a fallback.",
     );
   }
 
