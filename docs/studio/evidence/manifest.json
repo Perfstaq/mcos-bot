@@ -1,0 +1,483 @@
+{
+  "description": "Render evidence for the three shipped templates (ARCHITECTURE §12.10). The MP4s are NOT committed; their sha256 is recorded here alongside the commit they were rendered from, so a reviewer can tell whether the committed plan/qc/frames describe the code in front of them. Regenerate with `npx tsx scripts/studio/render-evidence.ts --footage <clean.mp4>`; check with `--check`.",
+  "generatedAt": "2026-08-27T20:04:26.698Z",
+  "renderedFromCommit": "3a035188e8d2c8a18417d49642ca56e253aaa4ef",
+  "renderedFromCommitSubject": "fix(studio): anchor the zoom on the chin, so the caption floor is true at every scale",
+  "treeDirty": false,
+  "renderAffectingPaths": [
+    "packages/render/src",
+    "packages/render/assets",
+    "packages/render/remotion.config.ts",
+    "scripts/studio/build-template-plan.ts",
+    "scripts/studio/render-evidence.ts",
+    "scripts/qc-render.ts",
+    "docs/studio/evidence/inputs"
+  ],
+  "harness": {
+    "node": "v22.22.0",
+    "analyzerPython": "/Users/sathvik/aix/st-p/services/analyzer/.venv/bin/python",
+    "pythonPackages": "librosa=0.11.0 scenedetect=0.7.1 numpy=2.3.5",
+    "renderer": "4.0.518"
+  },
+  "footage": {
+    "path": "/Users/sathvik/aix/studio-renders/reference-16x9-proxy.mp4",
+    "sha256": "f204b1628fdcfb1a753de9069463a6364160674b5079c46d1faf95da9db41013",
+    "bytes": 6995896
+  },
+  "inputs": {
+    "words": {
+      "file": "inputs/reference-words.json",
+      "sha256": "34bbe681ac2049028dda575b169dc065a86fd0dcf8042128e86be4fce5e0c9ab"
+    },
+    "beats": {
+      "file": "inputs/reference-beats.json",
+      "sha256": "ad80060252dc4d0c499a83ad19f3bdf651461bed10810a5fd3a9b94f5f1d2f7b"
+    }
+  },
+  "templates": {
+    "statement_serif": {
+      "templateVersion": 1,
+      "mp4": {
+        "sha256": "6c9085e8ce70d47349e3049bc12b859416974674115add0ff23dab35e3921c27",
+        "bytes": 32463753,
+        "retained": false,
+        "file": null
+      },
+      "plan": {
+        "file": "plan.json",
+        "sha256": "58a7aea84550eccd22774f968fdb414131b3eb1f90a5b9779cb333ebbfc93537"
+      },
+      "qc": {
+        "file": "qc.json",
+        "sha256": "0340227b05fb7db571d8b111420725ece5d3db26ee5c7de77e93d6b32d52925f"
+      },
+      "frames": [
+        {
+          "file": "frame1.png",
+          "sha256": "b3c29e4e5764c0eb998ab6e9e90cb6b4417bbc9133d878dc53aeb028b3857473",
+          "bytes": 729423,
+          "frame": 23,
+          "timeMs": 780,
+          "why": "banner settled + first karaoke chunk — the scroll-stopper as a viewer first sees it"
+        },
+        {
+          "file": "frame2.png",
+          "sha256": "d72c10ea52bb44bebea7a89b6da467a3121f4a6cb3623bb8b90f5242624f4578",
+          "bytes": 326267,
+          "frame": 244,
+          "timeMs": 8147,
+          "why": "emphasis word \"not\" at its punch peak — accent means emphasis only (§12.9)"
+        },
+        {
+          "file": "frame3.png",
+          "sha256": "9f294afefb2486adcacd9afe3a587ac8ad890bea89b87897cee13211d4bf0b77",
+          "bytes": 756649,
+          "frame": 1454,
+          "timeMs": 48460,
+          "why": "late chunk \"being one of\" at position \"center\" — caption rotation and the alternating handle corner"
+        }
+      ],
+      "overallPass": false,
+      "gates": {
+        "G1a": {
+          "pass": true,
+          "measured": {
+            "ratio": 1,
+            "withinCount": 29,
+            "totalCuts": 29,
+            "gridQuality": 2.2934,
+            "gridQualityOk": true
+          }
+        },
+        "G1b": {
+          "pass": false,
+          "measured": {
+            "matchedRatio": 0.103,
+            "matched": 3,
+            "totalPlanCuts": 29,
+            "detectedCuts": 29,
+            "windowMs": 66,
+            "informationalPixelBeatLockRatio": 0.759,
+            "referenceBaseline": 0.821
+          }
+        },
+        "G2": {
+          "pass": true,
+          "measured": 31.7
+        },
+        "G3": {
+          "pass": true,
+          "measured": 1.15
+        },
+        "G4": {
+          "pass": true,
+          "measured": 0.64
+        },
+        "G5": {
+          "pass": true,
+          "measured": 3
+        },
+        "G6": {
+          "pass": true,
+          "measured": 3
+        },
+        "G8": {
+          "pass": true,
+          "measured": {
+            "chunks": 62,
+            "outOfRangeEmphasis": 0
+          }
+        },
+        "G10": {
+          "pass": true,
+          "measured": {
+            "violations": 0,
+            "cutsChecked": 30
+          }
+        },
+        "G11": {
+          "pass": true,
+          "measured": -14
+        },
+        "G12": {
+          "pass": true,
+          "measured": {
+            "width": 1080,
+            "height": 1920,
+            "fps": 30,
+            "vcodec": "h264",
+            "acodec": "aac"
+          }
+        },
+        "G13": {
+          "pass": null,
+          "measured": {
+            "checksum": "sha256:6c9085e8ce70d47349e3049bc12b859416974674115add0ff23dab35e3921c27"
+          }
+        },
+        "G14": {
+          "pass": null,
+          "measured": {
+            "contentBriefId": null
+          }
+        },
+        "G7": {
+          "pass": true,
+          "measured": {
+            "shots": 30,
+            "staticShots": 0,
+            "minDelta": 0.0509,
+            "maxDelta": 0.0793,
+            "threshold": 0.01
+          }
+        },
+        "G9": {
+          "pass": true,
+          "measured": {
+            "violations": 0,
+            "bannerTopExemptionRatio": 0.08,
+            "faceFloorRatio": 0.717,
+            "bannerLines": 1,
+            "examples": []
+          }
+        }
+      }
+    },
+    "staccato_condensed": {
+      "templateVersion": 1,
+      "mp4": {
+        "sha256": "ebb927599e6712b1c4275176d45529e78e0d2daa414cf38dd1401566cb2e1aeb",
+        "bytes": 31327137,
+        "retained": false,
+        "file": null
+      },
+      "plan": {
+        "file": "plan.json",
+        "sha256": "5c160b06e12269923a0cf452094958cfd574df469233a0377e4478e7fff0bffb"
+      },
+      "qc": {
+        "file": "qc.json",
+        "sha256": "ee893b7bbbd3210aeb140da8ed4e7ad98ccb770867cea59feacb159e55393e10"
+      },
+      "frames": [
+        {
+          "file": "frame1.png",
+          "sha256": "8a53bd2a2e40538acda5e8f110c696e056c0bbd0a01847dbd0ca5323e9f865f8",
+          "bytes": 679913,
+          "frame": 23,
+          "timeMs": 780,
+          "why": "banner settled + first karaoke chunk — the scroll-stopper as a viewer first sees it"
+        },
+        {
+          "file": "frame2.png",
+          "sha256": "7d74eddb24d2bc445946239b304ba76a94202b55888820a98fbba816a7a2ac78",
+          "bytes": 279480,
+          "frame": 244,
+          "timeMs": 8147,
+          "why": "emphasis word \"not\" at its punch peak — accent means emphasis only (§12.9)"
+        },
+        {
+          "file": "frame3.png",
+          "sha256": "0a6fcb66c8b6b54d21203254778320493f6a777da9913f5a060fcb29bb00db0c",
+          "bytes": 768424,
+          "frame": 1373,
+          "timeMs": 45780,
+          "why": "late chunk \"to settle,\" at position \"center\" — caption rotation and the alternating handle corner"
+        }
+      ],
+      "overallPass": false,
+      "gates": {
+        "G1a": {
+          "pass": true,
+          "measured": {
+            "ratio": 1,
+            "withinCount": 33,
+            "totalCuts": 33,
+            "gridQuality": 2.2934,
+            "gridQualityOk": true
+          }
+        },
+        "G1b": {
+          "pass": false,
+          "measured": {
+            "matchedRatio": 0.121,
+            "matched": 4,
+            "totalPlanCuts": 33,
+            "detectedCuts": 29,
+            "windowMs": 66,
+            "informationalPixelBeatLockRatio": 0.724,
+            "referenceBaseline": 0.821
+          }
+        },
+        "G2": {
+          "pass": true,
+          "measured": 36.1
+        },
+        "G3": {
+          "pass": true,
+          "measured": 1.16
+        },
+        "G4": {
+          "pass": true,
+          "measured": 0.84
+        },
+        "G5": {
+          "pass": true,
+          "measured": 3
+        },
+        "G6": {
+          "pass": true,
+          "measured": 3
+        },
+        "G8": {
+          "pass": true,
+          "measured": {
+            "chunks": 62,
+            "outOfRangeEmphasis": 0
+          }
+        },
+        "G10": {
+          "pass": true,
+          "measured": {
+            "violations": 0,
+            "cutsChecked": 34
+          }
+        },
+        "G11": {
+          "pass": true,
+          "measured": -14
+        },
+        "G12": {
+          "pass": true,
+          "measured": {
+            "width": 1080,
+            "height": 1920,
+            "fps": 30,
+            "vcodec": "h264",
+            "acodec": "aac"
+          }
+        },
+        "G13": {
+          "pass": null,
+          "measured": {
+            "checksum": "sha256:ebb927599e6712b1c4275176d45529e78e0d2daa414cf38dd1401566cb2e1aeb"
+          }
+        },
+        "G14": {
+          "pass": null,
+          "measured": {
+            "contentBriefId": null
+          }
+        },
+        "G7": {
+          "pass": true,
+          "measured": {
+            "shots": 34,
+            "staticShots": 0,
+            "minDelta": 0.0509,
+            "maxDelta": 0.0793,
+            "threshold": 0.01
+          }
+        },
+        "G9": {
+          "pass": true,
+          "measured": {
+            "violations": 0,
+            "bannerTopExemptionRatio": 0.08,
+            "faceFloorRatio": 0.717,
+            "bannerLines": 1,
+            "examples": []
+          }
+        }
+      }
+    },
+    "editorial_sans": {
+      "templateVersion": 1,
+      "mp4": {
+        "sha256": "e46dc4ee6fc16aa7f07322ec8de501592d7a72a5504bc33ac7eac8654645342e",
+        "bytes": 31491665,
+        "retained": false,
+        "file": null
+      },
+      "plan": {
+        "file": "plan.json",
+        "sha256": "a75a817840ab4bd0b3f0fa38a990634c37bd2d6941f424c08861804a5fa75ed9"
+      },
+      "qc": {
+        "file": "qc.json",
+        "sha256": "0148ad61339df72d33f750ef756502d95f4365016a51ff6cab3699414a687cd1"
+      },
+      "frames": [
+        {
+          "file": "frame1.png",
+          "sha256": "29379472cc5f01d4dd594a589d01909075debf53fcfeb8048df6d313d97b6536",
+          "bytes": 707548,
+          "frame": 23,
+          "timeMs": 780,
+          "why": "banner settled + first karaoke chunk — the scroll-stopper as a viewer first sees it"
+        },
+        {
+          "file": "frame2.png",
+          "sha256": "1e92d752dc0feee3b8cdf484e6a214e666ee5e3db921e17e9ed5335cdd151d0c",
+          "bytes": 330639,
+          "frame": 244,
+          "timeMs": 8147,
+          "why": "emphasis word \"not\" at its punch peak — accent means emphasis only (§12.9)"
+        },
+        {
+          "file": "frame3.png",
+          "sha256": "ed227955ca0b25fa77693a2da44b1a5c3b3c456130a43d4e4709580207d0a735",
+          "bytes": 750305,
+          "frame": 1373,
+          "timeMs": 45780,
+          "why": "late chunk \"to settle,\" at position \"center_low\" — caption rotation and the alternating handle corner"
+        }
+      ],
+      "overallPass": false,
+      "gates": {
+        "G1a": {
+          "pass": true,
+          "measured": {
+            "ratio": 1,
+            "withinCount": 27,
+            "totalCuts": 27,
+            "gridQuality": 2.2934,
+            "gridQualityOk": true
+          }
+        },
+        "G1b": {
+          "pass": false,
+          "measured": {
+            "matchedRatio": 0.074,
+            "matched": 2,
+            "totalPlanCuts": 27,
+            "detectedCuts": 29,
+            "windowMs": 66,
+            "informationalPixelBeatLockRatio": 0.759,
+            "referenceBaseline": 0.821
+          }
+        },
+        "G2": {
+          "pass": true,
+          "measured": 29.5
+        },
+        "G3": {
+          "pass": true,
+          "measured": 1.51
+        },
+        "G4": {
+          "pass": true,
+          "measured": 1
+        },
+        "G5": {
+          "pass": true,
+          "measured": 3
+        },
+        "G6": {
+          "pass": true,
+          "measured": 3
+        },
+        "G8": {
+          "pass": true,
+          "measured": {
+            "chunks": 62,
+            "outOfRangeEmphasis": 0
+          }
+        },
+        "G10": {
+          "pass": true,
+          "measured": {
+            "violations": 0,
+            "cutsChecked": 28
+          }
+        },
+        "G11": {
+          "pass": true,
+          "measured": -14
+        },
+        "G12": {
+          "pass": true,
+          "measured": {
+            "width": 1080,
+            "height": 1920,
+            "fps": 30,
+            "vcodec": "h264",
+            "acodec": "aac"
+          }
+        },
+        "G13": {
+          "pass": null,
+          "measured": {
+            "checksum": "sha256:e46dc4ee6fc16aa7f07322ec8de501592d7a72a5504bc33ac7eac8654645342e"
+          }
+        },
+        "G14": {
+          "pass": null,
+          "measured": {
+            "contentBriefId": null
+          }
+        },
+        "G7": {
+          "pass": true,
+          "measured": {
+            "shots": 28,
+            "staticShots": 0,
+            "minDelta": 0.0509,
+            "maxDelta": 0.0793,
+            "threshold": 0.01
+          }
+        },
+        "G9": {
+          "pass": true,
+          "measured": {
+            "violations": 0,
+            "bannerTopExemptionRatio": 0.08,
+            "faceFloorRatio": 0.717,
+            "bannerLines": 1,
+            "examples": []
+          }
+        }
+      }
+    }
+  }
+}

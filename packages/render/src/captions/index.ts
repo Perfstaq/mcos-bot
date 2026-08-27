@@ -22,6 +22,15 @@ export {
   type CaptionWordPlan,
 } from "./chunk.js";
 export {
+  blockHeightPx,
+  lineCount,
+  textWidthPx,
+  wrapLines,
+  wrapWords,
+  type MeasuredWord,
+  type WrapOptions,
+} from "./measure.js";
+export {
   EMPHASIS_THRESHOLD,
   EMPHASIS_WEIGHTS,
   buildEmphasisContext,
@@ -40,6 +49,8 @@ export {
   BANNER_ANCHOR,
   BANNER_TOP_MARGIN_RATIO,
   CAPTION_POSITIONS,
+  CONTENT_REGION_RATIO,
+  FACE_FLOOR_RATIO,
   DROP_SHADOW,
   FONT_ROLES,
   FRAME,
@@ -49,9 +60,13 @@ export {
   SPOKEN_OPACITY,
   TYPE_SCALE,
   anchorFor,
+  contentRegion,
   captionWordAppearance,
+  faceFloorOriginY,
+  faceFloorViolationsForBlock,
   fontSizePx,
   g9Violations,
+  g9ViolationsForBlock,
   handleAnchor,
   handleCornerForShot,
   letterboxVideoBand,

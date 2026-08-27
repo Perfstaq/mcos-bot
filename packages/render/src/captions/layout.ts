@@ -1,27 +1,30 @@
 /**
  * layout.ts — where text is allowed to be (02_MOTION_SYSTEM §2, §7; 01 §4, §7).
  *
- * ── The framing ruling this file implements (ARCHITECTURE §11.1 R2) ─────────
- * v1 ships **`letterbox` framing only**. That is what the reference does
- * (01 §7) and it is what descopes face detection: 16:9 source scaled to width
- * inside 9:16 leaves black bars top and bottom, and the bars are caption real
- * estate that structurally cannot occlude a face. `fill` framing and
- * MediaPipe face boxes are deferred to v2 and must be added together — so
- * `fill` is deliberately not buildable here.
+ * ── The framing ruling this file implements (§11.1 R2, as corrected by §12.16)
+ * v1 ships **`letterbox` framing only**, and `fill` plus MediaPipe face boxes
+ * are deferred to v2 together — so `fill` is deliberately not buildable here.
+ *
+ * R2 originally justified descoping face detection by claiming captions live
+ * in the black bars and "structurally cannot occlude a face". **That reason
+ * was wrong and a rendered frame disproved it** (§12.16): a caption landed
+ * across a subject's mouth in all three templates. The conclusion survives on
+ * different grounds — a content region sized like the reference's (62.5% of
+ * frame height, not the 31.6% a width-fit gives) leaves real room below the
+ * chin, and locked-off interview footage needs only a static per-template
+ * crop offset rather than a tracker.
+ *
+ * The anchors below are therefore derived from a MEASURED face floor, not
+ * from an argument about which region text sits in.
  *
  * **No luminance analysis.** 02 §2.2 wanted a scrim "when over a busy region
  * (detect via mean luminance of the text bounding box)"; R2 descopes it.
  * Drop-shadow is always on (the reference achieves legibility with a 2px
  * shadow alone, 01 §4) and the scrim is a static per-template policy.
  *
- * ── Reconciling 02 §2.2's position names with letterbox ─────────────────────
- * 02 names four rotation positions — `center_low`, `lower_left`, `center`,
- * `upper_third` — and 01 §4 measures the reference's karaoke layer sitting
- * over the video. Resolved against a letterboxed 1080×1920 frame, three of
- * the four land inside the black bars and the fourth (`center`) sits in the
- * bottom sixth of the video band, below where a seated subject's face is in
- * podcast framing. That keeps 02's vocabulary, honours R2's "cannot occlude a
- * face", and satisfies G6 (≥3 distinct positions) without a face detector.
+ * ── Position names ──────────────────────────────────────────────────────────
+ * 02 §2.2 names four rotation positions; §12.20 retires `upper_third` because
+ * the corrected geometry has no room for it. See the note on `CaptionPosition`.
  */
 
 export const FRAME = { width: 1080, height: 1920 } as const;
@@ -45,21 +48,66 @@ export const BANNER_TOP_MARGIN_RATIO = 0.08;
 /** Which G9 rule a text layer is held to. */
 export type TextLayer = "banner" | "karaoke" | "handle";
 
-/** 16:9 inside 9:16, scaled to width: the video band's vertical extent. */
+/**
+ * The content region: where footage is drawn (ARCHITECTURE §12.16).
+ *
+ * **This replaces "scale 16:9 to width".** `01 §7` said the reference is
+ * "16:9 podcast footage scaled to fit width"; §12.4 measured the content
+ * region at 720×800 (≈0.9:1) and §12.16 established why that difference
+ * matters rather than being trivia. Fitting 16:9 to width puts 607px of video
+ * in a 1920 frame — 31.6% of frame height, against the reference's 62.5% —
+ * so our subject was half the size of the reference's, and the "bars" were
+ * 68% of the frame. The reference gets its 0.9:1 region by zooming ~2× and
+ * cropping the SIDES, which is why its subject's head fills the frame.
+ *
+ * That cramped band is the root cause of the caption-across-the-mouth this
+ * ruling came from: with only 31.6% of the frame carrying video, every
+ * caption position sat either in a vast black bar or on the subject's face,
+ * with nothing in between.
+ */
+export const CONTENT_REGION_RATIO = 0.625;
+
+export function contentRegion(
+  height: number = FRAME.height,
+  regionRatio: number = CONTENT_REGION_RATIO,
+): { top: number; bottom: number; height: number } {
+  const regionHeight = height * regionRatio;
+  const top = (height - regionHeight) / 2;
+  return { top, bottom: top + regionHeight, height: regionHeight };
+}
+
+/**
+ * @deprecated Superseded by `contentRegion` (§12.16). Retained only so the
+ * arithmetic of the old assumption stays inspectable next to the correction:
+ * this is the 16:9-fit band that produced a 31.6% video region.
+ */
 export function letterboxVideoBand(width: number = FRAME.width, height: number = FRAME.height): { top: number; bottom: number } {
   const videoHeight = width * (9 / 16);
   const top = (height - videoHeight) / 2;
   return { top, bottom: top + videoHeight };
 }
 
-export type CaptionPosition = "center_low" | "lower_left" | "center" | "upper_third";
+/**
+ * §12.20 retires `upper_third`. Under the corrected content region the top
+ * bar spans y ∈ [0, 0.1875] and G9's 12% margin leaves 130px of usable
+ * height; a two-line chunk at emphasis size is 229px. It does not fit, and no
+ * amount of anchor tuning makes it fit. `01 §4` measures the reference's own
+ * karaoke layer at exactly three positions ("center-low, lower-left,
+ * center"), so three is both what fits and what the reference does. §12.5
+ * preserved 02 §2.2's four names under the OLD geometry; the geometry changed.
+ *
+ * The retirement originally cited §12.16, which rules on the content region
+ * and not on this; §12.20 is the ruling that actually retires the position,
+ * and it also records that `02 §2.2`'s four-position list and §12.5's
+ * resolution of it are stale on this point.
+ */
+export type CaptionPosition = "center_low" | "lower_left" | "center";
 
 /** 02 §2.2's rotation list, in rotation order. */
 export const CAPTION_POSITIONS: readonly CaptionPosition[] = [
   "center_low",
   "lower_left",
   "center",
-  "upper_third",
 ] as const;
 
 export type Anchor = {
@@ -71,19 +119,76 @@ export type Anchor = {
 };
 
 /**
- * Letterbox geometry for 1080×1920: video band is y ∈ [0.3418, 0.6582];
- * safe area is y ∈ [0.12, 0.88], x ∈ [0.12, 0.88].
- *   upper_third → 0.26  (top bar, below the banner, above the video)
- *   center      → 0.62  (bottom sixth of the video band, below a seated face)
- *   center_low  → 0.72  (bottom bar)
- *   lower_left  → 0.80  (bottom bar, left-aligned)
+ * Anchors for the CORRECTED content region (§12.16), 1080×1920.
+ *
+ * Content region y ∈ [0.1875, 0.8125]; safe area y ∈ [0.12, 0.88].
+ *
+ * ── Where these numbers come from ───────────────────────────────────────────
+ * Measured, not chosen. In the source footage the subject's chin sits at
+ * ≈0.847 of source height; cover-cropped into the 0.625 content region that
+ * lands at **y ≈ 0.717 of the frame**. So the caption band that cannot touch
+ * a face is y > 0.73, bounded below by G9's 12% bottom margin at 0.88.
+ *
+ * The previous anchors (center 0.62, center_low 0.72) were derived against
+ * the 16:9-fit band, where 0.62 was "the bottom sixth of the video, below a
+ * seated subject's face". Under the corrected region 0.62 is the MOUTH — which
+ * is what three rendered templates showed, and what falsified §11.1 R2's
+ * claim that letterboxed captions structurally cannot occlude a face.
+ *
+ * The band is bounded on BOTH sides and is genuinely tight — 0.73 to 0.88,
+ * about 288px, against a two-line block of ~200px. So vertical variance is
+ * limited by geometry, and the positions get their separation mostly from
+ * ALIGNMENT, which is what `01 §4`'s "center-low, lower-left, center" is:
+ * lower-left is a horizontal move, not a vertical one.
+ *
+ *   center      → 0.785  (centred, over the chest, below the chin at 0.717)
+ *   lower_left  → 0.800  (LEFT-aligned from the safe margin — the visible move)
+ *   center_low  → 0.818  (centred, lowest; still clears G9's bottom at 2 lines)
+ *
+ * `lower_left` starts at x=0.12 rather than 0.3 so its box is the full safe
+ * width. At 0.3 the box was 626px, which wrapped ordinary three-word chunks
+ * to two and three lines and pushed them through the bottom margin; the fix
+ * for a too-tall block is usually a wider box, not a higher anchor.
  */
 const ANCHORS: Record<CaptionPosition, Anchor> = {
-  upper_third: { x: 0.5, y: 0.26, align: "center" },
-  center: { x: 0.5, y: 0.62, align: "center" },
-  center_low: { x: 0.5, y: 0.72, align: "center" },
-  lower_left: { x: 0.3, y: 0.8, align: "left" },
+  center: { x: 0.5, y: 0.785, align: "center" },
+  lower_left: { x: 0.12, y: 0.8, align: "left" },
+  center_low: { x: 0.5, y: 0.818, align: "center" },
 };
+
+/** The measured chin line under the corrected content region — the bound the
+ *  caption anchors above are derived from, named so a test can assert it. */
+export const FACE_FLOOR_RATIO = 0.717;
+
+/**
+ * The face floor expressed in the CONTENT REGION's own coordinates — 0..1 of
+ * region height, which is what a CSS `transform-origin` on the region div
+ * takes (ARCHITECTURE §12.19).
+ *
+ * This exists because the anchors above are derived from the chin at scale
+ * 1.0, and the renderer does not compose at scale 1.0. It composes drift ×
+ * punch, up to 1.18 × 1.06 ≈ 1.25. Scaling about the region's CENTRE leaves
+ * the chin 416px below the origin, so the zoom pushes it down — 0.717 static
+ * becomes 0.771 at worst case, against caption tops as high as 0.755. The
+ * anchors were correct; the geometry they were derived under was not the
+ * geometry that renders.
+ *
+ * Scaling about THIS line instead makes the chin the transform's fixed point,
+ * so `FACE_FLOOR_RATIO` is the chin's position at every scale rather than only
+ * at 1.0 — which is what lets the face-floor check below be a bound on one
+ * measured constant instead of a bound that has to track `REFRAME_STEP`,
+ * `MAX_GROW` and `punchScale` and be re-derived whenever any of them moves.
+ *
+ * Cover is preserved: for any scale ≥1 and any origin inside the element, the
+ * scaled box contains the unscaled box, so the region never reveals an edge.
+ */
+export function faceFloorOriginY(
+  faceFloorRatio: number = FACE_FLOOR_RATIO,
+  regionRatio: number = CONTENT_REGION_RATIO,
+): number {
+  const regionTopRatio = (1 - regionRatio) / 2;
+  return (faceFloorRatio - regionTopRatio) / regionRatio;
+}
 
 export function anchorFor(position: CaptionPosition): Anchor {
   return ANCHORS[position];
@@ -172,9 +277,33 @@ export function g9Violations(
   width: number = FRAME.width,
   height: number = FRAME.height,
 ): string[] {
+  return g9ViolationsForBlock(layer, anchor, fontSizePixels * LINE_HEIGHT * lines, width, height);
+}
+
+/**
+ * G9 for a block whose height is already known in pixels.
+ *
+ * `g9Violations` above assumes every line is the same size, which is true of
+ * the banner and the handle and NOT true of a karaoke chunk: 02 §7 gives the
+ * emphasis word 0.101·W and its neighbours 0.075·W, so a wrapped chunk's
+ * height is the sum of per-line maxima, not `size × lines`. Measuring it the
+ * uniform way over-estimates by up to 35% on exactly the chunks most likely
+ * to be near a margin — which surfaced as a G9 failure on a chunk that in
+ * fact fits. An over-strict gate is a real cost: it teaches people to
+ * disbelieve the gate.
+ */
+export function g9ViolationsForBlock(
+  layer: TextLayer,
+  anchor: Anchor,
+  blockHeightPx: number,
+  width: number = FRAME.width,
+  height: number = FRAME.height,
+): string[] {
   const problems: string[] = [];
   const { left, right } = textBoxBounds(anchor, width);
-  const { top, bottom } = textBoxVerticalExtent(anchor, fontSizePixels, lines, height);
+  const centre = anchor.y * height;
+  const top = centre - blockHeightPx / 2;
+  const bottom = centre + blockHeightPx / 2;
   const eps = 1e-6;
 
   if (left < SAFE_MARGIN_RATIO * width - eps) problems.push(`left ${(left / width).toFixed(4)} < ${SAFE_MARGIN_RATIO}`);
@@ -188,6 +317,43 @@ export function g9Violations(
   if (top < topLimit * height - eps) problems.push(`top ${(top / height).toFixed(4)} < ${topLimit}`);
 
   return problems;
+}
+
+/**
+ * Whether a karaoke block clears the face, measured on its TOP EDGE
+ * (ARCHITECTURE §12.19). Empty array means clear.
+ *
+ * `g9ViolationsForBlock` bounds a karaoke top at 12% — the frame edge — and
+ * says nothing about the chin at 71.7%, so the two bounds leave a hole between
+ * them that a tall block falls straight through. A three-line chunk at
+ * `center` puts its top at 0.711, eleven pixels ABOVE the chin, while sitting
+ * comfortably inside every margin G9 knows about: it passes, silently, with
+ * text across a face. That is the same failure §12.16 exists to fix, one layer
+ * up, and it stayed invisible because the floor was only ever asserted on
+ * `anchor.y` — the block's CENTRE — which is by construction the half of the
+ * block that is furthest from the face.
+ *
+ * Kept separate from `g9Violations` rather than folded into it because they
+ * bound different things: G9 is about platform chrome at the frame edges, this
+ * is about the subject. A caller that wants both asks for both.
+ *
+ * Only the karaoke layer is scored. The banner and the handle live in the top
+ * bar by construction (§12.16 item 4), where "below the chin" is not a bound
+ * anyone wants — it would demand the hook banner sit on the subject's chest.
+ */
+export function faceFloorViolationsForBlock(
+  anchor: Anchor,
+  blockHeightPx: number,
+  height: number = FRAME.height,
+  faceFloorRatio: number = FACE_FLOOR_RATIO,
+): string[] {
+  const top = anchor.y * height - blockHeightPx / 2;
+  const floor = faceFloorRatio * height;
+  const eps = 1e-6;
+  if (top < floor - eps) {
+    return [`top ${(top / height).toFixed(4)} above the face floor ${faceFloorRatio}`];
+  }
+  return [];
 }
 
 /**
@@ -271,14 +437,32 @@ export function captionWordAppearance(state: WordVisualState, isEmphasis: boolea
  * a watermark, alternating reads as design." 01 §4 measures the reference
  * alternating upper-right and mid-left.
  */
-export type HandleCorner = "upper_right" | "mid_left";
+/**
+ * §12.16 item 3: the handle moved OUT of the content region.
+ *
+ * It used to alternate `upper_right` (y=0.2) and `mid_left` (y=0.5), copying
+ * 01 §4's description of the reference. Under the corrected content region
+ * y=0.5 is the dead centre of the video — the subject's face — and a render
+ * showed the handle sitting on his hair. `mid_left` was renamed rather than
+ * repointed: a constant whose name says "mid" while it resolves to the top
+ * bar is the same kind of lie §12.14 recorded in camera.ts, and the enum is
+ * young enough that honesty costs one schema line.
+ *
+ * Both corners now live in the top bar, alternating sides. The bottom bar is
+ * not available: `center_low` and `lower_left` captions already occupy it,
+ * and a handle that intermittently collides with a caption is worse than one
+ * that alternates within a bar it owns.
+ */
+export type HandleCorner = "upper_right" | "upper_left";
 
 export const HANDLE_OPACITY = 0.52; // 02 §2.3's 45–60% band
 
 export function handleCornerForShot(shotIndex: number): HandleCorner {
-  return shotIndex % 2 === 0 ? "upper_right" : "mid_left";
+  return shotIndex % 2 === 0 ? "upper_right" : "upper_left";
 }
 
 export function handleAnchor(corner: HandleCorner): Anchor {
-  return corner === "upper_right" ? { x: 0.78, y: 0.2, align: "center" } : { x: 0.2, y: 0.5, align: "left" };
+  return corner === "upper_right"
+    ? { x: 0.78, y: 0.155, align: "center" }
+    : { x: 0.14, y: 0.155, align: "left" };
 }

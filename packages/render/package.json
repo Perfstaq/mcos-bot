@@ -14,6 +14,9 @@
     "./planner": "./dist/planner/index.js",
     "./motion": "./dist/motion/index.js",
     "./captions": "./dist/captions/index.js",
+    "./fonts": "./dist/fonts/index.js",
+    "./templates": "./dist/templates/index.js",
+    "./templates/resolve": "./dist/templates/resolve.js",
     "./gates/types": "./dist/gates/types.js",
     "./gates/g1a": "./dist/gates/g1a.js",
     "./compositions/Reel": "./dist/compositions/Reel.js"

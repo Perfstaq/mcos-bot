@@ -47,3 +47,11 @@ services/analyzer/stages/__pycache__/
 # (ADR-7 dev/CI path). Real renders stream footage from R2 presigns.
 packages/render/public/
 packages/render/out/
+
+# Render evidence: the plan, the QC report and the PNG frames are committed
+# (ARCHITECTURE §12.10); the MP4s they describe are not. A ~22MB render per
+# template per regeneration would dominate the repo, and the manifest records
+# each MP4's sha256 + the commit it came from, which is what makes the
+# committed artifacts checkable without the video itself.
+docs/studio/evidence/**/*.mp4
+docs/studio/evidence/**/.props.json
