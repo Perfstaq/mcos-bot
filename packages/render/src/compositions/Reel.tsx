@@ -12,6 +12,7 @@ import {
 } from "remotion";
 import {
   BANNER_ANCHOR,
+  CONTENT_REGION_RATIO,
   DROP_SHADOW,
   LINE_HEIGHT,
   TYPE_SCALE,
@@ -91,6 +92,7 @@ function fallbackStyle(width: number): TemplateStyle {
     tracking: { banner: 0.01, karaoke: 0, handle: 0.08 },
     bannerLines: 1,
     punchScale: 0.06,
+    content: { regionRatio: CONTENT_REGION_RATIO, cropX: 0.5, cropY: 0.5 },
   };
 }
 
@@ -186,12 +188,25 @@ function punchMultiplier(frame: number, onsetFrame: number | null, fps: number, 
  * edge case. `interpolate()` appears nowhere: 02 §1 bans it for visible
  * motion, and a linear tween is the #1 tell of generated video.
  *
- * **Framing is letterbox and only letterbox** (§11.1 R2). The video is scaled
- * to the frame's WIDTH and vertically centred, which is what puts 16:9 source
- * in bars inside 9:16 and makes those bars caption real estate that
- * structurally cannot occlude a face. `fill` is deferred to v2 with face
- * detection and the two must land together, so this refuses it loudly rather
- * than rendering something plausible and wrong.
+ * **Framing is letterbox and only letterbox** (§11.1 R2), but NOT by scaling
+ * to width. That was the original reading of `01 §7` and it was wrong twice
+ * over: §12.4 measured the reference's content region at ≈0.9:1 rather than
+ * 16:9, and §12.16 established that the difference is the whole ballgame — a
+ * width-fit puts video in 31.6% of frame height against the reference's
+ * 62.5%, halving the subject and turning two-thirds of the frame into bars.
+ * The footage now COVERS a 0.625 content region and is cropped at the sides,
+ * which is what the reference does.
+ *
+ * R2's conclusion still holds — no face detection in v1 — but its stated
+ * reason ("captions in the bars structurally cannot occlude a face") was
+ * falsified by a rendered frame with a caption across a subject's mouth
+ * (§12.16). What actually keeps captions clear of faces is that the content
+ * region is large enough to have room below the chin, plus static per-template
+ * crop offsets, which locked-off interview footage does not need a tracker for.
+ *
+ * `fill` remains deferred to v2 with MediaPipe face boxes, and the two must
+ * land together, so this refuses it loudly rather than rendering something
+ * plausible and wrong.
  */
 const Shot: React.FC<{
   cut: Cut;
@@ -200,7 +215,9 @@ const Shot: React.FC<{
   fps: number;
   frames: number;
   punch: number;
-}> = ({ cut, src, motion, fps, frames, punch }) => {
+  content: TemplateStyle["content"];
+  height: number;
+}> = ({ cut, src, motion, fps, frames, punch, content, height }) => {
   const frame = useCurrentFrame();
   const progress = motion
     ? spring({ frame, fps, config: SPRINGS[motion.spring], durationInFrames: motion.durationInFrames })
@@ -209,15 +226,40 @@ const Shot: React.FC<{
   const scale = driftScale * punch;
   const origin = motion ? `${motion.originX * 100}% ${motion.originY * 100}%` : "50% 50%";
 
+  const regionHeight = height * content.regionRatio;
+  const regionTop = (height - regionHeight) / 2;
+
+  // The content region: a fixed box the footage COVERS and overflows, rather
+  // than a full-width fit that leaves the video occupying a third of the
+  // frame (§12.16). `object-fit: cover` + `object-position` does the zoom and
+  // the side crop without the composition needing the source's dimensions —
+  // which matters because the plan does not carry them and a component that
+  // measured its own source would stop being a pure plan-consumer.
   return (
-    <AbsoluteFill style={{ justifyContent: "center", overflow: "hidden" }}>
-      <div style={{ transform: `scale(${scale})`, transformOrigin: origin, width: "100%" }}>
-        <OffthreadVideo
-          src={src}
-          startFrom={Math.round((cut.sourceInMs / 1000) * fps)}
-          endAt={Math.round((cut.sourceInMs / 1000) * fps) + frames}
-          style={{ width: "100%" }}
-        />
+    <AbsoluteFill>
+      <div
+        style={{
+          position: "absolute",
+          top: regionTop,
+          left: 0,
+          width: "100%",
+          height: regionHeight,
+          overflow: "hidden",
+        }}
+      >
+        <div style={{ transform: `scale(${scale})`, transformOrigin: origin, width: "100%", height: "100%" }}>
+          <OffthreadVideo
+            src={src}
+            startFrom={Math.round((cut.sourceInMs / 1000) * fps)}
+            endAt={Math.round((cut.sourceInMs / 1000) * fps) + frames}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: `${content.cropX * 100}% ${content.cropY * 100}%`,
+            }}
+          />
+        </div>
       </div>
     </AbsoluteFill>
   );
@@ -369,7 +411,7 @@ const HandleLayer: React.FC<{
 };
 
 export const Reel: React.FC<ReelProps> = ({ plan, footageSrc }) => {
-  const { fps, width } = useVideoConfig();
+  const { fps, width, height } = useVideoConfig();
   const src = footageSrc.startsWith("http") || footageSrc.startsWith("/") ? footageSrc : staticFile(footageSrc);
   const style = plan.templateStyle ?? fallbackStyle(width);
 
@@ -421,6 +463,8 @@ export const Reel: React.FC<ReelProps> = ({ plan, footageSrc }) => {
                 frames={frames}
                 onsetFrame={onsetFrame}
                 depth={style.punchScale}
+                content={style.content}
+                height={height}
               />
             </Sequence>
           );
@@ -497,8 +541,12 @@ const PunchedShot: React.FC<{
   frames: number;
   onsetFrame: number | null;
   depth: number;
-}> = ({ cut, src, motion, fps, frames, onsetFrame, depth }) => {
+  content: TemplateStyle["content"];
+  height: number;
+}> = ({ cut, src, motion, fps, frames, onsetFrame, depth, content, height }) => {
   const frame = useCurrentFrame();
   const punch = punchMultiplier(frame, onsetFrame, fps, depth);
-  return <Shot cut={cut} src={src} motion={motion} fps={fps} frames={frames} punch={punch} />;
+  return (
+    <Shot cut={cut} src={src} motion={motion} fps={fps} frames={frames} punch={punch} content={content} height={height} />
+  );
 };

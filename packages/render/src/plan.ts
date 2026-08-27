@@ -114,9 +114,9 @@ export const CaptionChunkSchema = z.object({
   /**
    * G6 wants ≥3 distinct. Left as a free string rather than an enum so plans
    * written against the scaffold's examples still validate; the canonical set
-   * is 02 §2.2's rotation list, exported from `@mcos/render/captions` as
-   * `CAPTION_POSITIONS` ("center_low" | "lower_left" | "center" |
-   * "upper_third"). New plans should use those.
+   * is exported from `@mcos/render/captions` as `CAPTION_POSITIONS`
+   * ("center_low" | "lower_left" | "center"). `upper_third` was retired by
+   * §12.16 — the corrected content region leaves no room for it.
    */
   position: z.string(),
   emphasisWordIndex: z.number().int().nonnegative().nullable(), // G8: ≤1 per chunk
@@ -151,7 +151,7 @@ export type Banner = z.infer<typeof BannerSchema>;
 export const HandleSchema = z.object({
   text: z.string(),
   opacity: z.number().min(0).max(1),
-  cornerByShot: z.array(z.enum(["upper_right", "mid_left"])),
+  cornerByShot: z.array(z.enum(["upper_right", "upper_left"])),
 });
 export type Handle = z.infer<typeof HandleSchema>;
 
@@ -231,6 +231,22 @@ export const TemplateStyleSchema = z.object({
   bannerLines: z.number().int().positive(),
   /** 02 §4.2's emphasis punch depth (+6%). 0 disables. */
   punchScale: z.number().min(0),
+  /**
+   * How footage fills the frame (ARCHITECTURE §12.16).
+   *
+   * `regionRatio` is the content region's share of frame height (0.625 — the
+   * reference's measured 62.5%, NOT the 31.6% a 16:9-to-width fit produces).
+   * `cropX`/`cropY` are the static crop offsets, 0..1, as CSS
+   * `object-position` — the source is scaled to COVER the region and the
+   * overflow cropped. Static per template and centred by default: locked-off
+   * interview footage does not need a tracker, so this does not reintroduce
+   * the face detection §11.1 R2 descoped.
+   */
+  content: z.object({
+    regionRatio: z.number().positive().max(1),
+    cropX: z.number().min(0).max(1),
+    cropY: z.number().min(0).max(1),
+  }),
 });
 export type TemplateStyle = z.infer<typeof TemplateStyleSchema>;
 

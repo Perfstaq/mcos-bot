@@ -33,6 +33,8 @@ import {
   isContrastWord,
   isNumberOrProperNoun,
   isStopword,
+  contentRegion,
+  FACE_FLOOR_RATIO,
   letterboxVideoBand,
   pickEmphasis,
   positionForShot,
@@ -117,19 +119,23 @@ describe("camera — ported motion.ts, pruned per the ledger (ARCHITECTURE §1.1
     }
   });
 
-  it("makes consecutive shots visibly different framings, or G1b can never pass", () => {
-    // Caught by rendering, not by reasoning. The reference gets visible cuts
-    // by REMOVING footage (01 §8, "cut on itself"). A plan that plays its
-    // footage continuously and only resets the drift spring produces a step
-    // of well under 1% at each boundary — the cuts are invisible, a scene
-    // detector finds nothing at them, and G1b (≥90% of plan cut times matched
-    // by a detected cut) is unreachable. The first render of the demo scored
-    // 0/24 matched for exactly this reason.
+  it("makes consecutive shots visibly different framings", () => {
+    // The name and threshold used to say "or G1b can never pass". That claim
+    // is FALSE and measurement disproved it (§12.14): with alternating base
+    // framing in place the render still scores 2/29 on G1b, because a scene
+    // detector needs content discontinuity and reframing continuous footage
+    // is not that. Real jump cuts need footage removal plus an output-time
+    // grid (§12.3, §12.13) — neither of which is this constant.
+    //
+    // What the alternation genuinely buys is that a hard cut reads as a
+    // change rather than as nothing, so that is all this asserts. The bound
+    // dropped with REFRAME_STEP 0.18 → 0.10 (§12.16 item 2), which stopped
+    // the zoom pushing a face across a fixed caption line.
     for (let shot = 0; shot < 8; shot++) {
       const a = shotCamera(shot, 45, 42);
       const b = shotCamera(shot + 1, 45, 42);
       const step = Math.abs(a.toScale - b.fromScale);
-      expect(step, `boundary ${shot}->${shot + 1}`).toBeGreaterThan(0.1);
+      expect(step, `boundary ${shot}->${shot + 1}`).toBeGreaterThan(0.05);
     }
   });
 
@@ -370,7 +376,7 @@ describe("caption layout — letterbox only, no luminance (ARCHITECTURE §11.1 R
     }
     const handleSize = fontSizePx("handle");
     expect(g9Violations("handle", handleAnchor("upper_right"), handleSize)).toEqual([]);
-    expect(g9Violations("handle", handleAnchor("mid_left"), handleSize)).toEqual([]);
+    expect(g9Violations("handle", handleAnchor("upper_left"), handleSize)).toEqual([]);
   });
 
   it("exempts ONLY the banner's top edge, only to 8% — the carve-out is named, not absent", () => {
@@ -407,7 +413,7 @@ describe("caption layout — letterbox only, no luminance (ARCHITECTURE §11.1 R
     const boxes = [
       ...CAPTION_POSITIONS.map((p) => [p, anchorFor(p)] as const),
       ["handle upper_right", handleAnchor("upper_right")] as const,
-      ["handle mid_left", handleAnchor("mid_left")] as const,
+      ["handle mid_left", handleAnchor("upper_left")] as const,
       ["banner", { x: 0.5, y: 0.09, align: "center" as const }] as const,
     ];
     for (const [label, anchor] of boxes) {
@@ -418,18 +424,25 @@ describe("caption layout — letterbox only, no luminance (ARCHITECTURE §11.1 R
     }
   });
 
-  it("places three of the four positions in the letterbox bars, and the fourth below the face", () => {
-    // R2 descopes face detection by shipping letterbox only: the bars cannot
-    // occlude a face. `center` is the one anchor over the video and it sits
-    // in the band's bottom sixth, below a seated subject's face.
-    const band = letterboxVideoBand();
-    const toPx = (y: number) => y * 1920;
-    expect(toPx(anchorFor("upper_third").y)).toBeLessThan(band.top);
-    expect(toPx(anchorFor("center_low").y)).toBeGreaterThan(band.bottom);
-    expect(toPx(anchorFor("lower_left").y)).toBeGreaterThan(band.bottom);
-    const center = toPx(anchorFor("center").y);
-    expect(center).toBeGreaterThan(band.top + (band.bottom - band.top) * 0.8);
-    expect(center).toBeLessThan(band.bottom);
+  it("puts every caption position below the measured face floor (§12.16)", () => {
+    // This test used to assert that three of four positions sat in the black
+    // bars, on R2's claim that bars "structurally cannot occlude a face".
+    // A rendered frame falsified that claim — a caption crossed a subject's
+    // mouth in all three templates — and §12.16 replaced the argument with a
+    // measurement: cover-cropped into the 0.625 content region, the chin
+    // lands at y ≈ 0.717. The bound is now that number, not a region.
+    const region = contentRegion();
+    expect(region.top).toBeCloseTo(360, 6);
+    expect(region.bottom).toBeCloseTo(1560, 6);
+
+    const emphasisSize = fontSizePx("emphasis");
+    for (const position of CAPTION_POSITIONS) {
+      const anchor = anchorFor(position);
+      // Clear of the face at the two-line height real chunks actually reach.
+      const twoLine = textBoxVerticalExtent(anchor, emphasisSize, 2);
+      expect(anchor.y, `${position} anchor below the face floor`).toBeGreaterThan(FACE_FLOOR_RATIO);
+      expect(twoLine.bottom, `${position} bottom margin`).toBeLessThanOrEqual(0.88 * 1920 + 1e-6);
+    }
   });
 
   it("sizes type as a proportion of frame width, never a px constant (02 §7)", () => {
@@ -442,7 +455,7 @@ describe("caption layout — letterbox only, no luminance (ARCHITECTURE §11.1 R
 
   it("alternates the handle across corners — a static bug reads as a watermark (02 §2.3)", () => {
     expect(handleCornerForShot(0)).toBe("upper_right");
-    expect(handleCornerForShot(1)).toBe("mid_left");
+    expect(handleCornerForShot(1)).toBe("upper_left");
     expect(handleCornerForShot(2)).toBe("upper_right");
   });
 });

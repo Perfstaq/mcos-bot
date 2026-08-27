@@ -1,4 +1,4 @@
-import { BANNER_ANCHOR, TYPE_SCALE, g9Violations, textBoxBounds } from "../captions/layout.js";
+import { BANNER_ANCHOR, CONTENT_REGION_RATIO, TYPE_SCALE, g9Violations, textBoxBounds } from "../captions/layout.js";
 import { lineCount, textWidthPx } from "../captions/measure.js";
 import { fontStack } from "../fonts/index.js";
 import type { MetricToken } from "../fonts/metrics.generated.js";
@@ -143,6 +143,11 @@ export function resolveTemplateStyle(
     },
     bannerLines,
     punchScale: PUNCH_SCALE,
+    content: {
+      regionRatio: CONTENT_REGION_RATIO,
+      cropX: template.crop?.x ?? 0.5,
+      cropY: template.crop?.y ?? 0.5,
+    },
   };
 }
 

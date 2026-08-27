@@ -255,16 +255,23 @@ describe("text measurement (the wrap predictor's foundation)", () => {
       { text: "remember", fontSizePx: emphasis },
       { text: "that", fontSizePx: karaoke },
     ];
-    const { left, right } = textBoxBounds(anchorFor("lower_left"), WIDTH);
-    const lines = wrapWords(words, "display_serif", right - left, { wordGapPx: WIDTH * 0.02 });
+    // A box narrow enough to force the wrap, stated explicitly. Deriving it
+    // from an anchor's own box made this test depend on that anchor's x,
+    // and widening `lower_left` to the safe margin (§12.16) silently turned
+    // the chunk into one line — the assertion still "passed" its inequality
+    // by measuring nothing. An explicit box keeps the test about the thing
+    // it is named for.
+    const box = 620;
+    const lines = wrapWords(words, "display_serif", box, { wordGapPx: WIDTH * 0.02 });
+    expect(lines.length).toBeGreaterThan(1);
+
     const uniform = emphasis * LINE_HEIGHT * lines.length;
     const measured = blockHeightPx(lines, LINE_HEIGHT);
 
-    // Measuring every line at the emphasis size over-states the block.
+    // Measuring every line at the emphasis size over-states the block, and
+    // the difference is large enough to decide a gate.
     expect(measured).toBeLessThan(uniform);
-    // And the difference is what decides the gate.
-    expect(g9ViolationsForBlock("karaoke", anchorFor("lower_left"), measured, WIDTH, HEIGHT)).toEqual([]);
-    expect(g9ViolationsForBlock("karaoke", anchorFor("lower_left"), uniform, WIDTH, HEIGHT).length).toBeGreaterThan(0);
+    expect(uniform - measured).toBeGreaterThan(20);
   });
 });
 
@@ -387,10 +394,9 @@ describe("G9 safety of every template's own geometry", () => {
     }
   });
 
-  it("keeps a worst-case 3-word emphasised chunk inside the margins at every position", () => {
-    // The stress case: three long words, one at emphasis size, at each of the
-    // four anchors. `lower_left` is the tight one — its box is narrower AND
-    // it sits at y=0.80, so anything that wraps grows toward the 12% bottom.
+  it("keeps a realistic 3-word emphasised chunk inside the margins at every position", () => {
+    // Ordinary caption words, one at emphasis size — the shape real chunks
+    // take. These reach two lines at most, which every position must hold.
     for (const id of TEMPLATE_IDS) {
       const t = TEMPLATES[id];
       const s = resolveTemplateStyle(t, { width: WIDTH, height: HEIGHT, hookText: "SHORT HOOK" });
@@ -398,21 +404,48 @@ describe("G9 safety of every template's own geometry", () => {
         const anchor = anchorFor(position);
         const { left, right } = textBoxBounds(anchor, WIDTH);
         const words = [
-          { text: "EVERYTHING", fontSizePx: s.sizes.karaoke },
-          { text: "COMPOUNDING", fontSizePx: s.sizes.emphasis },
-          { text: "RELENTLESSLY", fontSizePx: s.sizes.karaoke },
+          { text: "MORE", fontSizePx: s.sizes.karaoke },
+          { text: "THAN", fontSizePx: s.sizes.emphasis },
+          { text: "WORK", fontSizePx: s.sizes.karaoke },
         ];
         const lines = wrapWords(words, s.fontTokens.karaoke, right - left, {
           wordGapPx: WIDTH * 0.02,
           trackingEm: s.tracking.karaoke,
         });
         const height = blockHeightPx(lines, LINE_HEIGHT);
+        expect(lines.length).toBeLessThanOrEqual(2);
         expect(
           g9ViolationsForBlock("karaoke", anchor, height, WIDTH, HEIGHT),
           `${id} @ ${position} (${lines.length} lines, ${Math.round(height)}px)`,
         ).toEqual([]);
       }
     }
+  });
+
+  it("DOES NOT fit a three-line chunk anywhere — the limit, asserted rather than hidden", () => {
+    // Three long words with one at emphasis size wrap to three lines (285px).
+    // The caption band under the corrected content region is y ∈ [0.73, 0.88]
+    // — about 288px — so a three-line block cannot both clear the face and
+    // stay inside G9's bottom margin. That is geometry, not a tuning failure,
+    // and the honest thing is to pin it: G9 catches such a chunk, which is
+    // what should happen. Tuning an anchor until this passed would have moved
+    // captions back onto the face, which is the bug §12.16 exists to fix.
+    const s = resolveTemplateStyle(TEMPLATES.statement_serif, {
+      width: WIDTH,
+      height: HEIGHT,
+      hookText: "SHORT HOOK",
+    });
+    const words = [
+      { text: "EVERYTHING", fontSizePx: s.sizes.karaoke },
+      { text: "COMPOUNDING", fontSizePx: s.sizes.emphasis },
+      { text: "RELENTLESSLY", fontSizePx: s.sizes.karaoke },
+    ];
+    const anchor = anchorFor("center_low");
+    const { left, right } = textBoxBounds(anchor, WIDTH);
+    const lines = wrapWords(words, s.fontTokens.karaoke, right - left, { wordGapPx: WIDTH * 0.02 });
+    expect(lines.length).toBe(3);
+    expect(g9ViolationsForBlock("karaoke", anchor, blockHeightPx(lines, LINE_HEIGHT), WIDTH, HEIGHT).length)
+      .toBeGreaterThan(0);
   });
 });
 

@@ -65,21 +65,23 @@ export function effectiveMotion(shotIndex: number, override?: SpanMotion): SpanM
 
 /**
  * Alternating base framing — wide, then punched in — so that a hard cut
- * between two shots is actually VISIBLE.
+ * between two shots reads as a change rather than a jump in nothing.
  *
- * Found by rendering: the reference gets its visible cuts by removing footage
- * ("a single continuous interview, cut on itself" — 01 §8), so every cut is a
- * real discontinuity. A plan that plays its footage continuously and only
- * resets the drift spring at each boundary produces a scale step of well
- * under 1% — the cuts are invisible, a scene detector finds nothing at them,
- * and **G1b (≥90% of plan cut times matched by a detected cut) can never
- * pass**. Alternating the base framing restores the discontinuity without
- * dropping a single word of speech, which footage removal cannot promise.
+ * ── Two corrections live in this constant ───────────────────────────────────
+ * **It does not make G1b passable** (ARCHITECTURE §12.14). The comment here
+ * used to claim that alternating the base framing "restores the
+ * discontinuity" a scene detector needs. Measurement falsified that: the
+ * render scores 2/29 on G1b with this in place. Real jump cuts need footage
+ * REMOVAL plus an output-time grid (§12.3, §12.13), neither of which is this.
  *
- * Deliberately larger than the drift range: it must survive being sampled at
- * the two sides of a cut where drift has already moved the scale.
+ * **It was reduced 0.18 → 0.10** (§12.16 item 2). At 18% the zoom moved the
+ * subject enough, shot to shot, to push a face across a fixed caption line —
+ * framing and caption placement are one decision, and the code now treats
+ * them as one. The transform origin stays at the region's centre, which is
+ * approximately where a locked-off interview puts the face, so the face is
+ * the near-fixed point of the zoom rather than the thing it displaces.
  */
-export const REFRAME_STEP = 0.18;
+export const REFRAME_STEP = 0.1;
 
 /**
  * Both scales stay ≥1 so the 9:16 cover-crop never reveals the source frame's

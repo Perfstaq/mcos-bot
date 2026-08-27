@@ -98,6 +98,13 @@ export type Template = {
   scrim: ScrimPolicy;
   /** 02 §2.3 — alternating corners; never one corner for the whole reel. */
   handleCorners: readonly HandleCorner[];
+  /**
+   * Static crop offset into the content region, 0..1 (CSS object-position).
+   * Omitted means centred, which is right for locked-off interview footage.
+   * Static per template by design (§12.16): a per-shot offset would be face
+   * tracking, which v1 does not have and does not need.
+   */
+  crop?: { x: number; y: number };
 };
 
 /**
@@ -129,9 +136,9 @@ const STATEMENT_SERIF: Template = {
   rhythm: { establishSec: [2.5, 3.5], accelerateSec: [0.8, 1.3], holdSec: [3.5, 4.5], burstShots: [3, 5] },
   // 01 §4 samples the reference at centre-low, lower-left and centre; the
   // fourth position is 02 §2.2's own list completing the rotation.
-  captionPositions: ["center_low", "lower_left", "center", "upper_third"],
+  captionPositions: ["center_low", "lower_left", "center"],
   scrim: "never",
-  handleCorners: ["upper_right", "mid_left"],
+  handleCorners: ["upper_right", "upper_left"],
 };
 
 /**
@@ -165,9 +172,9 @@ const STACCATO_CONDENSED: Template = {
   // shift. A different look, still "one look per template" (02 §6).
   grade: { contrast: 1.14, saturation: 0.98, warmTint: 0.0, vignette: 0.16 },
   rhythm: { establishSec: [2.0, 2.8], accelerateSec: [1.0, 1.4], holdSec: [3.0, 3.8], burstShots: [4, 6] },
-  captionPositions: ["lower_left", "center", "upper_third", "center_low"],
+  captionPositions: ["lower_left", "center", "center_low"],
   scrim: "never",
-  handleCorners: ["mid_left", "upper_right"],
+  handleCorners: ["upper_left", "upper_right"],
 };
 
 /**
@@ -201,9 +208,9 @@ const EDITORIAL_SANS: Template = {
   // Flattest of the three: near-neutral, minimal vignette. Restraint as a look.
   grade: { contrast: 1.05, saturation: 1.02, warmTint: 0.02, vignette: 0.08 },
   rhythm: { establishSec: [2.8, 3.6], accelerateSec: [1.1, 1.6], holdSec: [3.8, 4.6], burstShots: [3, 4] },
-  captionPositions: ["center", "center_low", "upper_third", "lower_left"],
+  captionPositions: ["center", "center_low", "lower_left"],
   scrim: "never",
-  handleCorners: ["upper_right", "mid_left"],
+  handleCorners: ["upper_right", "upper_left"],
 };
 
 export const TEMPLATES: Record<TemplateId, Template> = {
