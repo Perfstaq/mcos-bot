@@ -210,6 +210,14 @@ async function main(): Promise<void> {
   /* -------------------------------- run 2: §12.12a — undo between the two */
   process.stdout.write("\n── run 2 · §12.12a · approve → enqueue → UNDO → worker runs ──\n");
 
+  // The worker is PAUSED across the enqueue/undo pair on purpose. An earlier
+  // version of this script raced it and the job sometimes won — which proved
+  // nothing about the guard either way, because a plan committed BEFORE the
+  // undo commits was legitimately built from an approved brief. §12.12a is
+  // about a specific ORDER (undo lands first, job runs second), so the script
+  // has to establish that order rather than hope for it.
+  await worker.pause();
+
   const briefId2 = await seedProposedBrief();
   await http("POST", `/api/v1/content/briefs/${briefId2}/approve`);
 
@@ -226,12 +234,101 @@ async function main(): Promise<void> {
   const undone = await http("POST", `/api/v1/content/briefs/${briefId2}/undo`);
   log("undo (real gate, HTTP)", `${undone.statusCode} · status=${undone.json().brief.status}`);
 
+  worker.resume();
   const outcome2 = await waitFor(planId2);
   const row2 = await db.renderPlan.findUnique({ where: { id: planId2 } });
   log("worker outcome", outcome2.ok ? "completed (WRONG)" : "rejected at materialization ✓");
   log("reason", outcome2.err ?? "—");
   log("RenderPlan row", row2 ? `WRITTEN ${row2.id} — INVARIANT 1 VIOLATED ✗` : "none ✓");
 
+  /* ------------ run 2b: the residual that belongs to content-gate.ts ------ */
+  //
+  // The OTHER order, which §12.12a's fix deliberately does not cover and
+  // which this script found by racing: the job commits first, and the undo
+  // arrives afterwards. The plan is legitimate — the brief WAS approved at
+  // the instant of the write — so nothing in `plan.build` should stop it.
+  // `content-gate.ts`'s undo is supposed to: it counts materialised
+  // RenderPlans and refuses when one exists ("Decide again instead").
+  //
+  // Whether it actually refuses is a property of that module, not of this
+  // one, and it is off-limits to this agent. Probed here rather than assumed,
+  // because a guard nobody has exercised is a guard nobody knows the state of.
+  process.stdout.write("\n── run 2b · the reverse order · plan committed, THEN undo ──\n");
+
+  const undoAfter = await http("POST", `/api/v1/content/briefs/${briefId}/undo`);
+  const briefAfter = await db.contentBrief.findUniqueOrThrow({ where: { id: briefId } });
+  const plansOnIt = await db.renderPlan.count({ where: { contentBriefId: briefId } });
+  log("undo after materialization", `${undoAfter.statusCode} (409 = guard held)`);
+  log("brief status now", briefAfter.status);
+  log("plans still attached", String(plansOnIt));
+  const undoGuardHeld = undoAfter.statusCode === 409 && briefAfter.status === "approved";
+  log(
+    "verdict",
+    undoGuardHeld
+      ? "content-gate's undo guard HELD ✓"
+      : "content-gate's undo guard did NOT hold — an approved-built plan now hangs off a non-approved brief",
+  );
+
+  /* ------------------------------- run 3 (opt-in): does the plan RENDER? */
+  //
+  // `--render <footage.mp4>` shells to the SAME entrypoint `render.submit`
+  // resolves (packages/render/scripts/render-plan.mjs) with the SAME props
+  // envelope it writes, differing only in `footageSrc`.
+  //
+  // On `footageSrc`, because the shape of it is a trap: `Reel` branches
+  // `startsWith("http") || startsWith("/")` straight through to
+  // `<OffthreadVideo src>` and otherwise calls `staticFile()`. A LEADING
+  // SLASH IS NOT A FILESYSTEM PATH — the browser resolves it against the
+  // bundle server's root, so `/Users/…/clip.mp4` 404s inside the webpack
+  // bundle. Only two things actually work: an http(s) URL, or a bare
+  // filename staged into `packages/render/public/`. `render.submit` uses the
+  // first (a presigned R2 URL, ADR-7); this proof uses the second, because
+  // R2 credentials here are stubs.
+  //
+  // This step has already earned its keep: it is what caught `render.submit`
+  // passing a bare plan where the composition wants `{ plan, footageSrc }` —
+  // a mistake that typechecks, starts the renderer, and renders nothing.
+  let rendered: string | null = null;
+  const renderIdx = process.argv.indexOf("--render");
+  if (renderIdx >= 0 && process.argv[renderIdx + 1]) {
+    const footagePath = path.resolve(process.argv[renderIdx + 1]!);
+    process.stdout.write("\n── run 3 · does the materialized plan actually render? ──\n");
+
+    const { execFileSync } = await import("node:child_process");
+    const { copyFileSync, mkdirSync, mkdtempSync, writeFileSync, existsSync, statSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+
+    if (!existsSync(footagePath)) throw new Error(`footage not found: ${footagePath}`);
+
+    // Stage into packages/render/public so `staticFile()` resolves it — the
+    // same gitignored scratch dir the evidence harness uses.
+    const stagingDir = path.join(repoRoot, "packages/render/public");
+    mkdirSync(stagingDir, { recursive: true });
+    const stagedName = path.basename(footagePath);
+    const staged = path.join(stagingDir, stagedName);
+    if (!existsSync(staged) || statSync(staged).size !== statSync(footagePath).size) {
+      copyFileSync(footagePath, staged);
+    }
+
+    const dir = mkdtempSync(path.join(tmpdir(), "prove-render-"));
+    const propsPath = path.join(dir, "props.json");
+    writeFileSync(propsPath, JSON.stringify({ plan, footageSrc: stagedName }));
+    const outPath = path.join(dir, "render.mp4");
+    const script = path.join(repoRoot, "packages/render/scripts/render-plan.mjs");
+
+    log("renderer entrypoint", script);
+    log("footage", `${footagePath} (${(statSync(footagePath).size / 1e6).toFixed(1)}MB)`);
+    const started = Date.now();
+    execFileSync(process.execPath, [script, "--props", propsPath, "--out", outPath, "--composition", "Reel"], {
+      stdio: "inherit",
+    });
+    if (!existsSync(outPath)) throw new Error("renderer exited 0 but wrote no MP4");
+    rendered = outPath;
+    log("rendered", `${outPath} · ${(statSync(outPath).size / 1e6).toFixed(1)}MB · ${((Date.now() - started) / 1000).toFixed(0)}s`);
+  }
+
+  // `undoGuardHeld` is reported, not asserted: it is `content-gate.ts`'s
+  // property, and this agent's boundary forbids fixing it there.
   const ok = !outcome2.ok && !row2 && g1a.pass;
 
   await worker.close();
@@ -239,7 +336,9 @@ async function main(): Promise<void> {
   await closeQueues();
   await db.$disconnect();
 
-  process.stdout.write(`\n${ok ? "CHAIN PROVEN" : "CHAIN BROKEN"}\n`);
+  process.stdout.write(
+    `\n${ok ? "CHAIN PROVEN" : "CHAIN BROKEN"}${rendered ? ` · rendered to ${rendered}` : " · render step skipped (pass --render <footage.mp4>)"}\n`,
+  );
   process.exit(ok ? 0 : 1);
 }
 
