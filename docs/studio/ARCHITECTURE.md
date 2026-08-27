@@ -1552,3 +1552,51 @@ Recorded so none of these is lost between agents. None blocks the milestone; two
   proof covers "the worker registration"; it constructs its own Worker around the same processor,
   so registration is exercised only by the suite. §12.13 has one test at the production call site
   and three against the guard function directly — adequate but thin.
+
+### 12.34 Correction to §12.27 — the baseline was never wrong; the bug was latent
+
+I wrote §12.27 as "a 3.5-point error in the number every later measurement was calibrated against."
+That overstated it, and the reviewer settled it by re-deriving the figure from the reel itself under
+all three rules:
+
+| Rule | Score |
+|---|---|
+| float grid + float ≤0.150 — `measure_reference.py` as written | **23/28 = 0.821** |
+| wire-format quantised grid + float ≤0.150 — the unpinned rule on real data | 22/28 = 0.786 |
+| quantised grid + integer-ms ≤150 inclusive — ADR-8 §4.1(c) as pinned | **23/28 = 0.821** |
+
+**0.821 is correct and always was.** The script's comparison rule was wrong, but on float inputs it
+coincided with the pinned rule, so the published baseline never carried the error. The bug was
+*latent*, and it was still genuinely load-bearing: F's extractor reads the sidecar's
+millisecond-quantised grid, so had it copied the script's float comparison it would have reported
+**0.786 and failed the ≥0.80 acceptance floor** — the feature would have looked broken because the
+measurement was. Deltas of exactly 150 and 151 ms straddle the boundary, and the reel has a cut
+within 1 ms of the window edge.
+
+The lesson survives intact and is arguably sharper: **a latent bug in a measurement tool is
+invisible precisely while its inputs happen to agree.** It surfaced only when a different consumer
+fed it differently-shaped data. Do not conclude from "the number matches" that the rule is right.
+
+### 12.35 Follow-ups after the style-transfer merge
+
+- **`04 §5`'s deletion/retention posture is not implemented anywhere (Important, unowned).**
+  `MediaAsset.purgedAt` exists and its comment already declares the policy, but **no code sets it**
+  for reference reels after fingerprinting, and there is no ≤30-day sweep and no consent flag on any
+  branch. F's storage design makes it implementable — the fingerprint survives on its own row, so
+  the source video is genuinely disposable — but the purge is unbuilt milestone work with a
+  privacy posture attached to it. Needs an owner: a purge step at the end of `runMediaAnalyze` for
+  `kind=reference`, or a scheduled sweep.
+- **`warmthRank` is described as a weak tiebreak but decided the selection.** Weight 0.25
+  (`style-transfer.ts:161-176`) against rhythm-only distances of staccato 0.170 vs statement 0.191 —
+  the warmth term is what put statement ahead. Defensible here (the 0.021 gap is inside
+  one-merged-shot noise ≈0.036), but a 0–0.25 term can override a real rhythm winner, and rhythm is
+  what `01 §2/§3` identify as the core signal. **Ruling: lower it to ~0.05**, or promote it honestly
+  to a third live term alongside the `inertTerms` disclosure. It must not be able to outvote rhythm.
+- **`assertOutputTimeGrid` checks bed *presence*, not grid *provenance*** — a plan that removes
+  footage, carries a bed, but embeds a footage-derived grid would pass. The plan schema has no
+  grid-source field, so this was the strongest check expressible when F wrote it. Now that Agent I's
+  plan-build is merged, add grid-source provenance to `beatGrid` (additive) or re-assert at
+  materialisation, where the grid's source row is known.
+- **Stale comments:** `stages/fingerprint.py:734` cites banner persistence 0.906 against the
+  fixture's 0.896; `style-transfer.ts:543-548` and its test still say the observations question
+  "needs a human ruling" — §12.30 R7 has since ruled exactly F's way, so cite the ruling.
