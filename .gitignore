@@ -42,3 +42,8 @@ services/analyzer/.venv/
 services/analyzer/__pycache__/
 services/analyzer/stages/__pycache__/
 *.pyc
+
+# Studio render scratch: demo footage staged for local `remotion render`
+# (ADR-7 dev/CI path). Real renders stream footage from R2 presigns.
+packages/render/public/
+packages/render/out/
