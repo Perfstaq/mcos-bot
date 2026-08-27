@@ -20,3 +20,10 @@ faster-whisper==1.2.1
 librosa==0.11.0
 numpy==2.5.2
 soundfile==0.14.0
+
+# QC harness only (ADR-8 §4.1(c) — the pinned methodology, normative for
+# G1b): PySceneDetect ContentDetector(threshold=27) on rendered output.
+# Used by qc_scene_detect.py, not by analyzer.py's own stages. scenedetect
+# pulls in opencv-python itself (not pinned separately here — requesting
+# opencv-python-headless alongside it installs BOTH, ~48MB each, wastefully).
+scenedetect==0.7.1

@@ -1,6 +1,7 @@
 import { Worker } from "bullmq";
-import { QUEUE, closeQueues, connection, type MediaAnalyzeJob } from "./queue.js";
+import { QUEUE, closeQueues, connection, type MediaAnalyzeJob, type RenderQcJob } from "./queue.js";
 import { failMediaAnalyze, runMediaAnalyze } from "./jobs/media-analyze.js";
+import { failRenderQc, runRenderQc } from "./jobs/render-qc.js";
 import { disconnect } from "./db.js";
 import { logger } from "./logger.js";
 
@@ -25,6 +26,11 @@ const workers = [
     concurrency: 2,
     lockDuration: 15 * 60 * 1000,
   }),
+  new Worker<RenderQcJob>(QUEUE.renderQc, (job) => runRenderQc(job.data), {
+    connection,
+    concurrency: 4,
+    lockDuration: 5 * 60 * 1000,
+  }),
 ];
 
 for (const worker of workers) {
@@ -48,8 +54,12 @@ for (const worker of workers) {
         case QUEUE.mediaAnalyze:
           await failMediaAnalyze(job.data as MediaAnalyzeJob, error);
           break;
-        // QUEUE.renderQc's processor + failure handler are wired once
-        // scripts/qc-render.ts lands (Agent P's task 6) — TODO(P).
+        case QUEUE.renderQc:
+          // Only reached for an actual crash (subprocess/DB layer) — a
+          // legitimate "gate failed" outcome is handled inside
+          // runRenderQc itself and never throws (see jobs/render-qc.ts).
+          await failRenderQc(job.data as RenderQcJob, error);
+          break;
       }
     } catch (markError) {
       log.error({ err: (markError as Error).message }, "could not record failure on media analysis/render");
