@@ -1238,3 +1238,32 @@ correctly by the next agent to hit it. Also worth recording: T's evidence harnes
 in itself before shipping, including a frame labelled "caption rotation" that contained no caption
 (it sampled 200ms into 160ms chunks), and it fixed a containment-test flag by moving the renderer
 invocation behind the boundary rather than exempting the file.
+
+### 12.18 The visual gate is now blocked on FOOTAGE, not on code
+
+Agent T's re-render against §12.16 was a large, visible improvement — the subject fills the frame,
+the banner sits clean in the bar, and "does the first 2 seconds make you want to keep watching?"
+flipped from qualified to **yes**. But `07 §2`'s final question is still answered **no**, for one
+residual defect: on shots whose source framing is tighter than the measured average, the chin
+drops to ~0.79 and the caption at 0.785 touches the jaw.
+
+**T's diagnosis is right and it is not a code defect.** §12.16's static-crop premise says a fixed
+crop is "sufficient for locked-off interview footage". The reference reel is not that — it is cut
+from multiple camera setups (a wide with the subject lower-left, a medium, and tight close-ups).
+One static crop and one caption line cannot serve all three. The premise may well hold; we simply
+have no footage that tests it.
+
+I surveyed what is available. `founder-journey/inbox/` has a dozen clips, all handheld
+multi-person B-roll from an office event — a moving camera and no stable face position, which is
+further from the premise than the reference is. The reference itself is additionally a 720p proxy,
+so cropping 1.67× into it leaves ~648×720 upscaled to 1080×1200 and the softness is visible.
+
+**What is needed, and only Sathvik can supply it:** one genuinely locked-off talking-head clip —
+a single fixed camera, seated subject, 60–90s, 1080p or better, no burned-in graphics. Exactly
+what a PerfStaq customer uploads when a founder records themselves. A phone on a stand produces
+it in two minutes.
+
+**Until that exists:** the templates are code-complete and pass 12 of 13 automated gates; the
+human gates in `07 §2` and the `07 §3` comparison test cannot be honestly cleared, and no agent
+should claim otherwise. This is also the fixture Agent D owes per §8, and it gates the
+Definition of Done's side-by-side comparison.
