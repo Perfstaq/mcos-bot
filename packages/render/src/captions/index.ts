@@ -22,6 +22,15 @@ export {
   type CaptionWordPlan,
 } from "./chunk.js";
 export {
+  blockHeightPx,
+  lineCount,
+  textWidthPx,
+  wrapLines,
+  wrapWords,
+  type MeasuredWord,
+  type WrapOptions,
+} from "./measure.js";
+export {
   EMPHASIS_THRESHOLD,
   EMPHASIS_WEIGHTS,
   buildEmphasisContext,
@@ -52,6 +61,7 @@ export {
   captionWordAppearance,
   fontSizePx,
   g9Violations,
+  g9ViolationsForBlock,
   handleAnchor,
   handleCornerForShot,
   letterboxVideoBand,

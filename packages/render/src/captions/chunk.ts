@@ -100,6 +100,17 @@ export type CaptionTrackInput = {
   cutTimesMs: number[];
   /** ContentBrief's frozen claim texts (ARCHITECTURE §11.1 R3). */
   claimTexts: string[];
+  /**
+   * The template's own rotation (02 §2.2: "Set per template"). Defaults to
+   * `positionForShot`, the house rotation, so existing callers are unchanged.
+   *
+   * A callback rather than a list because the invariant that matters — never
+   * the same position twice in a row, ≥3 distinct (G6) — is a property of the
+   * *walk*, and templates express it by ordering the same four names
+   * differently rather than by inventing positions. `templatePositionForShot`
+   * is the implementation templates pass in.
+   */
+  positionForShot?: (shotIndex: number) => CaptionPosition;
 };
 
 /**
@@ -112,6 +123,7 @@ export function buildCaptionTrack(input: CaptionTrackInput): CaptionChunkPlan[] 
   const ctx: EmphasisContext = buildEmphasisContext(input.words, input.claimTexts);
   const offsets = sentenceOffsets(input.words);
   const chunks = chunkWords(input.words);
+  const positionAt = input.positionForShot ?? positionForShot;
 
   const plans: CaptionChunkPlan[] = [];
   let cursor = 0;
@@ -130,7 +142,7 @@ export function buildCaptionTrack(input: CaptionTrackInput): CaptionChunkPlan[] 
       })),
       startMs,
       endMs,
-      position: positionForShot(shotIndexAt(startMs, input.cutTimesMs)),
+      position: positionAt(shotIndexAt(startMs, input.cutTimesMs)),
       emphasisWordIndex,
     });
   }

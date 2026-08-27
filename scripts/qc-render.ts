@@ -6,6 +6,19 @@ import { fileURLToPath } from "node:url";
 import { RenderPlanSchema, cutTimesMs, type RenderPlan } from "@mcos/render/plan";
 import { gateG1a, FINGERPRINT_ACCEPTANCE_FLOOR, REFERENCE_BEAT_LOCK_RATIO } from "@mcos/render/gates/g1a";
 import type { GateResult } from "@mcos/render/gates/types";
+import {
+  BANNER_ANCHOR,
+  BANNER_TOP_MARGIN_RATIO,
+  LINE_HEIGHT,
+  TYPE_SCALE,
+  blockHeightPx,
+  g9Violations,
+  g9ViolationsForBlock,
+  handleAnchor,
+  textBoxBounds,
+  wrapWords,
+} from "@mcos/render/captions";
+import { MIN_VISIBLE_SCALE_DELTA } from "@mcos/render/motion";
 
 /**
  * qc-render.ts — 07_QUALITY_GATES §1, ADR-8.
@@ -322,30 +335,168 @@ export function gateG14(contentBriefId?: string): GateResult {
   };
 }
 
-// --- Not yet computable this milestone (never silently skipped) -----------
-export function notYetComputableGates(): GateResult[] {
-  return [
-    {
-      id: "G7",
-      name: "Micro-motion",
+// --- G7/G9: closed against the plan, no pixels required (§12.6) ------------
+//
+// Both were `computable: false` because the contract carried no motion or
+// caption geometry. Agent M added `ShotMotionSchema` per cut and `anchor` per
+// caption, and the template resolver adds the resolved type sizes, so both are
+// now decidable from the plan alone — which ARCHITECTURE §12.6 names as P/T's
+// boundary to wire up. Scoring them off the plan rather than off frames is not
+// a shortcut: the plan is the artifact a re-render reproduces, and a gate that
+// needed a rasteriser could not run at `plan.build`, which is where a failing
+// plan should be rejected (ADR-8's posture for G1a).
+
+/** 02 §4.1 / G7: every shot moves. `MIN_VISIBLE_SCALE_DELTA` is M's constant. */
+export function gateG7(plan: RenderPlan): GateResult {
+  const id = "G7";
+  const name = "Micro-motion";
+  const target = "100% of shots have scale delta >1%";
+
+  const withoutMotion = plan.cuts.filter((c) => !c.motion);
+  if (withoutMotion.length === plan.cuts.length) {
+    return {
+      id,
+      name,
       hard: true,
       computable: false,
       pass: null,
       measured: null,
-      target: "100% of shots have scale delta >1%",
-      note: "RenderPlan has no `motion` field yet — Agent M's contract extension (ARCHITECTURE §8) — scored once it lands",
+      target,
+      note: "no cut on this plan declares `motion` — a pre-template plan; scored for any plan the current builder produces",
+    };
+  }
+
+  const failing = plan.cuts.filter(
+    (c) => !c.motion || Math.abs(c.motion.toScale - c.motion.fromScale) <= MIN_VISIBLE_SCALE_DELTA,
+  );
+  const deltas = plan.cuts.map((c) => (c.motion ? Math.abs(c.motion.toScale - c.motion.fromScale) : 0));
+
+  return {
+    id,
+    name,
+    hard: true,
+    computable: true,
+    pass: failing.length === 0,
+    measured: {
+      shots: plan.cuts.length,
+      staticShots: failing.length,
+      minDelta: deltas.length ? Math.round(Math.min(...deltas) * 10000) / 10000 : null,
+      maxDelta: deltas.length ? Math.round(Math.max(...deltas) * 10000) / 10000 : null,
+      threshold: MIN_VISIBLE_SCALE_DELTA,
     },
-    {
-      id: "G9",
-      name: "Safe margins",
-      hard: true,
-      computable: false,
-      pass: null,
-      measured: null,
-      target: "0 violations of text within 12% of frame edge",
-      note: "caption chunks carry a position LABEL, not pixel geometry, in this milestone's contract — scored once Agent M's caption engine adds it",
+    target,
+  };
+}
+
+/**
+ * G9, with §12.7's carve-out and §12.11's wrap bound both asserted.
+ *
+ * Three things this checks that a naive reading would not:
+ *
+ *  1. **Vertical extents, not anchors.** A block's top and bottom are its
+ *     anchor ± half its height. §12.7 required this explicitly, because
+ *     checking the anchor alone is exactly why a banner at y=0.09 shipped
+ *     inside a margin it looked clear of.
+ *  2. **The banner's measured line count** (§12.11 Minor A). Two lines double
+ *     the block height and put ink at ~6.3%, through the 8% exemption. The
+ *     line count is measured at plan build and carried on the plan, so this
+ *     scores the same number the renderer laid out rather than assuming one.
+ *  3. **Caption wrap.** Up to three words at emphasis size in a serif face
+ *     can exceed the text box and wrap, which grows the block downward toward
+ *     the 12% bottom bound. Same failure mode as the banner's, one layer down.
+ */
+export function gateG9(plan: RenderPlan): GateResult {
+  const id = "G9";
+  const name = "Safe margins";
+  const target =
+    "0 text blocks within 12% of the left/right/bottom edge; banner top exempt to 8% (ARCHITECTURE §12.7)";
+
+  const style = plan.templateStyle;
+  const sizes = style
+    ? style.sizes
+    : {
+        banner: TYPE_SCALE.banner * plan.width,
+        karaoke: TYPE_SCALE.karaoke * plan.width,
+        emphasis: TYPE_SCALE.emphasis * plan.width,
+        handle: TYPE_SCALE.handle * plan.width,
+      };
+  const tokens = style?.fontTokens ?? {
+    banner: "display_condensed" as const,
+    karaoke: "display_serif" as const,
+    handle: "body_sans" as const,
+  };
+  const tracking = style?.tracking ?? { banner: 0.01, karaoke: 0, handle: 0.08 };
+
+  const violations: { layer: string; detail: string; problems: string[] }[] = [];
+
+  // Layer 1 — banner.
+  if (plan.banner) {
+    const anchor = plan.banner.anchor ?? BANNER_ANCHOR;
+    const lines = style?.bannerLines ?? 1;
+    const problems = g9Violations("banner", anchor, sizes.banner, lines, plan.width, plan.height);
+    if (problems.length) {
+      violations.push({ layer: "banner", detail: `"${plan.banner.text}" (${lines} line(s))`, problems });
+    }
+  }
+
+  // Layer 2 — karaoke chunks, measured PER WORD.
+  //
+  // Only the emphasis word draws at `sizes.emphasis`; its neighbours draw at
+  // `sizes.karaoke` (02 §7). Measuring the whole chunk at the larger size
+  // over-estimates both width and height by up to 35% and fails chunks that
+  // fit — which it did, on "To remember that" @ lower_left, before this was
+  // measured properly. The layout is a flex row with `gap: width * 0.02`, so
+  // the separator is that gap and not a space glyph.
+  for (const chunk of plan.captions) {
+    const anchor = chunk.anchor;
+    if (!anchor) continue; // pre-geometry plan; nothing to score for this chunk
+    const { left, right } = textBoxBounds(anchor, plan.width);
+    const measured = chunk.words.map((w, i) => ({
+      text: w.word,
+      fontSizePx: w.isEmphasis === true || chunk.emphasisWordIndex === i ? sizes.emphasis : sizes.karaoke,
+    }));
+    const lines = wrapWords(measured, tokens.karaoke, right - left, {
+      wordGapPx: plan.width * 0.02,
+      trackingEm: tracking.karaoke,
+    });
+    const height = blockHeightPx(lines, LINE_HEIGHT);
+    const problems = g9ViolationsForBlock("karaoke", anchor, height, plan.width, plan.height);
+    if (problems.length) {
+      violations.push({
+        layer: "karaoke",
+        detail: `"${chunk.words.map((w) => w.word).join(" ")}" @ ${chunk.position} (${lines.length} line(s), ${Math.round(height)}px)`,
+        problems,
+      });
+    }
+  }
+
+  // Layer 3 — the handle, in each corner it visits.
+  if (plan.handle) {
+    for (const corner of new Set(plan.handle.cornerByShot)) {
+      const anchor = handleAnchor(corner);
+      const problems = g9Violations("handle", anchor, sizes.handle, 1, plan.width, plan.height);
+      if (problems.length) {
+        violations.push({ layer: "handle", detail: `${plan.handle.text} @ ${corner}`, problems });
+      }
+    }
+  }
+
+  return {
+    id,
+    name,
+    hard: true,
+    computable: true,
+    pass: violations.length === 0,
+    measured: {
+      violations: violations.length,
+      bannerTopExemptionRatio: BANNER_TOP_MARGIN_RATIO,
+      bannerLines: style?.bannerLines ?? null,
+      // Capped: a broken template can produce one violation per chunk, and a
+      // qc.json nobody can read is a qc.json nobody reads.
+      examples: violations.slice(0, 5),
     },
-  ];
+    target,
+  };
 }
 
 export type QcReport = {
@@ -379,7 +530,8 @@ export async function runQc(opts: {
     gateG12(opts.mp4Path),
     gateG13(opts.mp4Path, opts.prevChecksum),
     gateG14(opts.contentBriefId),
-    ...notYetComputableGates(),
+    gateG7(opts.plan),
+    gateG9(opts.plan),
   ];
 
   // Overall pass: every HARD gate that IS computable must pass. A gate that

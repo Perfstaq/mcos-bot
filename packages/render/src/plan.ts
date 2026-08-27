@@ -163,8 +163,76 @@ export const GradeSchema = z.object({
   contrast: z.number().positive(),
   saturation: z.number().positive(),
   warmTint: z.number(),
+  /** 02 §6's "slight vignette (0.12)". Optional so plans written before the
+   *  templates landed still validate; absent renders as no vignette. */
+  vignette: z.number().min(0).max(1).optional(),
 });
 export type Grade = z.infer<typeof GradeSchema>;
+
+// ---------------------------------------------------------------------------
+// Template style — resolved at plan build, frozen here, never looked up at
+// render time.
+//
+// The composition reads THIS and never imports the template registry. A
+// render is reproducible from {ContentBrief, template_id, footage_ref, seed}
+// (00_MASTER invariant 6), which cannot hold if editing a constant in
+// `templates/index.ts` silently changes what an existing plan renders as. It
+// is the same freeze discipline §11.1 R3 applies to claim texts and §11.2 R4
+// to `framework_evidence_tier`.
+//
+// It also keeps G7/G9 decidable from the plan alone (§12.6): the pixel sizes
+// the gates measure are on the artifact, not behind a rasteriser.
+// ---------------------------------------------------------------------------
+export const TemplateStyleSchema = z.object({
+  templateId: z.string().min(1),
+  templateVersion: z.number().int().positive(),
+  /** Resolved CSS font-family stacks, primary face embedded as a data URL. */
+  fonts: z.object({
+    banner: z.string().min(1),
+    karaoke: z.string().min(1),
+    handle: z.string().min(1),
+  }),
+  /**
+   * 02 §7's token name per layer, alongside the CSS stack.
+   *
+   * The stack is what the browser reads; the token is what a *measurement*
+   * reads — `FONT_METRICS` is keyed by token, and G9 has to predict wrapping
+   * with the same advances the renderer draws with. Carrying both is what
+   * keeps `qc-render.ts` from having to parse a CSS font-family string back
+   * into a metrics table, which is the kind of seam that silently starts
+   * measuring the wrong font.
+   */
+  fontTokens: z.object({
+    banner: z.enum(["display_condensed", "display_serif", "body_sans"]),
+    karaoke: z.enum(["display_condensed", "display_serif", "body_sans"]),
+    handle: z.enum(["display_condensed", "display_serif", "body_sans"]),
+  }),
+  /** 02 §7's tokens resolved against this plan's width, in pixels. */
+  sizes: z.object({
+    banner: z.number().positive(),
+    karaoke: z.number().positive(),
+    emphasis: z.number().positive(),
+    handle: z.number().positive(),
+  }),
+  /** CSS letter-spacing per layer, in em. */
+  tracking: z.object({
+    banner: z.number(),
+    karaoke: z.number(),
+    handle: z.number(),
+  }),
+  /**
+   * How many lines the banner text occupies, MEASURED at plan build against
+   * the real font metrics (ARCHITECTURE §12.11 Minor A). G9's banner
+   * carve-out is a bound on the text block's top edge, and a block's height
+   * is a function of its line count — so a gate that assumes one line is a
+   * gate that stops holding the moment a hook wraps. Carried on the plan so
+   * `qc-render.ts` scores the same number the renderer laid out.
+   */
+  bannerLines: z.number().int().positive(),
+  /** 02 §4.2's emphasis punch depth (+6%). 0 disables. */
+  punchScale: z.number().min(0),
+});
+export type TemplateStyle = z.infer<typeof TemplateStyleSchema>;
 
 export const MusicRefSchema = z.object({
   assetId: z.string(),
@@ -202,6 +270,9 @@ export const RenderPlanSchema = z.object({
   beatGrid: BeatGridSchema,
   music: MusicRefSchema.nullable(),
   grade: GradeSchema,
+  /** Optional so plans predating the template registry still validate; the
+   *  composition falls back to the reference look when it is absent. */
+  templateStyle: TemplateStyleSchema.optional(),
   /** Static per-template legibility policy — ARCHITECTURE §11.1 R2 descopes
    *  the per-frame luminance decision 02 §2.2 asked for. Drop shadow is
    *  always on and is not a policy. */

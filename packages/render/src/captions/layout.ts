@@ -172,9 +172,33 @@ export function g9Violations(
   width: number = FRAME.width,
   height: number = FRAME.height,
 ): string[] {
+  return g9ViolationsForBlock(layer, anchor, fontSizePixels * LINE_HEIGHT * lines, width, height);
+}
+
+/**
+ * G9 for a block whose height is already known in pixels.
+ *
+ * `g9Violations` above assumes every line is the same size, which is true of
+ * the banner and the handle and NOT true of a karaoke chunk: 02 §7 gives the
+ * emphasis word 0.101·W and its neighbours 0.075·W, so a wrapped chunk's
+ * height is the sum of per-line maxima, not `size × lines`. Measuring it the
+ * uniform way over-estimates by up to 35% on exactly the chunks most likely
+ * to be near a margin — which surfaced as a G9 failure on a chunk that in
+ * fact fits. An over-strict gate is a real cost: it teaches people to
+ * disbelieve the gate.
+ */
+export function g9ViolationsForBlock(
+  layer: TextLayer,
+  anchor: Anchor,
+  blockHeightPx: number,
+  width: number = FRAME.width,
+  height: number = FRAME.height,
+): string[] {
   const problems: string[] = [];
   const { left, right } = textBoxBounds(anchor, width);
-  const { top, bottom } = textBoxVerticalExtent(anchor, fontSizePixels, lines, height);
+  const centre = anchor.y * height;
+  const top = centre - blockHeightPx / 2;
+  const bottom = centre + blockHeightPx / 2;
   const eps = 1e-6;
 
   if (left < SAFE_MARGIN_RATIO * width - eps) problems.push(`left ${(left / width).toFixed(4)} < ${SAFE_MARGIN_RATIO}`);
