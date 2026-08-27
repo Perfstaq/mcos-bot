@@ -114,6 +114,14 @@ async function main(): Promise<void> {
     elapsedMs,
     missed: scores.missed,
     typeMisses: scores.typeMisses,
+    // Every kept claim, for reading a failed run — which segments it cited is
+    // usually the whole story.
+    predictions: result.predicted.map((c) => ({
+      type: c.type,
+      text: c.text,
+      confidence: c.confidence,
+      segmentIds: c.segmentIds,
+    })),
     evidenceMisses: scores.evidenceMisses,
     falsePositiveClaims: scores.falsePositiveClaims,
   };

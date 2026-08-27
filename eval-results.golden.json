@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-26T13:17:32.677Z",
+  "generatedAt": "2026-08-27T05:57:32.957Z",
   "mode": "mock",
   "model": "mock(answer-key)",
   "promptVersion": "propose_claims/v3-openai",
@@ -35,6 +35,236 @@
   "elapsedMs": 4,
   "missed": [],
   "typeMisses": [],
+  "predictions": [
+    {
+      "type": "icp_fact",
+      "text": "ICP sweet spot is 200-2,000 seats.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0026"
+      ]
+    },
+    {
+      "type": "icp_fact",
+      "text": "Buyer is usually a director of IT or head of infrastructure, not the CIO.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0038"
+      ]
+    },
+    {
+      "type": "icp_fact",
+      "text": "ICP runs today on a shared inbox and spreadsheets, not a competing ITSM tool.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0043"
+      ]
+    },
+    {
+      "type": "icp_fact",
+      "text": "Buying trigger is a compliance audit or a customer security questionnaire deadline.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0048"
+      ]
+    },
+    {
+      "type": "pain_point",
+      "text": "Ticket backlog grows because nobody owns the queue full-time.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0052"
+      ]
+    },
+    {
+      "type": "pain_point",
+      "text": "Can't report ticket volume/SLA compliance to leadership; it all lives in email threads.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0059"
+      ]
+    },
+    {
+      "type": "pain_point",
+      "text": "New-hire onboarding takes days with no single system tracking access requests.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0064",
+        "s0066"
+      ]
+    },
+    {
+      "type": "pain_point",
+      "text": "Employees DM the IT lead directly because they don't know where to submit a request.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0072"
+      ]
+    },
+    {
+      "type": "pain_point",
+      "text": "On-call IT gets paged for password resets at midnight; no self-service reset.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0075"
+      ]
+    },
+    {
+      "type": "objection",
+      "text": "Buyers worry a security review will take too long and stall the purchase.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0079"
+      ]
+    },
+    {
+      "type": "objection",
+      "text": "Buyers assume the product is too lightweight to pass a SOC 2 vendor questionnaire.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0084"
+      ]
+    },
+    {
+      "type": "objection",
+      "text": "Legal wants SSO and audit logging confirmed before signing.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0089"
+      ]
+    },
+    {
+      "type": "objection",
+      "text": "IT directors worry switching systems implies they mismanaged the old one.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0094"
+      ]
+    },
+    {
+      "type": "competitor_mention",
+      "text": "Zendesk: incumbent helpdesk, but no IT asset tracking.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0101",
+        "s0102"
+      ]
+    },
+    {
+      "type": "competitor_mention",
+      "text": "ServiceNow is aspirational but unaffordable with a 6-month rollout at this size.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0109",
+        "s0110"
+      ]
+    },
+    {
+      "type": "competitor_mention",
+      "text": "Jira Service Management occasionally comes up, mostly as a pricing comparison.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0112"
+      ]
+    },
+    {
+      "type": "positioning_statement",
+      "text": "Position PerfStaq for mid-market IT teams underserved by legacy ITSM.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0116",
+        "s0118"
+      ]
+    },
+    {
+      "type": "positioning_statement",
+      "text": "Not a ticketing tool: the operating system for IT service delivery for teams too small for ServiceNow.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0121"
+      ]
+    },
+    {
+      "type": "positioning_statement",
+      "text": "Position as the modern, fast alternative for IT teams without a dedicated ServiceNow admin.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0125"
+      ]
+    },
+    {
+      "type": "positioning_statement",
+      "text": "Lead with time-to-value, not a feature-parity fight with enterprise ITSM players.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0126"
+      ]
+    },
+    {
+      "type": "positioning_statement",
+      "text": "Category is self-service ITSM for lean IT teams, not another help desk clone.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0130"
+      ]
+    },
+    {
+      "type": "positioning_statement",
+      "text": "Win by being the system a 5-person IT team can run themselves, no consultants.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0134"
+      ]
+    },
+    {
+      "type": "proof_point",
+      "text": "Acme was live in 6 days with zero implementation consultants.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0137"
+      ]
+    },
+    {
+      "type": "proof_point",
+      "text": "Bramford cut ticket resolution time by 35% in the first month.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0141"
+      ]
+    },
+    {
+      "type": "proof_point",
+      "text": "Contoso passed a SOC 2 vendor review using the audit log export in under a week.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0145"
+      ]
+    },
+    {
+      "type": "messaging_decision",
+      "text": "Decision: stop saying 'ticketing system' everywhere, starting with the website.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0150"
+      ]
+    },
+    {
+      "type": "messaging_decision",
+      "text": "Decision: every deck leads with time-to-value and the 6-day Acme number, not the feature grid.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0156"
+      ]
+    },
+    {
+      "type": "messaging_decision",
+      "text": "Decision: pull the enterprise case studies from the mid-market deck.",
+      "confidence": 0.9,
+      "segmentIds": [
+        "s0158"
+      ]
+    }
+  ],
   "evidenceMisses": [],
   "falsePositiveClaims": []
 }

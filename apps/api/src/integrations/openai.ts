@@ -4,7 +4,7 @@ import { env } from "../env.js";
 import { CLAIM_TYPES, isClaimType } from "../domain/claims.js";
 import { renderChunk, segmentHandle, type Chunk } from "../domain/chunking.js";
 import { formatTimestamp } from "../domain/transcript.js";
-import { PROMPT_VERSION, SYSTEM_PROMPT } from "./prompts/extract-v3.js";
+import { PROMPT_VERSION, SYSTEM_PROMPT } from "./prompts/extract-v5.js";
 
 /** Re-exported so call sites record which harness produced their claims —
  *  the version lives with the prompt text in prompts/extract-v{n}.ts. */
