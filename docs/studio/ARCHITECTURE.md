@@ -1267,3 +1267,52 @@ it in two minutes.
 human gates in `07 §2` and the `07 §3` comparison test cannot be honestly cleared, and no agent
 should claim otherwise. This is also the fixture Agent D owes per §8, and it gates the
 Definition of Done's side-by-side comparison.
+
+### 12.19 Correction to §12.18 — a zoom term is hiding inside the "footage" explanation
+
+Review of T's framing round found the fixture attribution is *mostly* right but **incomplete**, and
+the remainder is a real code defect that would survive onto the clean fixture:
+
+The caption anchors are derived from the chin at **scale 1.0**, but the renderer composes up to
+**1.18 × 1.06 ≈ 1.25** about the region centre (`Reel.tsx:250`). The chin sits 416px below that
+origin, so it is *not* the near-fixed point `camera.ts:81-83` claims — that is true of the eyes,
+and the chin is precisely the line the caption band is derived from. Chin at 0.717 static becomes
+0.739 at odd-shot base 1.10, 0.756 at 1.18, and **0.771 with punch**, against caption tops of
+0.755 (one-line emphasis) and 0.733 (two-line).
+
+Measured against T's own committed plans: drift alone clears on average footage (0 overlaps, which
+is why the renders looked clean), but **drift + punch overlaps the derived face floor on 2/1/3
+emphasis chunks per template**, by 2–25px for up to 14 frames.
+
+So **§12.16 item 3 is not satisfied — the reframe step was reduced, not neutralised, and the punch
+multiplies it.** The visible jaw contact T reported is still dominated by footage variance
+(tighter source framing contributes ~0.05+ against the zoom's ~0.01–0.05), so §12.18's fixture
+request stands unchanged. But the zoom term persists on ideal footage, and if left in place the
+incoming locked-off clip would be judged against wrong geometry — the fixture would be blamed for
+a bug, or worse, absolve one.
+
+**Required:** derive the face floor at worst-case composed scale (chin ≈ 0.771), or re-anchor the
+odd-shot zoom origin to the chin line so it cannot displace it, or suppress the punch on shots
+whose visible chunk anchors at `center`. Plus a plan-scorable face-floor check over block **tops**
+— today the floor is asserted only on `anchor.y`, so a three-line chunk at `center` (top 0.711,
+above the 0.717 chin) passes G9 silently. Enforce it everywhere, not at one position.
+
+### 12.20 `upper_third` is retired — recorded as its own ruling
+
+T retired the `upper_third` caption position and cited §12.16, which does not rule on it. The
+retirement is nonetheless correct and is recorded here properly: after the content-region crop the
+top bar leaves ~130px of usable height while a real mixed-size two-line chunk is ~200px, so it fits
+at no anchor. `01 §4` measures the reference at exactly three positions, so three is both what fits
+and what the reference does. **`02 §2.2`'s four-position list and §12.5's resolution of it are now
+stale on this point** — the positions are `center_low`, `lower_left`, `center`.
+
+### 12.21 Two honest-labelling notes
+
+- **G11's −14 LUFS is not a capability.** All three templates hit it exactly because the fixture's
+  audio is already at −14 and passes through untouched; **no loudness stage exists anywhere in the
+  pipeline**. The number is true and demonstrates nothing about arbitrary footage. Do not read the
+  green gate as a shipped normaliser; `03 §5` still owes one.
+- **The font NOTICE reads OFL §3 backwards.** It claims shipping an un-renamed *subset* of Playfair
+  Display is "the permitted case"; a subset is a Modified Version and may not carry the Reserved
+  Font Name without permission. Universally tolerated in practice, but the note asserts the
+  opposite of the licence. Folded into ADR-5's pre-GA licensing checklist alongside Remotion.
