@@ -1025,3 +1025,35 @@ M's resolution stands, on its grounds: `01 §4` measures the reference's karaoke
 white with only the *banner* two-tone; `01 §8` forbids adding effects the reference does not have;
 and `02 §2.1`'s own argument — "two coloured words halves the emphasis" — applies with more force
 to two coloured words that mean different things. `02 §2.2`'s active-word colouring is superseded.
+
+### 12.10 Render evidence lives in-repo with a manifest — ruling
+
+Render artifacts have been living in `/Users/sathvik/aix/studio-renders/`, outside the repo. That
+has now produced the same failure twice in one day: frames written three minutes before a fix were
+forwarded to the user as evidence of the fixed behaviour, and the demo MP4 went stale against
+`c0dc1a6` while still sitting there looking authoritative. Evidence that cannot be checked against
+the code it claims to demonstrate is worse than no evidence, because it is trusted.
+
+**Ruling:** commit `demo-plan.json`, `qc.json`, and 2–3 PNG frames (~500KB each) under
+`docs/studio/evidence/`, written by a regeneration script that also emits a manifest recording the
+MP4's sha256 and the commit it was rendered from. The 22MB MP4 itself stays out of git. Staleness
+then becomes a detectable manifest-vs-HEAD mismatch rather than a silent lie, and a PR reviewer
+can tell at a glance whether the pictures describe the code in front of them.
+
+**Owner: Agent T**, as part of the template work — T renders three templates and will produce the
+next generation of evidence anyway.
+
+### 12.11 Two open follow-ups from M's review (not blocking, do not lose)
+
+- **Banner wrap is unbounded (Minor A).** The G9 carve-out is asserted at one line only. A hook
+  long enough to wrap at `0.062·W` puts ink at ~6.3%, breaching the 8% exemption, and nothing caps
+  hook length — `buildBanner` accepts any text and the composition wraps. **Fix when Agent B's
+  ContentBrief lands:** cap `hook_text` length in the schema, or assert wrap count at plan-build
+  from measured text width. Owner: B, with T asserting it in the template.
+- **`missWeightFloor` bounds single-shot degradation, not the real exchange (Minor B).** Swapping
+  an unlocked cut for a locked one changes TWO adjacent shots, since they share the boundary.
+  Reachable worst case with today's constants gives a combined penalty ≈7.2 against a floor of
+  4.56. Practically inert — it needs a ~3.9s stretch with no locked candidate, which a beat every
+  ~0.5s makes essentially impossible, and the measured-`lockPct` gate backstops it. One-line
+  hardening with no downside, since paths with no locked alternative all pay `miss` equally:
+  double the floor, or restate the comment to claim only the single-shot bound honestly.
