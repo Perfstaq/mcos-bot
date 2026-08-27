@@ -3,7 +3,8 @@
     "type": "positioning_statement",
     "text_gist": "Position PerfStaq for mid-market IT teams underserved by legacy ITSM.",
     "evidence_segment_ids": [
-      "s0116"
+      "s0116",
+      "s0118"
     ],
     "must_extract": true
   },
@@ -99,7 +100,8 @@
     "type": "pain_point",
     "text_gist": "New-hire onboarding takes days with no single system tracking access requests.",
     "evidence_segment_ids": [
-      "s0064"
+      "s0064",
+      "s0066"
     ],
     "must_extract": true
   },
@@ -179,7 +181,8 @@
     "type": "competitor_mention",
     "text_gist": "Zendesk: incumbent helpdesk, but no IT asset tracking.",
     "evidence_segment_ids": [
-      "s0101"
+      "s0101",
+      "s0102"
     ],
     "must_extract": true
   },
@@ -187,7 +190,8 @@
     "type": "competitor_mention",
     "text_gist": "ServiceNow is aspirational but unaffordable with a 6-month rollout at this size.",
     "evidence_segment_ids": [
-      "s0109"
+      "s0109",
+      "s0110"
     ],
     "must_extract": true
   },
