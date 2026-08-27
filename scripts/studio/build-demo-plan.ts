@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { buildBanner, buildCaptionTrack, anchorFor, handleCornerForShot, HANDLE_OPACITY } from "@mcos/render/captions";
+import { BANNER_ANCHOR, buildBanner, buildCaptionTrack, anchorFor, handleCornerForShot, HANDLE_OPACITY } from "@mcos/render/captions";
 import { shotCamera } from "@mcos/render/motion";
 import { assertValidRenderPlan, PLAN_VERSION, type Cut, type RenderPlan } from "@mcos/render/plan";
 import { planBeatLockedCuts, type Bed, type WordInterval } from "@mcos/render/planner";
@@ -141,7 +141,7 @@ function main(): void {
       endMs: c.endMs,
       anchor: anchorFor(c.position),
     })),
-    banner: { text: banner.text, emphasisWordIndex: banner.emphasisWordIndex, anchor: { x: 0.5, y: 0.09, align: "center" } },
+    banner: { text: banner.text, emphasisWordIndex: banner.emphasisWordIndex, anchor: BANNER_ANCHOR },
     handle: {
       text: handleText,
       opacity: HANDLE_OPACITY,

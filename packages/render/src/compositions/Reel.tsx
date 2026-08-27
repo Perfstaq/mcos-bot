@@ -1,6 +1,16 @@
 import React from "react";
 import { AbsoluteFill, OffthreadVideo, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
-import { DROP_SHADOW, TYPE_SCALE, anchorFor, handleAnchor, textBoxBounds } from "../captions/layout.js";
+import {
+  BANNER_ANCHOR,
+  DROP_SHADOW,
+  LINE_HEIGHT,
+  TYPE_SCALE,
+  anchorFor,
+  captionWordAppearance,
+  handleAnchor,
+  textBoxBounds,
+  type WordVisualState,
+} from "../captions/layout.js";
 import { SPRINGS, SPRING_FRAMES } from "../motion/springs.js";
 import type { Anchor, Banner, CaptionChunk, Cut, Handle, RenderPlan, ShotMotion } from "../plan.js";
 
@@ -90,9 +100,17 @@ const Shot: React.FC<{ cut: Cut; src: string; motion: ShotMotion | undefined; fp
 
 /**
  * Layer 2 — karaoke word captions (02 §2.2). Each word enters on its own
- * speech onset with SPRINGS.pop from `scale 0.82, opacity 0`; the word being
- * spoken is accent-coloured and settles to white afterwards. At most three
- * words are ever on screen because the chunker guarantees it (G5).
+ * speech onset with SPRINGS.pop from `scale 0.82, opacity 0`, and recedes in
+ * opacity once spoken. At most three words are ever on screen because the
+ * chunker guarantees it (G5).
+ *
+ * The active word is highlighted by weight, NOT by hue: accent belongs to the
+ * single emphasis word. 02 §2.2 asks for accent on the active word too, but
+ * that makes an orange word ambiguous between "the payload of the approved
+ * claim" and "the speaker is mid-sentence" — and on a one-word chunk the
+ * active word is orange for its whole life on screen, which is how a
+ * deliberately un-emphasised stopword ("IT") read as emphasised. See
+ * captions/layout.ts for the full argument (01 §4 and §8 outrank here).
  */
 const CaptionChunkLayer: React.FC<{ chunk: CaptionChunk; width: number; fps: number }> = ({ chunk, width, fps }) => {
   const frame = useCurrentFrame();
@@ -110,9 +128,14 @@ const CaptionChunkLayer: React.FC<{ chunk: CaptionChunk; width: number; fps: num
           config: SPRINGS.pop,
           durationInFrames: SPRING_FRAMES.popEnter,
         });
-        const active = frame >= onset && frame <= ((word.endMs - chunkStart) / 1000) * fps;
+        const offset = ((word.endMs - chunkStart) / 1000) * fps;
         const emphasis = word.isEmphasis === true || chunk.emphasisWordIndex === i;
-        const size = (emphasis ? TYPE_SCALE.emphasis : TYPE_SCALE.karaoke) * width;
+        const state: WordVisualState = local < 0 ? "pending" : frame <= offset ? "active" : "spoken";
+        // Accent is reserved for the ONE emphasis word (G8). The active word
+        // is highlighted by weight, not hue — see captions/layout.ts for why
+        // 02 §2.2's literal reading loses against 01 §8.
+        const look = captionWordAppearance(state, emphasis);
+        const size = TYPE_SCALE[look.sizeToken] * width;
         return (
           <span
             key={`${word.word}-${word.startMs}`}
@@ -122,9 +145,9 @@ const CaptionChunkLayer: React.FC<{ chunk: CaptionChunk; width: number; fps: num
               fontWeight: 700,
               textTransform: "uppercase",
               fontSize: size,
-              lineHeight: 1.05,
-              color: emphasis || active ? ACCENT : "#FFFFFF",
-              opacity: local < 0 ? 0 : enter,
+              lineHeight: LINE_HEIGHT,
+              color: look.colorRole === "accent" ? ACCENT : "#FFFFFF",
+              opacity: state === "pending" ? 0 : enter * look.opacity,
               transform: `scale(${0.82 + 0.18 * (local < 0 ? 0 : enter)})`,
             }}
           >
@@ -142,7 +165,7 @@ const CaptionChunkLayer: React.FC<{ chunk: CaptionChunk; width: number; fps: num
 const BannerLayer: React.FC<{ banner: Banner; width: number; fps: number }> = ({ banner, width, fps }) => {
   const frame = useCurrentFrame();
   const enter = spring({ frame, fps, config: SPRINGS.pop, durationInFrames: SPRING_FRAMES.popEnter });
-  const anchor = banner.anchor ?? { x: 0.5, y: 0.09, align: "center" as const };
+  const anchor = banner.anchor ?? BANNER_ANCHOR;
   const tokens = banner.text.split(/\s+/).filter(Boolean);
   return (
     <div
@@ -155,7 +178,7 @@ const BannerLayer: React.FC<{ banner: Banner; width: number; fps: number }> = ({
         textTransform: "uppercase",
         fontSize: TYPE_SCALE.banner * width,
         letterSpacing: "0.01em",
-        lineHeight: 1.05,
+        lineHeight: LINE_HEIGHT,
         color: "#FFFFFF",
       }}
     >

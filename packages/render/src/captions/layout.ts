@@ -29,6 +29,22 @@ export const FRAME = { width: 1080, height: 1920 } as const;
 /** G9: nothing within 12% of a frame edge (platform UI overlap). */
 export const SAFE_MARGIN_RATIO = 0.12;
 
+/**
+ * ARCHITECTURE §12.7 — the one carve-out, and it is deliberately narrow.
+ *
+ * G9's 12% bound stays strict on the LEFT, RIGHT and BOTTOM edges. The TOP
+ * edge is exempt **for the persistent banner only**, which may reach 8%.
+ * Platform UI on Reels/Shorts/TikTok sits at the bottom (caption, CTA) and
+ * the right (action rail); the top is comparatively clear, the banner lives
+ * in the letterbox bar where it occludes nothing, and pushing it to 14% would
+ * bury the hook to satisfy a margin protecting against UI that is not there.
+ * Every other layer stays bound on all four edges.
+ */
+export const BANNER_TOP_MARGIN_RATIO = 0.08;
+
+/** Which G9 rule a text layer is held to. */
+export type TextLayer = "banner" | "karaoke" | "handle";
+
 /** 16:9 inside 9:16, scaled to width: the video band's vertical extent. */
 export function letterboxVideoBand(width: number = FRAME.width, height: number = FRAME.height): { top: number; bottom: number } {
   const videoHeight = width * (9 / 16);
@@ -119,6 +135,69 @@ export function positionForShot(shotIndex: number): CaptionPosition {
   return CAPTION_POSITIONS[shotIndex % CAPTION_POSITIONS.length]!;
 }
 
+/** The line-height every text layer renders at; used to turn a font size
+ *  into the block height G9 actually has to bound. */
+export const LINE_HEIGHT = 1.05;
+
+/**
+ * The vertical extent of a text block centred on `anchor.y`.
+ *
+ * G9 bounds where the TEXT lands, and a block's top and bottom are its anchor
+ * ± half its height — which is why an anchor at 9% and a 67px banner puts ink
+ * at 7.2%, inside a margin the anchor alone looked clear of. The horizontal
+ * half of this was already learned the hard way (see `textBoxBounds`); this is
+ * the same lesson on the other axis.
+ */
+export function textBoxVerticalExtent(
+  anchor: Anchor,
+  fontSizePixels: number,
+  lines = 1,
+  height: number = FRAME.height,
+): { top: number; bottom: number } {
+  const blockHeight = fontSizePixels * LINE_HEIGHT * lines;
+  const centre = anchor.y * height;
+  return { top: centre - blockHeight / 2, bottom: centre + blockHeight / 2 };
+}
+
+/**
+ * Every way a text block breaks G9, named. Empty array means compliant.
+ * Encodes §12.7's asymmetry directly, so the exemption is a value the tests
+ * can point at rather than an assertion someone forgot to write.
+ */
+export function g9Violations(
+  layer: TextLayer,
+  anchor: Anchor,
+  fontSizePixels: number,
+  lines = 1,
+  width: number = FRAME.width,
+  height: number = FRAME.height,
+): string[] {
+  const problems: string[] = [];
+  const { left, right } = textBoxBounds(anchor, width);
+  const { top, bottom } = textBoxVerticalExtent(anchor, fontSizePixels, lines, height);
+  const eps = 1e-6;
+
+  if (left < SAFE_MARGIN_RATIO * width - eps) problems.push(`left ${(left / width).toFixed(4)} < ${SAFE_MARGIN_RATIO}`);
+  if (right > (1 - SAFE_MARGIN_RATIO) * width + eps)
+    problems.push(`right ${(right / width).toFixed(4)} > ${1 - SAFE_MARGIN_RATIO}`);
+  if (bottom > (1 - SAFE_MARGIN_RATIO) * height + eps)
+    problems.push(`bottom ${(bottom / height).toFixed(4)} > ${1 - SAFE_MARGIN_RATIO}`);
+
+  // The ONLY asymmetry (§12.7): banner tops may reach 8%, everything else 12%.
+  const topLimit = layer === "banner" ? BANNER_TOP_MARGIN_RATIO : SAFE_MARGIN_RATIO;
+  if (top < topLimit * height - eps) problems.push(`top ${(top / height).toFixed(4)} < ${topLimit}`);
+
+  return problems;
+}
+
+/**
+ * The banner's anchor, defined once so the composition and the plan builder
+ * cannot drift apart. y=0.10 rather than 01 §4's measured ~0.09 because the
+ * ruling bounds the block's TOP at 8%, and a 0.062·W banner centred at 0.09
+ * puts its top at 7.2%.
+ */
+export const BANNER_ANCHOR: Anchor = { x: 0.5, y: 0.1, align: "center" };
+
 /** 02 §7 — sizes proportional to frame width, never px constants. */
 export const TYPE_SCALE = {
   banner: 0.062,
@@ -143,6 +222,48 @@ export const DROP_SHADOW = { offsetPx: 2, blurPx: 6, color: "rgba(0,0,0,0.85)" }
 
 /** R2: a static per-template policy, not a per-frame luminance decision. */
 export type ScrimPolicy = "never" | "always";
+
+// ---------------------------------------------------------------------------
+// Karaoke word appearance — where 02 §2.2 and 01 §8 collide.
+//
+// 02 §2.2 asks for the ACTIVE word (the one being spoken) to be "brand accent
+// color while it's being spoken, then settles to white". 02 §3 gives the ONE
+// emphasis word "accent color + scale 1.35". Rendered literally, those two
+// rules use the same colour, so on any given frame an accent word means
+// either "this is the payload of the approved claim" or merely "the speaker
+// is currently saying this" — and on a 1–2 word chunk the active word is
+// accent for essentially the whole time it is on screen.
+//
+// That is the exact failure 02 §2.1 names in the banner's case: "Two coloured
+// words halves the emphasis." It also adds an effect the measured reference
+// does not have — 01 §4 records the karaoke layer as plain WHITE, with only
+// the banner two-tone — and 01 §8 is explicit that "Restraint is part of the
+// quality. Do not add effects the reference doesn't have."
+//
+// Resolution: accent is reserved for emphasis. The active word is still
+// highlighted, by weight and opacity rather than hue — already-spoken words
+// recede, which is the karaoke read — so word-level sync survives and the one
+// accent word in a chunk keeps meaning exactly one thing.
+// ---------------------------------------------------------------------------
+
+export type WordVisualState = "pending" | "active" | "spoken";
+
+export type WordAppearance = {
+  /** "accent" is reserved for the single emphasis word (G8). */
+  colorRole: "accent" | "primary";
+  opacity: number;
+  sizeToken: "karaoke" | "emphasis";
+};
+
+export const SPOKEN_OPACITY = 0.72;
+
+export function captionWordAppearance(state: WordVisualState, isEmphasis: boolean): WordAppearance {
+  return {
+    colorRole: isEmphasis ? "accent" : "primary",
+    opacity: state === "spoken" && !isEmphasis ? SPOKEN_OPACITY : 1,
+    sizeToken: isEmphasis ? "emphasis" : "karaoke",
+  };
+}
 
 /**
  * 02 §2.3 — the handle/brand bug. "Alternates between two safe corners across

@@ -15,14 +15,19 @@ import {
   shotCamera,
 } from "@mcos/render/motion";
 import {
+  BANNER_ANCHOR,
+  BANNER_TOP_MARGIN_RATIO,
   CAPTION_POSITIONS,
   MAX_WORDS_PER_CHUNK,
+  TYPE_SCALE,
   anchorFor,
   buildBanner,
   buildCaptionTrack,
   buildEmphasisContext,
+  captionWordAppearance,
   chunkWords,
   fontSizePx,
+  g9Violations,
   handleAnchor,
   handleCornerForShot,
   isContrastWord,
@@ -33,6 +38,7 @@ import {
   positionForShot,
   rmsStats,
   textBoxBounds,
+  textBoxVerticalExtent,
   withinSafeMargins,
   type ScoredWord,
 } from "@mcos/render/captions";
@@ -260,6 +266,44 @@ describe("emphasis scorer (02 §3) — pick the ONE word", () => {
     expect(words[index!]!.word).toBe("delta");
   });
 
+  it("does not auto-emphasise a single-word chunk — max() over one candidate is still a threshold test", () => {
+    // A one-word chunk is the case where an unguarded argmax would always
+    // return that word. The demo render put a lone "IT" on screen; the scorer
+    // was right to refuse it (stopword -2.0 against an RMS z of +0.82 leaves
+    // -0.77, well under the 1.0 bar) and this pins that.
+    const words: ScoredWord[] = [{ word: "it", startMs: 3340, endMs: 3500, rms: 0.1971 }];
+    const corpus: ScoredWord[] = [
+      ...words,
+      { word: "dedication", startMs: 3500, endMs: 3940, rms: 0.1628 },
+      { word: "quiet", startMs: 4000, endMs: 4300, rms: 0.1 },
+      { word: "louder", startMs: 4300, endMs: 4600, rms: 0.21 },
+    ];
+    expect(pickEmphasis(words, ctx([], corpus))).toBeNull();
+
+    const track = buildCaptionTrack({ words, cutTimesMs: [], claimTexts: [] });
+    expect(track).toHaveLength(1);
+    expect(track[0]!.emphasisWordIndex).toBeNull();
+    expect(track[0]!.words[0]!.isEmphasis).toBe(false);
+  });
+
+  it("reserves the accent colour for emphasis — an active word is not an emphasised word", () => {
+    // 02 §2.2 asks for accent on the word being spoken and 02 §3 gives accent
+    // to the emphasis word; rendered literally an orange word means two
+    // different things, and on a one-word chunk the active word is orange for
+    // its whole life on screen. 01 §4 records the karaoke layer as white and
+    // 01 §8 forbids adding effects the reference lacks, so accent is
+    // emphasis-only and "active" is carried by opacity.
+    for (const state of ["pending", "active", "spoken"] as const) {
+      expect(captionWordAppearance(state, false).colorRole, state).toBe("primary");
+      expect(captionWordAppearance(state, true).colorRole, state).toBe("accent");
+    }
+    expect(captionWordAppearance("active", false).opacity).toBe(1);
+    expect(captionWordAppearance("spoken", false).opacity).toBeLessThan(1);
+    // Emphasis keeps 02 §3's 1.35× treatment and never recedes.
+    expect(captionWordAppearance("spoken", true).opacity).toBe(1);
+    expect(TYPE_SCALE.emphasis / TYPE_SCALE.karaoke).toBeCloseTo(1.35, 2);
+  });
+
   it("emphasises NOTHING when nothing clears the threshold — restraint over decoration", () => {
     const words: ScoredWord[] = [
       { word: "and", startMs: 0, endMs: 100 },
@@ -306,6 +350,54 @@ describe("caption layout — letterbox only, no luminance (ARCHITECTURE §11.1 R
     for (const position of CAPTION_POSITIONS) {
       expect(withinSafeMargins(anchorFor(position)), position).toBe(true);
     }
+  });
+
+  it("bounds every layer's VERTICAL extent too — top, bottom, and the block, not the anchor (G9)", () => {
+    // The horizontal half of this test is why the clipped handle was caught.
+    // Its absence on the vertical axis is why a banner at y=0.09, whose ink
+    // reaches 7.2%, shipped unnoticed (ARCHITECTURE §12.7).
+    const karaokeSize = fontSizePx("karaoke");
+    const emphasisSize = fontSizePx("emphasis");
+    for (const position of CAPTION_POSITIONS) {
+      // Two lines: a 3-word chunk at emphasis size can wrap in its box.
+      for (const [size, lines] of [
+        [karaokeSize, 1],
+        [emphasisSize, 1],
+        [emphasisSize, 2],
+      ] as const) {
+        expect(g9Violations("karaoke", anchorFor(position), size, lines), `${position} @${size}px ×${lines}`).toEqual([]);
+      }
+    }
+    const handleSize = fontSizePx("handle");
+    expect(g9Violations("handle", handleAnchor("upper_right"), handleSize)).toEqual([]);
+    expect(g9Violations("handle", handleAnchor("mid_left"), handleSize)).toEqual([]);
+  });
+
+  it("exempts ONLY the banner's top edge, only to 8% — the carve-out is named, not absent", () => {
+    // ARCHITECTURE §12.7: G9 stays strict on left/right/bottom; the top edge
+    // is exempt for the persistent banner alone, to 8%. An exemption nothing
+    // tests is indistinguishable from a bug, so this pins all three halves:
+    // the banner passes, the SAME geometry fails for any other layer, and the
+    // exemption does not extend past 8%.
+    const bannerSize = fontSizePx("banner");
+    expect(BANNER_TOP_MARGIN_RATIO).toBe(0.08);
+    expect(g9Violations("banner", BANNER_ANCHOR, bannerSize)).toEqual([]);
+
+    // The very same box is a violation for a non-banner layer.
+    const asKaraoke = g9Violations("karaoke", BANNER_ANCHOR, bannerSize);
+    expect(asKaraoke.length).toBeGreaterThan(0);
+    expect(asKaraoke.join(" ")).toContain("top");
+
+    // And the carve-out really is bounded at 8%: 01 §4's measured ~9% anchor
+    // puts the block's top at ~7.2%, which the exemption must still reject.
+    const tooHigh = { x: 0.5, y: 0.09, align: "center" as const };
+    const violations = g9Violations("banner", tooHigh, bannerSize);
+    expect(violations.length).toBeGreaterThan(0);
+    expect(violations.join(" ")).toContain("top");
+
+    const { top } = textBoxVerticalExtent(BANNER_ANCHOR, bannerSize);
+    expect(top / 1920).toBeGreaterThanOrEqual(BANNER_TOP_MARGIN_RATIO);
+    expect(top / 1920).toBeLessThan(0.12); // still inside what plain G9 forbids
   });
 
   it("keeps the rendered TEXT BOX inside the margins, not just its anchor (G9)", () => {

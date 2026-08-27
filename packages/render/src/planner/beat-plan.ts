@@ -64,8 +64,21 @@ export type Bed = {
 };
 
 export type PlannerWeights = {
-  /** Cut further than the lock window from every beat. Must exceed the worst
-   *  in-bounds rhythm penalty, or the DP would trade locks for tidiness. */
+  /**
+   * Cut further than the lock window from every beat.
+   *
+   * For "the rhythm bends, the beat does not" to actually hold, this must
+   * EXCEED the worst rhythm penalty any in-bounds shot can incur — otherwise
+   * the DP is free to buy tidiness with a missed beat. The flat 4.0 that
+   * shipped first did not: with 02's own hold target of 4.5s and G4's 0.6s
+   * floor, `ln(0.6/4.5)² ≈ 4.06 > 4.0`, so at that one corner a miss was the
+   * cheaper move. It never fired on the fixtures, but it made the guarantee
+   * a coincidence rather than a property.
+   *
+   * Leave it undefined and `missWeightFloor()` derives it from the rhythm
+   * curve and shot bounds actually in play, so the property survives someone
+   * editing DEFAULT_RHYTHM. `DEFAULT_WEIGHTS.miss` is only the floor.
+   */
   miss: number;
   /** Quadratic penalty inside the window — an exact hit beats a 149ms hit. */
   near: number;
@@ -85,6 +98,29 @@ export const DEFAULT_WEIGHTS: PlannerWeights = {
 export type ShotBounds = { minShotSec: number; maxShotSec: number };
 /** G4 (min shot ≥0.6s) and 02 §5 step 3's upper bound. */
 export const DEFAULT_BOUNDS: ShotBounds = { minShotSec: 0.6, maxShotSec: 5.0 };
+
+/** Headroom above the worst rhythm penalty, so the ordering is strict. */
+const MISS_MARGIN = 0.5;
+
+/**
+ * The smallest `miss` weight for which a missed beat is never the cheaper
+ * option: the largest `rhythm · ln(d/τ)²` reachable with `d` inside the shot
+ * bounds and `τ` any target the rhythm curve actually emits, plus headroom.
+ * Derived rather than hardcoded so the invariant cannot be silently broken by
+ * retuning the rhythm curve.
+ */
+export function missWeightFloor(slots: number[], bounds: ShotBounds, rhythmWeight: number): number {
+  let worst = 0;
+  for (const target of slots) {
+    if (target <= 0) continue;
+    worst = Math.max(
+      worst,
+      Math.log(bounds.maxShotSec / target) ** 2,
+      Math.log(bounds.minShotSec / target) ** 2,
+    );
+  }
+  return rhythmWeight * worst + MISS_MARGIN;
+}
 
 /** The G1a window (07 §1 / ADR-8): pass at ≤150ms inclusive. */
 export const LOCK_WINDOW_MS = 150;
@@ -347,10 +383,17 @@ type Attempt = {
 
 export function planBeatLockedCuts(input: PlannerInput): PlannerResult {
   const bounds: ShotBounds = { ...DEFAULT_BOUNDS, ...input.bounds };
-  const weights: PlannerWeights = { ...DEFAULT_WEIGHTS, ...input.weights };
   const lockWindowMs = input.lockWindowMs ?? LOCK_WINDOW_MS;
   const gatePct = input.gatePct ?? G1A_GATE_PCT;
   const slots = rhythmSlots(input.durationSec, input.seed, input.rhythm);
+  const weights: PlannerWeights = { ...DEFAULT_WEIGHTS, ...input.weights };
+  // Unless the caller pinned `miss` explicitly, lift it above the worst
+  // rhythm penalty these particular slots and bounds can produce, so "bend
+  // the rhythm, never the beat" is a property of the cost function rather
+  // than a fact about one set of constants.
+  if (input.weights?.miss === undefined) {
+    weights.miss = Math.max(weights.miss, missWeightFloor(slots, bounds, weights.rhythm));
+  }
   const words = [...input.words].sort((a, b) => a.start - b.start);
   const candidateOpts: CandidateOptions = { legality: input.legality };
 
