@@ -1,21 +1,31 @@
 #!/usr/bin/env python3
 """analyzer.py — Content Studio media sidecar CLI.
 
-Invoked per-job by `apps/api/src/jobs/media-analyze.ts` via `execFileSync`
-(the same venv-shell pattern founder-journey's transcribe.ts already runs in
-production shape — ARCHITECTURE.md §5/ADR-3). No long-lived Python process, no
-Python<->Redis client, no HTTP inside the task: the CLI writes one JSON file
-per requested stage into --out and exits; the Node job zod-validates each
-file before writing it into `MediaAnalysis`.
+Invoked per-job by `apps/api/src/jobs/media-analyze.ts` via a promisified,
+timeout-bounded `execFile` (the same venv-shell pattern founder-journey's
+transcribe.ts already runs in production shape — ARCHITECTURE.md §5/ADR-3).
+No long-lived Python process, no Python<->Redis client, no HTTP inside the
+task: the CLI writes one JSON file per requested stage into --out and
+exits; the Node job zod-validates each file before writing it into
+`MediaAnalysis`.
 
   python analyzer.py --input <media> --out <dir> --stages words,beats [--model base] [--language en]
   python analyzer.py --print-versions
 
-Only `words` and `beats` are implemented (Agent P's task 4 scope).
-`scenes`/`motion`/`faces` are named in the target CLI shape
-(ARCHITECTURE.md §2) but owned by later agents (F for scenes; the ledger's
-`face.ts`/`mediapipe_face_run.py` port for faces) — requesting them fails
-loudly rather than silently doing nothing.
+Only `words` and `beats` are implemented (Agent P's task 4 scope). `words`
+includes per-word RMS energy (ARCHITECTURE §11.1 R1 — 02_MOTION_SYSTEM §3's
+emphasis scorer needs it).
+
+`scenes`/`motion`/`faces` are named in the target CLI shape (ARCHITECTURE.md
+§2) but are all DEFERRED to v2, per the human's v1 scope ruling
+(ARCHITECTURE §11.1 R2): v1 ships `letterbox` framing only (matching the
+reference), which puts captions in the black bars and structurally removes
+the need for face detection; per-shot footage scoring uses pause quality +
+word-RMS + duration fit instead of motion energy; the scrim is a static
+per-template policy, not a computed luminance map. `fill` framing (which
+would need faces/motion again) is v2's problem, not this milestone's.
+Requesting scenes/motion/faces still fails loudly rather than silently
+doing nothing.
 """
 from __future__ import annotations
 
@@ -29,7 +39,7 @@ import sys
 # regardless of caller cwd.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-ANALYZER_VERSION = "studio-analyzer@0.1.0"
+ANALYZER_VERSION = "studio-analyzer@0.2.0"  # 0.2.0: words stage gains per-word RMS (ARCHITECTURE §11.1 R1)
 
 IMPLEMENTED_STAGES = {"words", "beats"}
 KNOWN_UNIMPLEMENTED_STAGES = {"scenes", "motion", "faces"}
@@ -120,8 +130,8 @@ def main() -> None:
     not_yet = [s for s in requested if s in KNOWN_UNIMPLEMENTED_STAGES]
     if not_yet:
         raise SystemExit(
-            f"analyzer.py: stage(s) {not_yet} are named in the target CLI shape but not implemented "
-            "(owned by a later agent — ARCHITECTURE.md §8). Run only --stages words,beats."
+            f"analyzer.py: stage(s) {not_yet} are named in the target CLI shape but deferred to v2 with "
+            "`fill` framing (ARCHITECTURE.md §11.1 R2 — v1 ships letterbox-only). Run only --stages words,beats."
         )
 
     os.makedirs(args.out, exist_ok=True)

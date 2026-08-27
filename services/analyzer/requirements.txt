@@ -16,9 +16,17 @@
 # alignment). Flagged in the PR body as a disk-motivated deviation from the
 # doc's literal "port whisperx_run.py" — same avoidance of pyannote/torchcodec
 # the original runner already committed to, taken one step further.
+# numpy pinned to 2.3.5, not the newer 2.5.x this venv originally resolved
+# to locally: 2.4.0+ requires Python>=3.12, and Dockerfile.media's base
+# image (node:20-bookworm-slim) ships Python 3.11 as its native `python3`
+# — getting 3.12 onto Debian bookworm needs either a backports package that
+# doesn't actually exist (tried, confirmed absent) or copying a second
+# Python installation from a different base image, both worse trades than
+# a numpy pin one minor version back. Re-verified after the rebuild: same
+# tempo/beat-count/beat-lock numbers on the reference (see PR body).
 faster-whisper==1.2.1
 librosa==0.11.0
-numpy==2.5.2
+numpy==2.3.5
 soundfile==0.14.0
 
 # QC harness only (ADR-8 §4.1(c) — the pinned methodology, normative for

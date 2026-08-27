@@ -21,10 +21,15 @@ torch-based VAD.
 """
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, asdict
 from typing import Optional
 
+import librosa
+import numpy as np
 from faster_whisper import WhisperModel
+
+from .beats import SAMPLE_RATE, demux_to_wav
 
 _model_cache: dict[tuple[str, str, str], WhisperModel] = {}
 
@@ -42,6 +47,7 @@ class Word:
     start: float
     end: float
     score: Optional[float]
+    rms: Optional[float] = None  # librosa RMS energy over [start, end) — 02_MOTION_SYSTEM §3's emphasis scorer input
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -56,6 +62,34 @@ class Segment:
 
     def to_dict(self) -> dict:
         return {**{k: v for k, v in asdict(self).items() if k != "words"}, "words": [w.to_dict() for w in self.words]}
+
+
+def _attach_rms(input_path: str, segments: list[Segment]) -> None:
+    """RMS energy per word span, in place. 02_MOTION_SYSTEM §3's emphasis
+    scorer weights `audio_energy_zscore(word)` at 1.5, and 03_RENDER_PIPELINE
+    §1 promises "RMS/word" from librosa — this is that stage. Reuses the
+    same demux config as the `beats` stage (SAME sample rate; ARCHITECTURE
+    doesn't pin RMS the way it pins beat_track, but there is no reason to
+    introduce a second decode configuration for one extra number).
+
+    Deliberately a SECOND decode of the audio, not a shared one with the
+    `beats` stage: threading a pre-loaded (y, sr) array between two
+    independently-dispatched CLI stage runners would mean restructuring
+    analyzer.py's stage-runner architecture for the sake of skipping one
+    redundant few-hundred-ms decode on typical clip lengths — not a good
+    complexity trade at this point in the milestone. Flagged, not silent."""
+    wav_path = demux_to_wav(input_path)
+    try:
+        y, sr = librosa.load(wav_path, sr=SAMPLE_RATE, mono=True)
+    finally:
+        os.remove(wav_path)
+
+    for seg in segments:
+        for w in seg.words:
+            i0 = max(0, int(w.start * sr))
+            i1 = min(len(y), int(w.end * sr))
+            clip = y[i0:i1]
+            w.rms = round(float(np.sqrt(np.mean(clip.astype(np.float64) ** 2))), 6) if len(clip) else 0.0
 
 
 def analyze_words(
@@ -92,6 +126,9 @@ def analyze_words(
             words.append(Word(word=w.word.strip(), start=round(ws, 3), end=round(we, 3), score=round(float(w.probability), 4) if w.probability is not None else None))
             last_end = we
         segments.append(Segment(start=round(float(seg.start), 3), end=round(float(seg.end), 3), text=seg.text.strip(), words=words))
+
+    if segments:
+        _attach_rms(input_path, segments)
 
     language_out = info.language or language or "en"
     duration_sec = round(float(info.duration), 3) if info.duration is not None else (segments[-1].end if segments else 0.0)
