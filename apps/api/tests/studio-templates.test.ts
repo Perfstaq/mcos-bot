@@ -256,6 +256,50 @@ describe("text measurement (the wrap predictor's foundation)", () => {
     expect(wrapLines("AAAAAAAAAAAAAAAAAAAA", size, "body_sans", box)).toHaveLength(1);
   });
 
+  it("measures karaoke text AS RENDERED — uppercase, like the composition draws it", () => {
+    // ── The bug ─────────────────────────────────────────────────────────────
+    // `Reel.tsx` sets `textTransform: uppercase` on every karaoke word, and
+    // `textWidthPx` sums per-codepoint advances — so measuring the plan's
+    // stored casing measured the wrong glyphs, short by 20-35%. Every karaoke
+    // width read from it was wrong: G9's horizontal bound, the wrapped line
+    // COUNT, and the block height that G9's vertical bound, the face floor and
+    // §12.43's containment check are all derived from.
+    //
+    // It hid because the banner — the one layer checked against a rendered
+    // frame — takes hook text that is already uppercase in the brief, so it
+    // agreed either way (§12.34's shape). Caught by measuring accent pixels in
+    // a real frame: a chunk every check called single-line wrapped to two on
+    // screen and pushed its first line 23px up into the footage.
+    const size = TYPE_SCALE.emphasis * WIDTH;
+    const lower = textWidthPx("wondering", size, "display_serif");
+    const upper = textWidthPx("WONDERING", size, "display_serif");
+    expect(upper, "capitals must measure wider than lowercase in this face").toBeGreaterThan(lower);
+
+    // What the wrapper actually uses is the UPPER width, whichever casing the
+    // plan stored — so both spellings wrap identically.
+    const box = upper - 1; // narrower than the uppercase word, wider than lower
+    expect(box).toBeGreaterThan(lower);
+    const asLower = wrapWords([{ text: "wondering", fontSizePx: size }], "display_serif", box, { wordGapPx: 0 });
+    const asUpper = wrapWords([{ text: "WONDERING", fontSizePx: size }], "display_serif", box, { wordGapPx: 0 });
+    expect(asLower.length).toBe(asUpper.length);
+
+    // And the transform is load-bearing: two words that fit at lowercase
+    // widths must NOT fit once uppercased, which is exactly the case that
+    // wrapped on screen.
+    const pair = [
+      { text: "wondering", fontSizePx: size },
+      { text: "what", fontSizePx: TYPE_SCALE.karaoke * WIDTH },
+    ];
+    const naive =
+      textWidthPx("wondering", size, "display_serif") +
+      textWidthPx("what", TYPE_SCALE.karaoke * WIDTH, "display_serif");
+    const rendered =
+      textWidthPx("WONDERING", size, "display_serif") +
+      textWidthPx("WHAT", TYPE_SCALE.karaoke * WIDTH, "display_serif");
+    const between = Math.floor((naive + rendered) / 2);
+    expect(wrapWords(pair, "display_serif", between, { wordGapPx: 0 }).length, "must wrap at rendered widths").toBe(2);
+  });
+
   it("measures a mixed-size chunk per word, and its height as per-line maxima", () => {
     // The exact case that made an over-strict G9 fail a chunk that fits:
     // only the emphasis word draws at 0.101·W, its neighbours at 0.075·W.

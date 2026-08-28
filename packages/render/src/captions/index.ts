@@ -28,6 +28,7 @@ export {
   textWidthPx,
   wrapLines,
   wrapWords,
+  asRendered,
   makeSingleLineFitPredicate,
   type MeasuredWord,
   type WrapOptions,
