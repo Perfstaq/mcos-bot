@@ -1,8 +1,8 @@
 {
   "description": "Render evidence for the three shipped templates (ARCHITECTURE §12.10). The MP4s are NOT committed; their sha256 is recorded here alongside the commit they were rendered from, so a reviewer can tell whether the committed plan/qc/frames describe the code in front of them. Regenerate with `npx tsx scripts/studio/render-evidence.ts --footage <clean.mp4>`; check with `--check`.",
-  "generatedAt": "2026-08-28T11:41:35.860Z",
-  "renderedFromCommit": "c4e131a8eff232ada61d23b32c701abc37fd6e41",
-  "renderedFromCommitSubject": "fix(render): measure karaoke text as the renderer draws it — uppercase",
+  "generatedAt": "2026-08-28T13:06:14.782Z",
+  "renderedFromCommit": "7070d6e9a0713f22676b626811d92e0dea4135c3",
+  "renderedFromCommitSubject": "docs(studio): W4.3 evidence — all three templates PASS, all three baselines FAIL",
   "treeDirty": false,
   "renderAffectingPaths": [
     "packages/render/src",
