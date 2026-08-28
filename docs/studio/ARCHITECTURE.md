@@ -1600,3 +1600,63 @@ fed it differently-shaped data. Do not conclude from "the number matches" that t
 - **Stale comments:** `stages/fingerprint.py:734` cites banner persistence 0.906 against the
   fixture's 0.896; `style-transfer.ts:543-548` and its test still say the observations question
   "needs a human ruling" — §12.30 R7 has since ruled exactly F's way, so cite the ruling.
+
+### 12.37 G1b is `not_applicable`, derived per-plan — resolving §12.3
+
+§12.3 diagnosed G1b correctly and then left it failing. Every template and every render reported a
+hard red on it, and §12.18's honest summary — "code-complete and pass 12 of 13 automated gates" —
+was carrying that red permanently. Two options were open: ship a licensed music bed so `03 §6`'s
+footage-removal stage could exist (§12.13 rules the two are inseparable), or mark the gate. **I
+surveyed the repo: there is no audio asset anywhere and no `data/music-library`.** Removal
+therefore cannot exist, so G1b cannot pass under any plan we are able to build. It is marked.
+
+**Ruling: G1b returns a not-applicable verdict — `pass: null` plus a machine-readable
+`notApplicable: { code, see }` — for any plan that does not remove footage. The QC report is
+green-with-exclusion, never green-by-omission.**
+
+Three properties make this an exclusion rather than a disabled gate, and each is asserted by a test
+that fails if it is removed:
+
+1. **Derived from the plan, never hardcoded.** The predicate is `planRemovesFootage(plan)` in
+   `packages/render/src/plan.ts`: a plan removes footage exactly when some shot's source span does
+   not continue where the last one ended. Nothing checks a flag, a template id or a milestone
+   number. The day the selection stage ships with a bed, its plans remove footage and G1b starts
+   scoring again with **no code change and no migration** — which is the whole difference between
+   deferring a measurement and abandoning one. A test asserts both directions on two fixtures that
+   differ only in their source spans.
+2. **Visibly excluded, never silently dropped.** `QcReport` grows `excludedGates` and
+   `scoredGateCount` as first-class fields, and the console prints `PASS (12 hard gates scored · 1
+   excluded (n/a))` with a `–` mark distinct from `·`. A green report beside an unscored gate is the
+   exact shape of the lies §12.21 and §12.10 record; the exclusion is lifted to the top of the
+   report so no reader has to reconstruct it by scanning for nulls.
+3. **Distinguished from "could not measure".** `computable: false` already meant a real contract gap
+   (G10 without `--words`). "Does not apply to this artifact" is a different claim and now says so
+   in its own field. `rollUpQc` checks `computable` **and** `notApplicable` independently, so a
+   future gate that sets one and forgets the other cannot silently rejoin the pass set — there is a
+   test that flips `computable` back to true and still expects exclusion.
+
+**Verified against the real artifacts, not fixtures.** Re-scoring the three committed evidence
+plans (`docs/studio/evidence/*/plan.json`) with their own recorded detected-cut counts:
+`statement_serif`, `staccato_condensed` and `editorial_sans` each go `removesFootage=false` ⇒ G1b
+n/a ⇒ `overallPass false → true`, **12 gates scored, 1 excluded**. That is §12.18's "12 of 13"
+arriving at an honest verdict instead of a permanent red. The committed `qc.json` files and
+`manifest.json` still record the old shape; they are dated by `renderedFromCommit` per §12.10, so
+they are stale rather than wrong, and will pick up `excludedGates` at the next regeneration. That
+needs a real render, which needs the analyzer venv §12.23 notes is missing outside `st-p`.
+
+**What would reverse this.** Any of: a licensed bed landing and `03 §6` shipping, at which point
+plans remove footage and the exclusion evaporates on its own — no reversal needed, which is the
+design. A decision that framing changes SHOULD be detectable discontinuities, which would make G1b
+measurable on continuous plans; §12.3 already refused that as gaming the gate, and reversing it
+means arguing with §12.3, not with this. Or evidence that some continuous plan does produce real
+detected cuts — the exclusion's `measured.detectedCuts` is recorded precisely so that would show up
+rather than being assumed away.
+
+**G1a is untouched**, and remains the gate that means something today (§12.3): 29/29 against a real
+librosa grid, where the human editor who cut the reference scores 0.821.
+
+**Noted, not fixed:** `assertOutputTimeGrid` in `apps/api/src/domain/studio/style-transfer.ts:483`
+carries its own copy of this predicate, written before there was a shared home for it. The two now
+agree by construction of having been written from the same ruling, which is exactly the arrangement
+§12.32 warns drifts. Collapsing it onto `planRemovesFootage` is a one-line change in a file this
+workstream had no other reason to open — left as a follow-up rather than taken as a drive-by.

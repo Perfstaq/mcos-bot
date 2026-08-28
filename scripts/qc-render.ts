@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { RenderPlanSchema, cutTimesMs, type RenderPlan } from "@mcos/render/plan";
+import { RenderPlanSchema, cutTimesMs, planRemovesFootage, type RenderPlan } from "@mcos/render/plan";
 import { gateG1a, FINGERPRINT_ACCEPTANCE_FLOOR, REFERENCE_BEAT_LOCK_RATIO } from "@mcos/render/gates/g1a";
 import type { GateResult } from "@mcos/render/gates/types";
 import {
@@ -124,11 +124,79 @@ function nearestDistanceMs(t: number, others: number[]): number | null {
 export { gateG1a };
 
 // --- G1b: render fidelity (output vs plan's known cut times) ---------------
+
+/**
+ * The exclusion's machine-readable reason code (ARCHITECTURE §12.37).
+ *
+ * Exported so a caller branches on a constant rather than a string literal it
+ * copied out of a report — and so that renaming it breaks a compile instead of
+ * silently breaking a consumer's `switch`.
+ */
+export const G1B_NOT_APPLICABLE_CONTINUOUS = "continuous_playback_no_discontinuities";
+
+/**
+ * G1b — render fidelity, scored **only against plans it can measure**.
+ *
+ * The gate matches the plan's known cut times against pixel-detected scene
+ * cuts. That question is only meaningful if the render contains scene cuts to
+ * detect, and it contains them only if the plan REMOVES footage: v1 plays one
+ * clip continuously and changes framing, and framing changes are not content
+ * discontinuities. ARCHITECTURE §12.3 records what that cost — every template
+ * and every render scored ~2/29 and reported a hard red — and names the
+ * temptation it creates: "inflating framing changes until a detector trips is
+ * gaming the gate, not passing it."
+ *
+ * Two options were open (§12.37): ship a licensed music bed so `03 §6`'s
+ * footage-removal stage could exist, or mark the gate not-applicable until it
+ * does. There is no licensed audio asset in this repo, so removal cannot exist
+ * under §12.13's ruling, so the gate cannot pass under ANY plan we can build
+ * today. It is marked.
+ *
+ * **The exclusion is derived from the plan, not from a flag or a date.** The day
+ * `03 §6` lands with a bed, its plans remove footage, `planRemovesFootage`
+ * returns true, and this gate starts scoring again with no code change and no
+ * migration. That property is what separates an honest exclusion from a
+ * disabled gate, and it is asserted by its own test rather than left as an
+ * intention.
+ *
+ * G1a is untouched and is the gate that means something today (§12.3).
+ */
 export function gateG1b(plan: RenderPlan, detectedCutsMs: number[]): GateResult {
   const id = "G1b";
   const name = "Beat lock — render fidelity";
   const planCuts = cutTimesMs(plan);
   const windowMs = Math.floor(2000 / plan.fps); // ±2 frames
+
+  if (!planRemovesFootage(plan)) {
+    return {
+      id,
+      name,
+      hard: true,
+      // Not "we lack a tool" (G10's case without --words) but "there is nothing
+      // here to measure". `notApplicable` below is what tells the two apart;
+      // this field is what keeps the gate out of the pass/fail rollup.
+      computable: false,
+      pass: null,
+      notApplicable: { code: G1B_NOT_APPLICABLE_CONTINUOUS, see: "ARCHITECTURE §12.3, §12.13" },
+      measured: {
+        // The evidence FOR the exclusion, so a reader can check the claim
+        // rather than take it. `detectedCuts` in particular: if a continuous
+        // plan ever starts producing a pile of detected cuts, that is a real
+        // finding about the renderer and this line is where it shows up.
+        removesFootage: false,
+        planCuts: planCuts.length,
+        detectedCuts: detectedCutsMs.length,
+        windowMs,
+      },
+      target: `≥90% of the plan's cut times have a detected cut within ±2 frames (${windowMs}ms) — scored only for plans that remove footage`,
+      note:
+        "not applicable: this plan is a continuous playthrough (every shot's source span continues where the " +
+        "last ended), so the render contains no content discontinuities for a scene detector to find. Real jump " +
+        "cuts need the footage-removal stage of 03 §6, which under ARCHITECTURE §12.13 requires a licensed music " +
+        "bed — no audio asset exists in this repo yet. Excluded from the pass/fail rollup, NOT passed. This gate " +
+        "resumes scoring automatically for any plan whose cuts actually remove footage.",
+    };
+  }
 
   if (!planCuts.length) {
     return { id, name, hard: true, computable: true, pass: false, measured: {}, target: `≥90% of plan cuts matched within ±2 frames (${windowMs}ms)`, note: "plan has no cuts" };
@@ -149,6 +217,7 @@ export function gateG1b(plan: RenderPlan, detectedCutsMs: number[]): GateResult 
     computable: true,
     pass: ratio >= 0.9,
     measured: {
+      removesFootage: true,
       matchedRatio: Math.round(ratio * 1000) / 1000,
       matched,
       totalPlanCuts: planCuts.length,
@@ -518,13 +587,62 @@ export function gateG9(plan: RenderPlan): GateResult {
   };
 }
 
+export type QcExclusion = { id: string; code: string; see: string };
+
 export type QcReport = {
   analyzerVersion: string;
   mp4: string;
   gates: GateResult[];
   overallPass: boolean;
+  /**
+   * Every gate that did not APPLY to this render, lifted to the top of the
+   * report (ARCHITECTURE §12.37).
+   *
+   * A report is read as a verdict, and `overallPass: true` beside a gate that
+   * was never scored is the exact shape of a lie this milestone has already
+   * been told twice — §12.21's "G11's −14 LUFS is not a capability", and the
+   * evidence frames of §12.10. A green report with a non-empty
+   * `excludedGates` is honest; a green report that quietly dropped a gate is
+   * not. So the exclusions are a first-class field rather than something a
+   * reader has to reconstruct by scanning `gates` for nulls.
+   */
+  excludedGates: QcExclusion[];
+  /** How many hard gates were actually scored — the denominator behind
+   *  `overallPass`, stated rather than implied. */
+  scoredGateCount: number;
   fingerprintAcceptanceFloor: number;
 };
+
+/**
+ * The pass/fail rollup, extracted so it is testable without an MP4, ffmpeg and
+ * PySceneDetect.
+ *
+ * A hard gate counts toward the verdict when it is computable AND applicable.
+ * Both conditions are checked independently on purpose: a future gate that sets
+ * one and forgets the other must not silently rejoin the pass set, and there is
+ * a test that removes exactly that safety net to prove it is load-bearing.
+ *
+ * A gate that is not computable still doesn't block a merge on its own — that
+ * behaviour predates this function and is unchanged. What is new is that a gate
+ * excluded for INAPPLICABILITY is also reported as such, so the two reasons a
+ * gate can be absent from the verdict are never confused for each other.
+ */
+export function rollUpQc(gates: GateResult[]): {
+  overallPass: boolean;
+  excludedGates: QcExclusion[];
+  scored: number;
+} {
+  const scored = gates.filter((g) => g.hard && g.computable && !g.notApplicable);
+  return {
+    overallPass: scored.every((g) => g.pass === true),
+    excludedGates: gates
+      .filter((g): g is GateResult & { notApplicable: NonNullable<GateResult["notApplicable"]> } =>
+        Boolean(g.notApplicable),
+      )
+      .map((g) => ({ id: g.id, code: g.notApplicable.code, see: g.notApplicable.see })),
+    scored: scored.length,
+  };
+}
 
 export async function runQc(opts: {
   mp4Path: string;
@@ -553,17 +671,20 @@ export async function runQc(opts: {
     gateG9(opts.plan),
   ];
 
-  // Overall pass: every HARD gate that IS computable must pass. A gate that
-  // isn't computable yet doesn't block a merge on its own (07 §4's "the M1
-  // suite must stay green" is about a DIFFERENT suite; this milestone's own
-  // gates fail loudly by being reported `pass: null`, never silently true).
-  const overallPass = gates.filter((g) => g.hard && g.computable).every((g) => g.pass === true);
+  // Overall pass: every HARD gate that is computable AND applicable must pass.
+  // A gate that isn't computable yet doesn't block a merge on its own (07 §4's
+  // "the M1 suite must stay green" is about a DIFFERENT suite; this
+  // milestone's own gates fail loudly by being reported `pass: null`, never
+  // silently true), and an inapplicable one is listed in `excludedGates`.
+  const roll = rollUpQc(gates);
 
   return {
     analyzerVersion: "qc-render@0.1.0",
     mp4: opts.mp4Path,
     gates,
-    overallPass,
+    overallPass: roll.overallPass,
+    excludedGates: roll.excludedGates,
+    scoredGateCount: roll.scored,
     fingerprintAcceptanceFloor: FINGERPRINT_ACCEPTANCE_FLOOR,
   };
 }
@@ -601,10 +722,21 @@ async function main(): Promise<void> {
   if (outPath) writeFileSync(outPath, json);
   else console.log(json);
 
-  console.error(`\nqc-render: ${report.overallPass ? "PASS" : "FAIL"} (${report.gates.filter((g) => g.hard && g.computable).length} hard gates scored)`);
+  // "PASS with 1 excluded" — never a bare PASS while a gate went unscored.
+  // The JSON carries `excludedGates`; an operator watching the console gets
+  // the same fact without having to open it.
+  const excluded = report.excludedGates.length
+    ? ` · ${report.excludedGates.length} excluded (n/a)`
+    : "";
+  console.error(
+    `\nqc-render: ${report.overallPass ? "PASS" : "FAIL"} (${report.scoredGateCount} hard gates scored${excluded})`,
+  );
   for (const g of report.gates) {
-    const mark = g.pass === null ? "·" : g.pass ? "✓" : "✗";
-    console.error(`  ${mark} ${g.id} ${g.name}`);
+    // `–` is its own mark: not scored because the gate does not APPLY, which
+    // is a different thing from `·` (applies, could not be measured).
+    const mark = g.notApplicable ? "–" : g.pass === null ? "·" : g.pass ? "✓" : "✗";
+    const why = g.notApplicable ? `  (n/a: ${g.notApplicable.code} — ${g.notApplicable.see})` : "";
+    console.error(`  ${mark} ${g.id} ${g.name}${why}`);
   }
   if (!report.overallPass) process.exit(1);
 }
