@@ -1,4 +1,4 @@
-import { MediaAnalysisStatus, MediaAssetKind } from "@prisma/client";
+import { MediaAssetKind } from "@prisma/client";
 import { prisma, rawPrisma } from "../db.js";
 import { env } from "../env.js";
 import { deleteObjects } from "../integrations/studio-r2.js";
@@ -35,16 +35,23 @@ export function isEligibleForPurge(args: {
   kind: MediaAssetKind;
   purgedAt: Date | null;
   createdAt: Date;
-  analysisStatus: MediaAnalysisStatus | null | undefined;
-  fingerprint: unknown;
   now: Date;
   retentionDays: number;
 }): boolean {
   if (args.kind !== MediaAssetKind.reference) return false;
   if (args.purgedAt) return false;
-  if (args.analysisStatus !== MediaAnalysisStatus.succeeded) return false;
-  if (args.fingerprint === null || args.fingerprint === undefined) return false;
 
+  // Age alone decides, deliberately. An earlier version also required a
+  // succeeded analysis carrying a fingerprint, which inverted the posture it
+  // was meant to enforce: a reference whose analysis permanently failed — a
+  // corrupt upload, a codec we cannot read — would satisfy neither condition
+  // and so be kept FOREVER. 04 §5's posture applies *most* to a video that
+  // yielded nothing, because there is no retained artifact to justify holding
+  // it. The fingerprint guard only ever made sense as protection against
+  // purging a video before extraction has run, and that is a concern about
+  // young assets, not thirty-day-old ones: analysis runs on upload, so a
+  // reference still unanalysed at the retention horizon is not pending, it is
+  // failed.
   const cutoff = args.now.getTime() - args.retentionDays * DAY_MS;
   return args.createdAt.getTime() < cutoff;
 }
@@ -81,15 +88,22 @@ export async function sweepPurgeReferences(
   const limit = opts.limit ?? 500;
   const now = opts.now ?? new Date();
 
+  // The age cutoff belongs in the query, not only in isEligibleForPurge. With
+  // it applied in memory over an oldest-first window, any row that is never
+  // eligible sits permanently at the head — and once more than `limit` of them
+  // accumulate, the sweep scans a full page of ineligible rows and purges
+  // nothing, forever, while reporting success. Filtering in SQL means the
+  // window only ever contains work.
+  const cutoff = new Date(now.getTime() - retentionDays * DAY_MS);
+
   const candidates = await rawPrisma.mediaAsset.findMany({
-    where: { kind: MediaAssetKind.reference, purgedAt: null },
+    where: { kind: MediaAssetKind.reference, purgedAt: null, createdAt: { lt: cutoff } },
     select: {
       id: true,
       tenantId: true,
       kind: true,
       purgedAt: true,
       createdAt: true,
-      analysis: { select: { status: true, fingerprint: true } },
     },
     orderBy: { createdAt: "asc" },
     take: limit,
@@ -103,8 +117,6 @@ export async function sweepPurgeReferences(
       kind: asset.kind,
       purgedAt: asset.purgedAt,
       createdAt: asset.createdAt,
-      analysisStatus: asset.analysis?.status,
-      fingerprint: asset.analysis?.fingerprint,
       now,
       retentionDays,
     });

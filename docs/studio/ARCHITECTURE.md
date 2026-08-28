@@ -1795,3 +1795,34 @@ home; §12.25 rejected that as inverting the pipeline's ordering, and that reaso
 **Left open, deliberately:** the attempt row is never garbage-collected. Rows are small and one per
 build request, so this is not urgent, but it is unbounded — the retention workstream's sweep is the
 natural owner and this table should be on its list.
+
+### 12.39 Correction to §12.36 — the purge kept forever exactly what it should delete first
+
+Review of the closeout caught an inversion in W1's eligibility rule, and an overclaim in §12.36.
+
+`isEligibleForPurge` required a **succeeded analysis carrying a fingerprint**. The intent was
+sound — do not delete a video before we have extracted from it — but the effect was the opposite
+of the posture: a reference whose analysis permanently failed (corrupt upload, unreadable codec)
+satisfied that condition *never*, and so was **kept indefinitely**. §12.36's sentence "no tenant
+ever retains a reference longer than 30 days" was false for precisely the class with the weakest
+claim to being retained: `04 §5` applies **most** to a video that yielded nothing, because there is
+no retained artifact justifying holding it.
+
+The fingerprint guard only ever protected *young* assets from being purged mid-extraction, and
+analysis runs on upload — so a reference still unanalysed at the retention horizon is not pending,
+it is failed. **Age alone now decides past the horizon.** The two tests that asserted the old
+behaviour were inverted rather than deleted, so the corrected posture is pinned.
+
+**A second defect fell out with it.** The age cutoff was applied only in memory, over a
+`take: limit` window ordered oldest-first — so rows that were never eligible accumulated at the
+head, and once more than `limit` of them existed the sweep would scan a full page, purge nothing,
+and report success forever. Pushing the cutoff into the query fixes it, and note the shape of the
+fix: **the query predicate and the in-memory predicate now select the same set**, so a row in the
+window is by construction a row to purge. Starvation is not guarded against; it is unrepresentable.
+
+**And a note on the test I did not write.** I wrote a starvation regression test, then mutated the
+query filter away to confirm it failed without the fix. It passed either way — the eligible row
+sorts first regardless of `limit`, so it demonstrated nothing. I removed it and left the reasoning
+in the test file instead. A test that passes with and without the fix is worse than no test: it is
+false assurance, which is the failure mode this milestone found five separate times. **Mutate a new
+test before trusting it.**

@@ -139,23 +139,15 @@ describe("isEligibleForPurge — the selection predicate", () => {
     expect(isEligibleForPurge({ ...base, createdAt: new Date("2026-08-20T00:00:00Z") })).toBe(false);
   });
 
-  it("does NOT select one whose fingerprint extraction never succeeded", () => {
+  it("DOES select an old reference whose fingerprint extraction never succeeded", () => {
+    // The inverse of this used to be asserted, and it was the wrong posture:
+    // requiring a succeeded analysis meant a reference that yielded nothing —
+    // corrupt upload, unreadable codec — satisfied the condition never and so
+    // was kept forever. 04 §5 applies *most* to a video with no retained
+    // artifact to justify holding it. Age alone decides past the horizon.
     expect(
-      isEligibleForPurge({
-        ...base,
-        createdAt: new Date("2026-01-01T00:00:00Z"),
-        analysisStatus: MediaAnalysisStatus.failed,
-        fingerprint: null,
-      }),
-    ).toBe(false);
-    expect(
-      isEligibleForPurge({
-        ...base,
-        createdAt: new Date("2026-01-01T00:00:00Z"),
-        analysisStatus: MediaAnalysisStatus.succeeded,
-        fingerprint: null,
-      }),
-    ).toBe(false);
+      isEligibleForPurge({ ...base, createdAt: new Date("2026-01-01T00:00:00Z") }),
+    ).toBe(true);
   });
 
   it("does NOT select one already purged", () => {
@@ -205,16 +197,36 @@ describe("media.purge-references — selection against real rows", () => {
     expect(row.purgedAt).toBeNull();
   });
 
-  it("does NOT purge an old reference asset whose fingerprint extraction never succeeded", async () => {
+  it("DOES purge old references whose fingerprint extraction never succeeded", async () => {
+    // These are the assets with the weakest claim to being kept: past the
+    // horizon with nothing extracted from them. Holding them forever was the
+    // bug, not the safeguard.
     await seedAsset({ ageDays: 45, analysis: "failed" });
     await seedAsset({ ageDays: 45, analysis: "none" });
     await seedAsset({ ageDays: 45, analysis: "succeeded-no-fingerprint" });
 
     const result = await sweepPurgeReferences();
 
-    expect(result.purged).toBe(0);
-    expect(deleteObjects).not.toHaveBeenCalled();
+    expect(result.purged).toBe(3);
+    expect(deleteObjects).toHaveBeenCalledTimes(3);
   });
+
+  // There is deliberately NO test here for scan-window starvation, and the
+  // reason is worth stating so nobody adds a hollow one back.
+  //
+  // The original bug: rows that passed the query filter but failed the
+  // in-memory predicate (references with no fingerprint) sorted oldest-first
+  // and, once more than `limit` of them existed, filled every scan window —
+  // the sweep purged nothing and reported success forever. That class no
+  // longer exists: the query and `isEligibleForPurge` now select the same set,
+  // so a row in the window is by construction a row to purge.
+  //
+  // I wrote a starvation test, then mutated the query filter away to check it
+  // failed. It passed either way — the eligible row sorts first regardless of
+  // `limit`, so nothing was being demonstrated. A test that passes with and
+  // without the fix is worse than no test: it is false assurance of exactly
+  // the kind this milestone kept finding. The property is structural now, and
+  // structure is what protects it.
 
   it("does NOT purge an asset that is already purged", async () => {
     const asset = await seedAsset({ ageDays: 90, purged: true });
