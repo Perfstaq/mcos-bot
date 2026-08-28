@@ -10,6 +10,11 @@ import {
   type PlanBuilderWord,
 } from "../domain/studio/plan-builder.js";
 import { assertValidBeatGrid, assertValidWordsResult } from "../domain/studio/media-analysis-schema.js";
+import {
+  markRenderAttemptBuilt,
+  recordRenderAttemptFailure,
+  type RenderAttemptIdentity,
+} from "../domain/studio/render-attempt.js";
 import { logger } from "../logger.js";
 import type { PlanBuildJob } from "../queue.js";
 import { withTenantContext } from "./context.js";
@@ -36,6 +41,32 @@ const log = logger.child({ job: "plan-build" });
  */
 export async function runPlanBuild(job: PlanBuildJob): Promise<void> {
   await withTenantContext(job.tenantId, async () => {
+    try {
+      await build(job);
+    } catch (error) {
+      // ARCHITECTURE §12.25/§12.38 — the failure is recorded HERE, on the
+      // first attempt, not only from the worker's permanent-failure handler.
+      //
+      // Two reasons, both learned the hard way on this milestone. A
+      // `plan_infeasible` is a verdict, not a transient fault: it will fail
+      // identically on every retry, and making the user wait out two backoffs
+      // before the reason appears is a worse surface than no retries at all.
+      // And `failPlanBuild` only runs if the worker's `failed` handler is
+      // wired — `scripts/studio/prove-plan-chain.ts` constructs its own
+      // Worker, and §12.33 already records that as a thin seam. Recording from
+      // inside the job makes the row a property of the JOB rather than of the
+      // worker that happened to run it.
+      //
+      // `failPlanBuild` still re-asserts it on permanent failure; both paths
+      // upsert the same row, so the count stays 1.
+      await recordRenderAttemptFailure(identify(job), error as Error);
+      throw error;
+    }
+  });
+}
+
+async function build(job: PlanBuildJob): Promise<void> {
+  {
     // 03 §3: "Idempotency: dedupe on (plan_id)". `planId` is pre-allocated by
     // the route, and `RenderPlan` is append-only — a second attempt cannot
     // rewrite the row, so the only correct behaviour on a retry that already
@@ -43,6 +74,13 @@ export async function runPlanBuild(job: PlanBuildJob): Promise<void> {
     // post-commit crash from failing loudly on a primary-key collision.
     const existing = await prisma.renderPlan.findUnique({ where: { id: job.planId } });
     if (existing) {
+      // Re-assert `built` rather than returning bare. A redundant retry
+      // usually means the FIRST run crashed after committing the plan but
+      // before recording the status — exactly the window where the attempt row
+      // would otherwise be left saying `queued` (or worse, `failed`) beside a
+      // plan that exists. The row must describe the plan table, not the job's
+      // history of getting there.
+      await markRenderAttemptBuilt(identify(job));
       log.info({ planId: job.planId }, "render plan already materialized — nothing to do");
       return;
     }
@@ -120,6 +158,9 @@ export async function runPlanBuild(job: PlanBuildJob): Promise<void> {
     });
 
     await materialize(job, built.plan);
+    // Only after the plan is committed. A `built` attempt beside no plan row
+    // would be the same lie in the other direction.
+    await markRenderAttemptBuilt(identify(job));
 
     const measured = built.g1a.measured as { ratio?: number; withinCount?: number; totalCuts?: number };
     log.info(
@@ -135,7 +176,20 @@ export async function runPlanBuild(job: PlanBuildJob): Promise<void> {
       },
       "render plan built and G1a passed",
     );
-  });
+  }
+}
+
+/** The five ids that identify an attempt row. The job payload already carries
+ *  every one — which is why a failure can always be recorded, even when the
+ *  build failed before loading anything. */
+function identify(job: PlanBuildJob): RenderAttemptIdentity {
+  return {
+    planId: job.planId,
+    tenantId: job.tenantId,
+    contentBriefId: job.contentBriefId,
+    templateId: job.templateId,
+    footageAssetId: job.footageAssetId,
+  };
 }
 
 /**
@@ -264,18 +318,22 @@ function handleTextFor(_tenantId: string): string {
  * throws itself — a failure to record a failure must not mask the original
  * error. Mirrors `failExtraction` / `failMediaAnalyze`.
  *
- * **Known gap, reported rather than papered over:** 03 §7 requires
- * `plan_infeasible(reason)` to be surfaced in the UI, and there is nowhere
- * durable to put it. `RenderPlan` is append-only and its row is precisely what
- * a failed build does NOT create; `Render.failedStage` already enumerates
- * `"plan"` but no `Render` exists until `POST /content/renders`, which comes
- * after a plan; and there is no plan-status table and no
- * `GET /content/plans/:id`. So the reason is structured into the job's failure
- * (BullMQ retains failed jobs for 7 days) and logged with the plan id, which
- * is honest but is not a UI surface. Closing it needs either a nullable
- * plan-attempt table or a status row the route creates at enqueue — an
- * additive migration, and a decision about which, that this agent flagged
- * rather than made.
+ * **The gap this used to describe is closed.** 03 §7 requires
+ * `plan_infeasible(reason)` to be surfaced and retryable, and there was nowhere
+ * durable to put it: `RenderPlan` is append-only and its row is precisely what
+ * a failed build does NOT create, `Render.failedStage` enumerates `"plan"` but
+ * no `Render` exists until after a plan, and there was no
+ * `GET /content/plans/:id`. ARCHITECTURE §12.25 ruled a lightweight attempt row
+ * keyed on the pre-allocated plan id, and §12.38 records it as built:
+ * `domain/studio/render-attempt.ts` is the writer, `render_attempts` the table,
+ * `GET /content/plans/:id` the read.
+ *
+ * `runPlanBuild` already recorded the failure on its own way out, so this call
+ * is the belt to that braces — it re-asserts the same row (upsert, keyed on
+ * plan id, so the count stays 1) for the case where the job failed in a way
+ * that never reached the job body at all. Recording it in both places is
+ * deliberate: the whole point of §12.25 is that a failure must not be able to
+ * vanish, and a single write site is a single point at which it can.
  */
 export async function failPlanBuild(job: PlanBuildJob, error: Error): Promise<void> {
   const infeasible = error instanceof PlanInfeasibleError ? error : null;
@@ -291,4 +349,6 @@ export async function failPlanBuild(job: PlanBuildJob, error: Error): Promise<vo
     },
     infeasible ? "plan rejected at plan.build" : "plan.build failed",
   );
+
+  await withTenantContext(job.tenantId, () => recordRenderAttemptFailure(identify(job), error));
 }
