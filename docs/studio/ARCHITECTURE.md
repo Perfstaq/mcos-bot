@@ -1915,3 +1915,80 @@ render as the professional one. That question is about the motion system, not th
 cut placement, caption behaviour, motion and grade; do not mark the PerfStaq render down for saying
 what the speaker said. A better take raises both sides equally and changes nothing about which one
 looks edited.
+
+### 12.46 The comparison test passes — and the baseline was built to resist being flattered
+
+`07 §3` is answered: **PerfStaq PASS ×3, naive baseline FAIL ×3**, same footage, same ContentBrief,
+12 hard gates scored on both sides. The baseline fails G2, G3, G5, G6, G7, G9 and G10. A stranger
+picks the real arm from a single still — one side has a two-word caption on black with the subject
+pushed in; the other has fourteen words across three lines running over the subject's hands, static
+and ungraded.
+
+**The part worth recording is how the baseline was built.** The instruction was that it must be
+honestly bad, because an agent optimising for a flattering comparison will unconsciously soften the
+control. It did the opposite, twice, in ways nobody asked for:
+
+- Baseline shots **declare** a camera with `fromScale === toScale` rather than omitting `motion` —
+  because omitting it makes `gateG7` report `computable: false`, and an *excluded* gate would
+  flatter the baseline by dropping the one gate measuring exactly what it lacks.
+- Baseline block captions carry their **real words**, which needed an additive `captionMode` field,
+  because `gateG5` measures `words.length` — a whole sentence collapsed into one `CaptionWord`
+  would report 1 and **pass**.
+
+Typography was held identical so the comparison could not be won on fonts, and the baseline was
+given a *smaller, more readable* caption size than the real arm. It also declined to retune the cut
+interval after discovering the finding below, on the grounds that **tuning the control arm to lose
+is the same error as softening it**. That is the right instinct stated better than I stated it.
+
+Also proven rather than asserted: re-rendering all three real arms from the W4.1 plans, in a
+different directory and a later session, reproduced the **W4.1 checksums byte for byte** — §11.3's
+amended G13 satisfied in fact, not merely recorded.
+
+### 12.47 Ruling — G1a is a floor, not a discriminator, and needs a regression tripwire beside it
+
+The baseline's **beat-blind** 2.5s cuts scored **87% on G1a and cleared the 85% gate**. The reason
+is arithmetic: the fixture's grid is 143.6 BPM (median gap 418ms) and 2.5s is 5.98 beats, so a fixed
+interval lands near a beat by coincidence. Neighbouring intervals collapse — 2.25s scores 65%,
+2.75s scores 52% — so this is a lucky number, not a capability.
+
+**An 85% floor is therefore reachable without consulting the grid at all.** That does not make the
+gate wrong: 85% was calibrated against the reference's own measured 82–86% (§4.1), i.e. against what
+a human editor achieves, and its job is to reject plans that never locked to the beat. But it cannot
+distinguish deliberate snapping from coincidence, and our planner scores **100% by construction**.
+
+**Ruling: keep 85% as the hard floor — it is the reference-calibrated contract and must not move
+(§12.3) — and add a separate regression tripwire asserting that plans produced by our own planner
+score ≥95%.** A drop from 100% to 87% means the snapping broke, and today's floor would not notice.
+A floor and a regression alarm are different instruments; we had only one.
+
+### 12.48 Two gaps in the emphasis path, one of which produced the milestone's last honest "no"
+
+**G8 cannot see a reel with no emphasis at all.** "At most one emphasis per chunk, indexing a real
+word" is satisfied by *zero*, so the baseline marks none and scores clean on all three templates.
+The mission statement says one word per phrase **gets** emphasis treatment; the gate only bounds the
+maximum. **Ruling: G8 also requires emphasis to be present at a minimum rate**, so a reel that
+emphasises nothing fails rather than passes silently.
+
+**The emphasis scorer ignores ASR confidence.** At 30.0s the emphasised word is "SHAIL" — a
+mis-transcription of "shared", carrying confidence 0.571 against a 0.970 median — and elsewhere
+"what" is selected at confidence **0.0423**, the least-confident token in the file. §11.1 R1 added
+per-word `rms` to the payload for this scorer; `score` sits in the same payload, unused. **Ruling:
+penalise low-confidence tokens in `pickEmphasis`.** Per §12.44 we do not mark the render down for
+what the speaker said — but *choosing* to enlarge and colour the one word the recogniser was least
+sure of is ours, and it is the last honest "no" in `07 §2`.
+
+### 12.49 The same shape a third time, in the harness that was checking for it
+
+The baseline's G9 predicted a six-line 510px block where the renderer drew three, because the
+composition computed its font size from a constant while the plan carried the template's display
+size. Same family as §12.45's uppercase bug: **every check agreed with every other check and all
+were wrong together**, because they shared an assumption instead of sharing a source. Fixed by
+putting the size on the plan.
+
+Three occurrences now (§12.34 latent calibration, §12.45 uppercase measurement, this). The pattern
+is stable enough to name: **when a value is derived independently on both sides of a boundary, the
+checks agree with each other and disagree with reality.** Put the value in the artifact that crosses
+the boundary, and measure the artifact.
+
+Minor, environmental: this machine's ffmpeg has no `drawtext` (no libfreetype), so the grid halves
+carry a colour band instead of text labels.
