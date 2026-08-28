@@ -320,7 +320,11 @@ function main(): void {
   const templates: Record<string, unknown> = {};
   for (const templateId of targets) {
     if (!flag("skip-grid")) buildGrid(templateId);
-    const frames = flag("skip-grid") ? [] : extractGridFrames(templateId);
+    // Frames come from whatever grid is on disk, so `--skip-grid` means "do
+    // not re-encode", not "write a manifest that claims there are no frames".
+    const frames = existsSync(path.join(comparisonDir, `${templateId}-grid.mp4`))
+      ? extractGridFrames(templateId)
+      : [];
     const entry: Record<string, unknown> = { frames, gateTable: gateTable(templateId) };
     for (const arm of ["perfstaq", "baseline"] as Arm[]) {
       const mp4 = path.join(comparisonDir, `${templateId}-${arm}.mp4`);
