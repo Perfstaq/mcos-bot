@@ -1826,3 +1826,137 @@ sorts first regardless of `limit`, so it demonstrated nothing. I removed it and 
 in the test file instead. A test that passes with and without the fix is worse than no test: it is
 false assurance, which is the failure mode this milestone found five separate times. **Mutate a new
 test before trusting it.**
+
+### 12.40 The locked-off fixture arrives — and the analyzer was right, the harness was not
+
+§12.18 said the visual gate was blocked on footage, not code. The footage exists now:
+`talking-head-v1.mp4`, sha256 `7dbc78be…17aa1`, 59.656s, a single fixed camera on a seated
+subject against a plain wall, lav mic, **no burned-in graphics** — the first input on which
+`07 §2` is answerable at all. Per §12.10 the MP4 stays out of git; its sha256 travels in
+`manifest.json` and its analysis is committed as
+`docs/studio/evidence/inputs/talking-head-v1-{words,beats}.json`.
+
+**The analyzer reproduced every measured value. No analyzer defect was found**, and three
+apparent disagreements were method differences that must not be "fixed":
+
+| Quantity | Staged measurement | Analyzer | Verdict |
+|---|---|---|---|
+| tempo | 143.6 bpm | 143.555 | agrees |
+| beats | "136 onsets" | 137 `beat_track` beats | §11.3's N ⇒ N−1 convention |
+| duration | 59.656s | 59.605s | **container vs audio stream.** Both real; `plan-build.ts:141` already prefers the container, and its comment already says why |
+| pauses >400ms | 8, listed | 8 word-gaps | the staged list is a **waveform silence** measurement (reproduced exactly with `silencedetect -35dB`, offset +0.05s/−0.10s); the analyzer emits word timings and never claimed to emit a pause list |
+| noise floor | 0.00008 RMS | 0.000071 | agrees |
+
+The lesson is §12.34's, one turn further on: **before calling a number a defect, establish that
+the two sides are measuring the same quantity.** Seven of the eight pauses line up; the eighth
+does not, and chasing it found something real (below).
+
+**A genuine ASR finding, and it is not ours to call a bug.** faster-whisper runs a word's END
+into the following silence: `'temple'` spans 16.34→17.76 (**1.42s**) at RMS 0.025, and three
+others do the same for 4.18s total. Two consequences the cutter inherits, because §12.2 made
+word edges the legal cut candidates and G10 forbids cutting strictly inside a word: those spans
+are **uncuttable**, and a caption chunk sits on screen for 1.4s over silence (visible at
+frame 516). Measured: no gap between legal candidates exceeds 1.84s against a 5.0s max shot, so
+this never makes the DP infeasible — it thins candidates, it does not starve them. The honest
+fix, when someone owns it, is to trim word ends against an RMS/VAD floor before the edges reach
+the planner; low RMS on a long word is exactly the signal, and it is already in the payload.
+
+**Trap 1 — `r_frame_rate` is `120/1` and it is a lie.** `avg_frame_rate` is 30.0093 and
+`nb_frames`/`duration` agrees. Swept the whole ingest path: **nothing reads a frame rate at
+all** — `words` and `beats` are audio-only stages, and `MediaAsset.fps` has no producer because
+no upload path exists. `fingerprint.py` (reference assets only) distinguishes the two exactly as
+§12.28 claims, verified on this file: cv2 reports 30.009 (average) into `fps`, `_nominal_fps`
+reports 120.0 into `fpsNominal`. `qc-render.ts:364` does read `r_frame_rate`, and is safe only
+because it measures our own Remotion output, where nominal equals average. **Left unchanged** —
+CLAUDE.md forbids improving working code in passing — but it is one repointing away from being
+wrong, and this entry is the record.
+
+**Trap 2 — `rotation=-90`, and the stated premise needs correcting.** The stream says
+3840×2160; the file is portrait. But "nothing applies rotation metadata anywhere" is true only
+of *our TypeScript*: **cv2, ffmpeg and Chromium all auto-apply the display matrix** (verified —
+cv2 `CAP_PROP_FRAME_WIDTH×HEIGHT` = 2160×3840, decoded frame `(3840, 2160, 3)`, ffmpeg stills
+2160×3840, `-noautorotate` 3840×2160). So the pixels are portrait everywhere and no render is
+mis-framed today. The real defect is narrower and still real: **ffprobe's raw stream
+`width`/`height` is PRE-rotation and disagrees with every decoder**, so the first ingest path
+that populates `MediaAsset.width/height` from those fields will record every portrait phone
+video — the overwhelmingly common case — as landscape. There is no such producer yet. The
+requirement on whoever writes one: normalize by the display matrix, or read dimensions from a
+decoder rather than from the container.
+
+**The evidence harness was building plans from the wrong recording.** `render-evidence.ts`
+hardcoded `inputs/reference-*.json` and `REFERENCE_DURATION_SEC`, so `--footage` swapped only
+the PIXELS — captions, cut legality and G10 all still came from the reference reel's speech.
+Against any other clip that renders one recording's words over another's audio, and scores word
+integrity against words absent from the file being measured. Invisible for as long as the only
+footage anyone rendered *was* the reference proxy — §12.34's shape again. Fixed additively
+(`--words/--beats/--duration/--asset-id/--r2-key/--hook/--emphasis`, all defaulted, so omitting
+them reproduces the committed evidence), plus `--plan` so the harness can render **the plan the
+pipeline actually committed** rather than a second builder's reconstruction, and
+`--content-brief-id` so G14 is scored instead of `computable: false`.
+
+**The chain runs on the fixture.** Real gate over HTTP (`ContentBriefDecision` row:
+`action=approve`), then three `plan.build` jobs → three `RenderPlan` rows, **G1a 100% on all
+three** (32/29/23 cuts), all continuous, so G1b excludes itself by derivation exactly as §12.37
+designed. `scripts/studio/w4-fixture-chain.ts` reproduces it. Brief *generation* was not
+exercised — `POST /content/briefs` 404s with "No brief version exists yet" because the fixture
+tenant has no M1 `BriefVersion`; the brief was seeded `proposed` and **approved through the real
+gate endpoint**, which is where invariant 1 lives.
+
+**editorial_sans fails G2, and the seed sweep says it is not the fixture's fault.** 23 cuts over
+59.66s = **23.1 cuts/min against a 25–40 band**. Sweeping eight seeds:
+
+| Template | fixture (59.66s) | reference (54.87s) |
+|---|---|---|
+| statement_serif | 0/8 fail | 0/8 fail |
+| staccato_condensed | 0/8 fail | 0/8 fail |
+| **editorial_sans** | **3/8 fail** (22.1) | **1/8 fail** (23.0) |
+
+Its curve (`establish 2.8–3.6, accelerate 1.1–1.6, hold 3.8–4.6, burst 3–4`) centres near
+26–27 cuts/min — about 5% of margin over the floor — so whether it passes is a **seed draw**.
+It fails on the reference too, at seed 31337. The committed evidence uses seed 42, which passes;
+production uses `planSeed(job)`, which is arbitrary. **editorial_sans has therefore been
+shipping with a roughly 1-in-8 chance of producing a plan that cannot pass a hard gate**, and
+the reference masked it for the same reason §12.34 gives.
+
+**The systemic half is worse than the template half.** ADR-8's posture is that a plan failing a
+gate is "rejected at plan-build so it never costs a render". That is implemented for **G1a
+only**. G2, G3, G4, G5, G6, G7, G8, G9 and G10 are every one of them plan-decidable — §12.6 made
+G7/G9 so *deliberately*, on the argument that a gate needing a rasteriser could not run at
+plan-build — and every one of them is hard. So a plan that fails G2 is persisted, materialized,
+and discovered only after a full render is paid for. **Recommendation: `buildApprovedRenderPlan`
+should evaluate every plan-decidable hard gate, not just G1a**, raising `PlanInfeasibleError`
+with the failing metric. That is the change that makes ADR-8's sentence true.
+
+Deliberately **not** done here: retuning editorial_sans's constants until the number goes green.
+That is §12.3's "inflating until the detector trips" in a different costume, and what the curve
+should be is an editorial decision about what the slow template *is* — Sathvik's call, like
+§12.15's.
+
+**The renders did not complete, and the reason is disk.** One MP4 reached frame 1594/1790 and
+Chrome then refused to fetch frames — *"could be caused by Chrome rejecting the request because
+the disk space is low"* — on a volume at 98% with ~4.2GB free. Stopped there per the standing
+instruction rather than retried; the Docker daemon was verified healthy afterwards and the
+half-updated `statement_serif/` evidence directory was restored rather than left mismatched,
+which is the §12.10 failure in miniature. **The unblock is a 1080-wide proxy**: the content
+region is 1080px wide and the source is 2160, so downscaling is *lossless for this pipeline*
+and cuts both the 374MB staging and Chrome's 4K per-frame buffers. That is the opposite of
+§12.18's softness complaint, which was about UPscaling a 720p proxy.
+
+**What the frames show, since stills cost one frame each and answered the question anyway.**
+Six were rendered from the committed plan. The hook reads, the banner sits clean in the top bar,
+the subject genuinely fills the frame, and **the face floor holds — no caption touches the jaw**,
+which is §12.22's fix landing correctly on footage that was never used to tune it. Three real
+defects, none of them about the face:
+
+1. **Captions land on the subject's HANDS.** §12.16 item 1 reasoned that a 62.5% band "leaves
+   real estate below a seated subject's face". It does — and this subject gestures into it
+   continuously. At frame 224 `WHO DO` sits across both forearms; at 900 `DEPENDER SHAIL` sits
+   across the hands and the shirt graphic. The premise was about the face and is correct about
+   the face; nobody checked what else occupies that space.
+2. **Low-opacity karaoke is illegible over mid-tones.** §12.9 moved the active-word cue to
+   opacity. Over black bars that reads fine; over skin, a light shirt graphic and a grey wall the
+   un-spoken words read as a rendering fault rather than as intent (frames 224, 900, 1753). The
+   drop shadow §11.1 R2 relies on is not carrying this.
+3. **Chunks straddle the video/bar boundary**, so one line sits on the subject and the next on
+   black (frame 36) — an accident of anchor geometry, and it looks like one.
+

@@ -41,7 +41,13 @@ import { buildTemplatePlan } from "./build-template-plan.js";
  *
  * Usage:
  *   npx tsx scripts/studio/render-evidence.ts --footage <clean.mp4> [--template <id>] [--keep-mp4]
+ *     [--words <words.json>] [--beats <beats.json>] [--duration <sec>]
+ *     [--asset-id <id>] [--r2-key <key>] [--hook <text>] [--emphasis <word>|none]
  *   npx tsx scripts/studio/render-evidence.ts --check
+ *
+ * `--words`/`--beats` are the analysis the PLAN is built from and must describe
+ * the same recording as `--footage`. They default to the committed reference
+ * inputs, so an invocation that passes neither reproduces the prior evidence.
  */
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -70,6 +76,44 @@ const RENDER_AFFECTING = [
 ];
 
 const REFERENCE_DURATION_SEC = 54.87;
+
+/**
+ * The analysis a plan is built from.
+ *
+ * Until W4.1 these were hardcoded to `inputs/reference-*.json`, so `--footage`
+ * swapped only the PIXELS: the plan's cuts, caption chunks and word-edge
+ * legality all still came from the reference reel's speech. Rendered against
+ * any other clip that produces captions of one recording laid over the audio
+ * of another — desynced by construction, and G10 (word integrity) scored
+ * against words that are not in the file being measured.
+ *
+ * That was invisible while the only footage anyone rendered WAS the reference
+ * proxy, which is the same "latent while its inputs happen to agree" shape
+ * ARCHITECTURE §12.34 records. The fixture of §12.18 is exactly the input that
+ * makes them disagree.
+ *
+ * Additive and defaulted (the §12.30 R8 posture): omitting all three
+ * reproduces the committed evidence byte-for-byte.
+ */
+type PlanInputs = {
+  wordsPath: string;
+  beatsPath: string;
+  durationSec: number;
+  assetId: string;
+  r2Key: string;
+  /**
+   * Render a plan the PIPELINE built, instead of rebuilding one here.
+   *
+   * `jobs/plan-build.ts` materializes plans with `buildApprovedRenderPlan`
+   * (G1a-gated, claim-text-aware, container-duration); this script's
+   * `buildTemplatePlan` is a second builder with a different input contract.
+   * Rendering the second one and calling the frames evidence for the first is
+   * the §12.10 failure — artifacts that cannot be checked against the code
+   * they claim to demonstrate. Given `--plan`, the harness renders exactly the
+   * row the chain committed and asserts it is the right template.
+   */
+  presetPlanPath: string | null;
+};
 
 function sha256(file: string): string {
   return createHash("sha256").update(readFileSync(file)).digest("hex");
@@ -215,24 +259,43 @@ function renderTemplate(
   footagePath: string,
   keepMp4: boolean,
   reuseMp4: boolean,
+  inputs: PlanInputs,
+  hook: string,
+  emphasisWord: string | null,
+  contentBriefId: string | null,
 ): Record<string, unknown> {
   const template = getTemplate(templateId);
   const outDir = path.join(evidenceDir, templateId);
   mkdirSync(outDir, { recursive: true });
 
   // --- plan -----------------------------------------------------------------
-  const wordsJson = JSON.parse(readFileSync(path.join(inputsDir, "reference-words.json"), "utf8"));
-  const beats = JSON.parse(readFileSync(path.join(inputsDir, "reference-beats.json"), "utf8"));
-  const plan = buildTemplatePlan({
+  const wordsJson = JSON.parse(readFileSync(inputs.wordsPath, "utf8"));
+  const beats = JSON.parse(readFileSync(inputs.beatsPath, "utf8"));
+  const plan = inputs.presetPlanPath
+    ? (() => {
+        const loaded = RenderPlanSchema.parse(JSON.parse(readFileSync(inputs.presetPlanPath!, "utf8")));
+        // `templateStyle` is optional in the schema (it post-dates the first
+        // plans). Without it a plan carries no template identity, so filing it
+        // under one is a guess — refuse rather than assume.
+        const loadedId = loaded.templateStyle?.templateId;
+        if (loadedId !== templateId) {
+          throw new Error(
+            `--plan is for template "${loadedId ?? "<none: plan has no templateStyle>"}" but this run is ` +
+              `rendering "${templateId}" — that would file one template's render under another's evidence`,
+          );
+        }
+        return loaded;
+      })()
+    : buildTemplatePlan({
     templateId,
     words: wordsJson.segments.flatMap((s: { words: unknown[] }) => s.words) as never,
-    durationSec: REFERENCE_DURATION_SEC,
+    durationSec: inputs.durationSec,
     beats,
     seed: 42,
-    hook: "THE POWER OF OBSESSION",
-    emphasisWord: "OBSESSION",
+    hook,
+    emphasisWord,
     handleText: "@PERFSTAQ",
-    footage: { assetId: "reference-proxy", r2Key: "demo/reference-16x9-proxy.mp4" },
+    footage: { assetId: inputs.assetId, r2Key: inputs.r2Key },
   });
   const planPath = path.join(outDir, "plan.json");
   const planJson = JSON.stringify(plan, null, 2);
@@ -327,7 +390,14 @@ function renderTemplate(
       path.join(repoRoot, "scripts/qc-render.ts"),
       "--mp4", mp4Path,
       "--plan", planPath,
-      "--words", path.join(inputsDir, "reference-words.json"),
+      // The SAME words the plan was built from. Scoring G10 against a
+      // different recording's words measures nothing about this render.
+      "--words", inputs.wordsPath,
+      // Without this G14 is `computable: false` — a REAL contract gap in the
+      // §12.37 sense, not an exclusion. The DoD chain has an approved
+      // ContentBrief behind every plan, so the id exists and provenance can
+      // be scored rather than skipped.
+      ...(contentBriefId ? ["--content-brief-id", contentBriefId] : []),
       "--out", qcPath,
     ],
     { cwd: repoRoot, stdio: "inherit" },
@@ -372,13 +442,58 @@ function runRender(): void {
   const only = process.argv.includes("--template") ? arg("template") : null;
   const targets = only ? [only] : [...TEMPLATE_IDS];
 
+  const wordsPath = path.resolve(arg("words", path.join(inputsDir, "reference-words.json")));
+  const beatsPath = path.resolve(arg("beats", path.join(inputsDir, "reference-beats.json")));
+  if (!existsSync(wordsPath)) throw new Error(`words not found: ${wordsPath}`);
+  if (!existsSync(beatsPath)) throw new Error(`beats not found: ${beatsPath}`);
+
+  // Duration defaults to REFERENCE_DURATION_SEC only when the reference words
+  // are in use. For any other analysis, defaulting to a constant measured off
+  // a different recording is the same class of error §12.33 flags in
+  // `plan-builder.ts:248` — so it comes from the analysis itself, and the
+  // planner is told how long the clip it is cutting actually is.
+  const usingReferenceWords = wordsPath === path.join(inputsDir, "reference-words.json");
+  const wordsDoc = JSON.parse(readFileSync(wordsPath, "utf8")) as { durationSec?: number };
+  const durationSec = process.argv.includes("--duration")
+    ? Number(arg("duration"))
+    : usingReferenceWords
+      ? REFERENCE_DURATION_SEC
+      : (wordsDoc.durationSec ??
+        (() => {
+          throw new Error(`${wordsPath} has no durationSec — pass --duration explicitly`);
+        })());
+  if (!Number.isFinite(durationSec) || durationSec <= 0) {
+    throw new Error(`bad --duration ${durationSec}`);
+  }
+
+  const inputs: PlanInputs = {
+    wordsPath,
+    beatsPath,
+    durationSec,
+    assetId: arg("asset-id", "reference-proxy"),
+    r2Key: arg("r2-key", "demo/reference-16x9-proxy.mp4"),
+    presetPlanPath: process.argv.includes("--plan") ? path.resolve(arg("plan")) : null,
+  };
+  if (inputs.presetPlanPath && !existsSync(inputs.presetPlanPath)) {
+    throw new Error(`plan not found: ${inputs.presetPlanPath}`);
+  }
+  // One plan file describes one template; rendering it into every template's
+  // evidence directory would file the same artifact under three names.
+  if (inputs.presetPlanPath && targets.length > 1) {
+    throw new Error("--plan renders one template — pass --template <id> alongside it");
+  }
+  const contentBriefId = process.argv.includes("--content-brief-id") ? arg("content-brief-id") : null;
+  const hook = arg("hook", "THE POWER OF OBSESSION");
+  const emphasisArg = arg("emphasis", "OBSESSION");
+  const emphasisWord = emphasisArg === "" || emphasisArg === "none" ? null : emphasisArg;
+
   const existing = existsSync(manifestPath)
     ? (JSON.parse(readFileSync(manifestPath, "utf8")) as { templates?: Record<string, unknown> })
     : {};
 
   const templates: Record<string, unknown> = { ...(existing.templates ?? {}) };
   for (const id of targets) {
-    templates[id] = renderTemplate(id, footage, keepMp4, reuseMp4);
+    templates[id] = renderTemplate(id, footage, keepMp4, reuseMp4, inputs, hook, emphasisWord, contentBriefId);
   }
 
   const manifest = {
@@ -404,9 +519,16 @@ function runRender(): void {
     renderAffectingPaths: RENDER_AFFECTING,
     harness: harnessVersions(),
     footage: { path: footage, sha256: sha256(footage), bytes: statSync(footage).size },
+    // Records the analysis the plans were ACTUALLY built from. When these are
+    // not the reference inputs the file lives outside the repo (§12.10 keeps
+    // media out of git), so the path plus its sha256 is the whole provenance.
     inputs: {
-      words: { file: "inputs/reference-words.json", sha256: sha256(path.join(inputsDir, "reference-words.json")) },
-      beats: { file: "inputs/reference-beats.json", sha256: sha256(path.join(inputsDir, "reference-beats.json")) },
+      words: { file: path.relative(repoRoot, wordsPath), sha256: sha256(wordsPath) },
+      beats: { file: path.relative(repoRoot, beatsPath), sha256: sha256(beatsPath) },
+      durationSec,
+      hook,
+      emphasisWord,
+      contentBriefId,
     },
     templates,
   };
