@@ -54,35 +54,11 @@ const createSchema = z
     }
   });
 
-const updateSchema = z
-  .object({
-    title: z.string().trim().min(1).max(300).optional(),
-    description: z.string().trim().max(4000).nullable().optional(),
-    status: z.nativeEnum(ActionItemStatus).optional(),
-    due_at: z.string().datetime({ offset: true }).nullable().optional(),
-    assignee_user_id: z.string().min(1).nullable().optional(),
-  })
-  .refine((patch) => Object.keys(patch).length > 0, { message: "No fields to update" });
-
 const meetingListSchema = z.object({
   status: statusFilter,
   assignee_user_id: z.string().min(1).optional(),
   due_before: z.string().datetime({ offset: true }).optional(),
   due_after: z.string().datetime({ offset: true }).optional(),
-});
-
-const inboxSchema = meetingListSchema.extend({
-  meeting_id: z.string().uuid().optional(),
-  /**
-   * Open work whose due date has passed. Cheaper to ask for than to assemble.
-   * Spelled out rather than `z.coerce.boolean()`, which reads `?overdue=false`
-   * as true — `Boolean("false")` is the JavaScript footgun underneath.
-   */
-  overdue: z
-    .enum(["true", "false"])
-    .transform((value) => value === "true")
-    .optional(),
-  limit: z.coerce.number().int().min(1).max(500).default(200),
 });
 
 /**
@@ -210,35 +186,6 @@ type OwnedItem = {
   assigneeUserId: string | null;
   createdByUserId: string | null;
 };
-
-/**
- * Who may change an existing item.
- *
- * Write access to the meeting is the normal answer. The exception is the
- * assignee of a meeting they can only read: they must still be able to move
- * their own item's status, or the item is a message they can only answer by
- * asking somebody else to click for them. It stays narrow — status and nothing
- * else, since retitling or reassigning is editing the meeting's output.
- */
-async function requirePatchAccess(
-  actor: Actor,
-  item: OwnedItem,
-  fields: string[],
-): Promise<void> {
-  if (!item.meetingId) {
-    requireStandaloneAccess(actor, item);
-    return;
-  }
-
-  const access = await meetingAccess(actor, item.meetingId);
-  if (!access.canRead) throw ApiError.notFound(`Action item not found`);
-  if (access.canWrite) return;
-
-  const statusOnly = fields.length > 0 && fields.every((field) => field === "status");
-  if (item.assigneeUserId === actor.userId && statusOnly) return;
-
-  throw new ApiError(403, "forbidden", "Read-only access to this meeting");
-}
 
 /**
  * An item with no meeting has nothing to inherit permission from, so it falls

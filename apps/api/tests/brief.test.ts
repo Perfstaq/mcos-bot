@@ -105,16 +105,6 @@ async function proposedClaims(meetingId: string) {
   });
 }
 
-async function approve(claimId: string) {
-  const res = await app.inject({
-    method: "POST",
-    url: `/api/v1/claims/${claimId}/approve`,
-    headers: HOME,
-    payload: {},
-  });
-  expect(res.statusCode).toBe(200);
-}
-
 /**
  * "Keep all high-confidence" — the button a reviewer actually presses to clear
  * a call's queue. Used here instead of a loop of single approvals because it is
