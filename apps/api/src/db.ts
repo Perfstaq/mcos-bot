@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { currentContext } from "./context.js";
+import { assertAppendOnly } from "./domain/append-only.js";
 
 /**
  * Row-level tenancy.
@@ -15,7 +16,25 @@ import { currentContext } from "./context.js";
  *   WebhookEvent  — written before the tenant is known (the payload has to be
  *                   parsed first), so it scopes itself explicitly.
  */
-const UNSCOPED = new Set(["Tenant", "ClaimSegment", "WebhookEvent"]);
+const UNSCOPED = new Set([
+  "Tenant",
+  "ClaimSegment",
+  "WebhookEvent",
+  // Better Auth owns these. They have no tenant_id — identity exists before a
+  // workspace does, and a user can belong to several. Tenancy for auth data is
+  // enforced by membership checks in the authorization layer, not by a column.
+  "User",
+  "Session",
+  "Account",
+  "Verification",
+  "Organization",
+  "Member",
+  "Invitation",
+  // Personal settings belong to a user, not a workspace: the same person can
+  // be in several, and their recording preference follows them. No tenant_id
+  // column exists, so injecting one would make every query throw.
+  "UserPreference",
+]);
 
 const WHERE_OPS = new Set([
   "findFirst",
@@ -48,6 +67,10 @@ export const prisma = base.$extends({
   query: {
     $allModels: {
       async $allOperations({ model, operation, args, query }) {
+        // Checked before tenancy and before the exemptions below, because
+        // append-only is not a property of who is asking. See domain/append-only.ts.
+        assertAppendOnly(model, operation, args);
+
         const ctx = currentContext();
         if (!ctx || UNSCOPED.has(model)) return query(args);
 

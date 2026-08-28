@@ -1,4 +1,4 @@
-import { ClaimStatus, ClaimType, MeetingStatus, type BriefClaim } from "@prisma/client";
+import { ClaimStatus, ClaimType, MeetingStatus, Prisma, type BriefClaim } from "@prisma/client";
 import { prisma } from "../db.js";
 import { transition } from "./state.js";
 import { CLAIM_TYPES } from "./claims.js";
@@ -9,6 +9,59 @@ export class NothingToMergeError extends Error {
     this.name = "NothingToMergeError";
   }
 }
+
+/** Two live claims in one edit lineage — see the guard in mergeApprovedClaims. */
+export class ConflictingLineageError extends Error {
+  constructor(readonly claimId: string) {
+    super(
+      `Two approved claims share the edit lineage of ${claimId}. ` +
+        "Reject one of them before merging.",
+    );
+    this.name = "ConflictingLineageError";
+  }
+}
+
+/** The merge kept losing a race with the review queue. Retry, do not guess. */
+export class MergeContentionError extends Error {
+  constructor() {
+    super(
+      "Someone was deciding claims while this merge ran. Nothing was written — press merge again.",
+    );
+    this.name = "MergeContentionError";
+  }
+}
+
+/**
+ * Postgres cannot always order two serializable transactions, and says so with
+ * `serialization_failure` (40001) or `deadlock_detected` (40P01). Prisma maps
+ * the first to P2034 and leaves the second as an unknown request error carrying
+ * only the SQLSTATE, so both shapes have to be matched. Same pattern as
+ * routes/agenda.ts, which reorders rows under the same kind of contention.
+ */
+const WRITE_CONFLICT = "P2034";
+const RETRYABLE_SQLSTATE = /\b(40001|40P01)\b/;
+const CONFLICT_ATTEMPTS = 5;
+
+const SERIALIZABLE = {
+  isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+} as const;
+
+function isWriteConflict(error: unknown): boolean {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) return error.code === WRITE_CONFLICT;
+  if (error instanceof Prisma.PrismaClientUnknownRequestError) {
+    return RETRYABLE_SQLSTATE.test(error.message);
+  }
+  return false;
+}
+
+export type MergeResult = {
+  version: number;
+  added: number;
+  removed: number;
+  edited: number;
+  total: number;
+  sourceMeetingId: string | null;
+};
 
 /**
  * Merge every approved-but-unmerged claim into a new brief version.
@@ -26,7 +79,41 @@ export async function mergeApprovedClaims(args: {
   tenantId: string;
   reviewer: string;
   note?: string | null;
-}): Promise<{ version: number; added: number; removed: number; edited: number; total: number }> {
+  /**
+   * The call the reviewer had just finished. Recorded on the version as the
+   * provenance of the merge action; when omitted it is inferred, below, from
+   * the claims being merged.
+   */
+  sourceMeetingId?: string | null;
+}): Promise<MergeResult> {
+  // SERIALIZABLE, because the transaction below reads the pending claims and
+  // then writes a version from what it read.
+  //
+  // Under READ COMMITTED an `undo` committing in that gap is invisible: the
+  // merge would carry a withdrawn edit's text into a published version, and no
+  // later decision can take it back out, because versions are immutable. That
+  // is invariant 3 being broken by a race rather than by a bug in anyone's
+  // code. Serializable makes Postgres refuse the interleaving instead, and the
+  // loser reruns against whatever the winner committed — which is the honest
+  // outcome, since the reviewer's undo genuinely happened first.
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await runMerge(args);
+    } catch (error) {
+      if (isWriteConflict(error) && attempt < CONFLICT_ATTEMPTS) continue;
+      // Out of retries: a 409 the reviewer can act on beats a 500 they cannot.
+      if (isWriteConflict(error)) throw new MergeContentionError();
+      throw error;
+    }
+  }
+}
+
+async function runMerge(args: {
+  tenantId: string;
+  reviewer: string;
+  note?: string | null;
+  sourceMeetingId?: string | null;
+}): Promise<MergeResult> {
   return prisma.$transaction(async (tx) => {
     const previous = await tx.briefVersion.findFirst({
       orderBy: { version: "desc" },
@@ -41,23 +128,58 @@ export async function mergeApprovedClaims(args: {
     const carried: BriefClaim[] = previous?.claims ?? [];
     if (pending.length === 0 && carried.length === 0) throw new NothingToMergeError();
 
+    // A claim's identity in the brief is its EDIT LINEAGE, not its row id.
+    // Edit-approve writes a new candidate_claim and supersedes the original
+    // (see domain/review-gate.ts), so keying the brief off row ids would turn
+    // every rewrite into "one claim removed, a different one added" instead of
+    // the edit it plainly is — and would carry the stale original forward
+    // alongside its own replacement.
+    const briefKey = (claim: { id: string; editedFromId: string | null }) => claim.editedFromId ?? claim.id;
+
     const previousByClaimId = new Map(carried.map((c) => [c.claimId, c]));
-    const pendingIds = new Set(pending.map((c) => c.id));
+    const pendingIds = new Set(pending.map(briefKey));
 
     // A claim already in the brief that has since been rejected drops out of
     // the next version. It stays in every version that already contained it.
-    const rejected = carried.length
+    //
+    // "The claim" here is the lineage's CURRENT member, not its root. A root
+    // superseded by an edit that was itself later rejected must drop out, and
+    // an edit withdrawn by undo — which marks the abandoned successor rejected
+    // and reproposes the root — must not, because the reviewer restored the
+    // claim rather than throwing it away.
+    const rootIds = carried.map((c) => c.claimId);
+    const lineage = rootIds.length
       ? await tx.candidateClaim.findMany({
-          where: { id: { in: carried.map((c) => c.claimId) }, status: ClaimStatus.rejected },
-          select: { id: true },
+          where: { OR: [{ id: { in: rootIds } }, { editedFromId: { in: rootIds } }] },
+          select: { id: true, editedFromId: true, status: true },
+          orderBy: [{ createdAt: "asc" }, { id: "asc" }],
         })
       : [];
-    const rejectedIds = new Set(rejected.map((r) => r.id));
+
+    const membersByRoot = new Map<string, typeof lineage>();
+    for (const member of lineage) {
+      const key = member.editedFromId ?? member.id;
+      const list = membersByRoot.get(key);
+      if (list) list.push(member);
+      else membersByRoot.set(key, [member]);
+    }
+
+    const rejectedIds = new Set<string>();
+    for (const [root, members] of membersByRoot) {
+      const rootRow = members.find((m) => m.id === root);
+      // A superseded root hands the lineage to its newest live successor;
+      // anything else is still speaking for itself.
+      const current =
+        rootRow?.status === ClaimStatus.superseded
+          ? (members.filter((m) => m.id !== root && m.status !== ClaimStatus.superseded).at(-1) ?? rootRow)
+          : rootRow;
+      if (current?.status === ClaimStatus.rejected) rejectedIds.add(root);
+    }
 
     let added = 0;
     let edited = 0;
     for (const claim of pending) {
-      if (previousByClaimId.has(claim.id)) edited += 1;
+      if (previousByClaimId.has(briefKey(claim))) edited += 1;
       else added += 1;
     }
     const removed = rejectedIds.size;
@@ -70,12 +192,20 @@ export async function mergeApprovedClaims(args: {
       (c) => !pendingIds.has(c.claimId) && !rejectedIds.has(c.claimId),
     );
 
+    // Which call this merge came from. The reviewer's own answer wins; failing
+    // that, a merge whose claims all came from one meeting names that meeting,
+    // and a merge spanning several names none — a single id would be a guess
+    // presented as provenance, and provenance is the one thing here that may
+    // never be guessed.
+    const sourceMeetingId = args.sourceMeetingId ?? soleMeetingOf(pending);
+
     const created = await tx.briefVersion.create({
       data: {
         tenantId: args.tenantId,
         version,
         createdBy: args.reviewer,
         note: args.note ?? null,
+        sourceMeetingId,
         addedCount: added,
         removedCount: removed,
         editedCount: edited,
@@ -102,12 +232,25 @@ export async function mergeApprovedClaims(args: {
       });
     }
 
+    // A lineage is exactly one row in the brief, so two pending claims sharing
+    // a root is not a merge we can perform — it is a gate bug that has already
+    // happened. Saying so beats a raw unique-constraint 500 from createMany,
+    // which tells whoever is paged nothing about which claims collided.
+    const seenKeys = new Set<string>();
+    for (const claim of pending) {
+      const key = briefKey(claim);
+      if (seenKeys.has(key)) {
+        throw new ConflictingLineageError(key);
+      }
+      seenKeys.add(key);
+    }
+
     if (pending.length > 0) {
       await tx.briefClaim.createMany({
         data: pending.map((claim) => ({
           tenantId: args.tenantId,
           briefVersionId: created.id,
-          claimId: claim.id,
+          claimId: briefKey(claim),
           meetingId: claim.meetingId,
           type: claim.type,
           text: claim.editedText ?? claim.text,
@@ -116,13 +259,27 @@ export async function mergeApprovedClaims(args: {
           timestampMs: claim.timestampMs,
           confidence: claim.confidence,
           evidenceRedacted: false,
-          introducedInVersion: previousByClaimId.get(claim.id)?.introducedInVersion ?? version,
+          introducedInVersion: previousByClaimId.get(briefKey(claim))?.introducedInVersion ?? version,
         })),
       });
 
+      // Stamp the lineage ROOTS too, not just the claims that were merged.
+      //
+      // brief_claims.claim_id points at the root, and brief_claims cascades
+      // from candidate_claims. Deleting a meeting purges every claim that never
+      // reached a brief — `mergedAt: null` — so an unstamped superseded root
+      // would be swept up by that purge and take a published brief version's
+      // row with it. A version is immutable; nothing downstream may delete a
+      // row out of one.
       const mergedAt = new Date();
+      const mergedIds = [
+        ...new Set([
+          ...pending.map((c) => c.id),
+          ...pending.map((c) => c.editedFromId).filter((id): id is string => id !== null),
+        ]),
+      ];
       await tx.candidateClaim.updateMany({
-        where: { id: { in: pending.map((c) => c.id) } },
+        where: { id: { in: mergedIds } },
         data: { mergedAt },
       });
 
@@ -142,8 +299,21 @@ export async function mergeApprovedClaims(args: {
       }
     }
 
-    return { version, added, removed, edited, total: created.totalCount };
-  });
+    return {
+      version,
+      added,
+      removed,
+      edited,
+      total: created.totalCount,
+      sourceMeetingId: created.sourceMeetingId,
+    };
+  }, SERIALIZABLE);
+}
+
+/** The one meeting every merged claim came from, or null if they disagree. */
+function soleMeetingOf(claims: Array<{ meetingId: string }>): string | null {
+  const ids = new Set(claims.map((c) => c.meetingId));
+  return ids.size === 1 ? [...ids][0]! : null;
 }
 
 export type GroupedClaims = Array<{ type: ClaimType; label: string; claims: BriefClaim[] }>;

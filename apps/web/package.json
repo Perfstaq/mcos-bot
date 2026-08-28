@@ -10,9 +10,19 @@
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
+    "@tiptap/extension-collaboration": "^3.30.2",
+    "@tiptap/extension-collaboration-caret": "^3.30.2",
+    "@tiptap/extension-placeholder": "^3.30.2",
+    "@tiptap/pm": "^3.30.2",
+    "@tiptap/react": "^3.30.2",
+    "@tiptap/starter-kit": "^3.30.2",
+    "better-auth": "^1.7.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.28.0"
+    "react-router-dom": "^6.28.0",
+    "y-protocols": "^1.0.7",
+    "y-websocket": "^3.1.0",
+    "yjs": "^13.6.32"
   },
   "devDependencies": {
     "@types/react": "^18.3.17",

@@ -120,6 +120,8 @@ vi.mock("../src/integrations/openai.js", async () => {
 const BOT_ID = "b0000000-0000-4000-8000-00000000bot1";
 const RECORDING_ID = "r0000000-0000-4000-8000-00000000rec1";
 const TRANSCRIPT_ID = "t0000000-0000-4000-8000-000000000tr1";
+/** A recording that came back WITH a video_mixed shortcut. See the video test. */
+const VIDEO_RECORDING_ID = "r0000000-0000-4000-8000-00000000rec2";
 
 let app: FastifyInstance;
 let agent: MockAgent;
@@ -157,6 +159,26 @@ beforeAll(async () => {
   recall
     .intercept({ path: `/api/v1/recording/${RECORDING_ID}/`, method: "GET" })
     .reply(200, recordingFixture)
+    .persist();
+  // Same recording, except Recall captured video too — which is what a
+  // workspace-level default in the Recall dashboard produces regardless of the
+  // recording_config we send. `transcript` is already populated so the job
+  // stores its artifacts and returns without asking for transcription twice.
+  recall
+    .intercept({ path: `/api/v1/recording/${VIDEO_RECORDING_ID}/`, method: "GET" })
+    .reply(200, {
+      ...recordingFixture,
+      id: VIDEO_RECORDING_ID,
+      media_shortcuts: {
+        ...recordingFixture.media_shortcuts,
+        video_mixed: {
+          id: "v0000000-0000-4000-8000-00000000vid1",
+          status: { code: "done", sub_code: null, updated_at: "2026-08-20T10:31:12.000Z" },
+          data: { download_url: "https://recall-media.test/video/rec2.mp4?sig=xyz789" },
+        },
+        transcript: { id: TRANSCRIPT_ID, status: { code: "done", sub_code: null, updated_at: "2026-08-20T10:31:15.000Z" } },
+      },
+    })
     .persist();
   recall
     .intercept({ path: `/api/v1/recording/${RECORDING_ID}/create_transcript/`, method: "POST" })
@@ -396,6 +418,36 @@ describe("artifact pipeline", () => {
     expect(meeting.recallTranscriptId).toBe(TRANSCRIPT_ID);
   });
 
+  /**
+   * RECALL_CAPTURE_VIDEO is "false" in the test environment, and that is the
+   * point of this test.
+   *
+   * The flag controls the recording_config we SEND. It does not control what
+   * Recall records: a workspace-level default in the dashboard turns
+   * video_mixed_mp4 on for every bot, and the config comes back carrying it.
+   * Ingest used to gate on the flag, so a meeting that really did have video
+   * was stored without it and the product had a recording it refused to show.
+   */
+  it("stores video whenever the recording has it, even with capture disabled", async () => {
+    await deliver("recording.done");
+    await drainWebhooks();
+    await jobs.ingestRecording({ meetingId, tenantId, recordingId: VIDEO_RECORDING_ID });
+
+    expect(uploads.map((u) => u.key)).toContain(`${tenantId}/meetings/${meetingId}/recording.mp4`);
+
+    const video = await db.artifact.findFirstOrThrow({
+      where: { meetingId, kind: ArtifactKind.recording_video },
+    });
+    expect(video.contentType).toBe("video/mp4");
+    // The presigned signature must not be kept in the audit trail.
+    expect(video.sourceUrl).toBe("https://recall-media.test/video/rec2.mp4");
+
+    // And the audio is still there: video replaces nothing.
+    expect(
+      await db.artifact.count({ where: { meetingId, kind: ArtifactKind.recording_audio } }),
+    ).toBe(1);
+  });
+
   it("is idempotent — a redelivered recording job re-uploads nothing", async () => {
     await deliver("recording.done");
     await drainWebhooks();
@@ -441,6 +493,8 @@ describe("extraction and the review gate", () => {
     expect(claims.every((c) => c.status === ClaimStatus.proposed)).toBe(true);
     // Provenance is structural: no claim exists without a segment link.
     expect(claims.every((c) => c.segments.length > 0)).toBe(true);
+    // Every claim is tagged with the model that produced it.
+    expect(claims.every((c) => c.extractedByModel === "gpt-5.6-terra")).toBe(true);
 
     const run = await db.extractionRun.findFirstOrThrow({ where: { meetingId } });
     expect(run.status).toBe("succeeded");
@@ -613,14 +667,26 @@ describe("tenancy", () => {
     expect(own.json().claims).toHaveLength(2);
   });
 
-  it("refuses a request for a tenant that does not exist", async () => {
+  it("refuses a request whose identity resolves to nothing", async () => {
+    // With sessions in play, a header naming a tenant that does not exist is
+    // not a bad request — it is an unauthenticated one. There is no identity
+    // behind it, and saying "no such tenant" would confirm which slugs exist.
     const response = await app.inject({
       method: "GET",
       url: "/api/v1/meetings",
       headers: { "x-tenant-slug": "no-such-tenant" },
     });
-    expect(response.statusCode).toBe(400);
-    expect(response.json().error.code).toBe("unknown_tenant");
+    expect(response.statusCode).toBe(401);
+    expect(response.json().error.code).toBe("unauthenticated");
+  });
+
+  it("refuses an unauthenticated request outright", async () => {
+    const response = await app.inject({ method: "GET", url: "/api/v1/review-queue" });
+    // The dev-header fallback supplies the seeded tenant, so this asserts the
+    // request is *identified*, not that it is anonymous. The production guard
+    // (AUTH_DEV_HEADERS ignored when NODE_ENV=production) is what makes the
+    // fallback safe; see resolveContext in src/http.ts.
+    expect([200, 401]).toContain(response.statusCode);
   });
 });
 

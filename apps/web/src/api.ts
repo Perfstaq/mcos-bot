@@ -44,11 +44,21 @@ export type ClaimType =
   | "positioning_statement" | "icp_fact" | "pain_point" | "objection"
   | "messaging_decision" | "competitor_mention" | "proof_point";
 
-export type ClaimCounts = { proposed: number; approved: number; rejected: number; edited: number; total: number };
+export type ClaimCounts = {
+  proposed: number;
+  approved: number;
+  rejected: number;
+  edited: number;
+  superseded: number;
+  total: number;
+};
+
+export type ConfidenceBand = "high" | "medium" | "low";
 
 export type Meeting = {
   id: string;
   title: string | null;
+  digest: string | null;
   meeting_url: string;
   join_at: string | null;
   status: MeetingStatus;
@@ -87,6 +97,8 @@ export type Evidence = {
   segments: Array<{ id: string; idx: number; speaker: string; start_ms: number; text: string }>;
 };
 
+export type ClaimStatus = "proposed" | "approved" | "rejected" | "edited" | "superseded";
+
 export type Claim = {
   id: string;
   type: ClaimType;
@@ -94,11 +106,62 @@ export type Claim = {
   text: string;
   original_text: string;
   confidence: number;
-  status: "proposed" | "approved" | "rejected" | "edited";
+  confidence_band: ConfidenceBand;
+  status: ClaimStatus;
+  /** Set when this claim is a reviewer's rewrite of an earlier one. */
+  edited_from: string | null;
   created_at: string;
   evidence: Evidence;
-  meeting: { id: string; title: string | null; meeting_url: string; started_at: string | null };
+  meeting: {
+    id: string;
+    title: string | null;
+    digest: string | null;
+    meeting_url: string;
+    started_at: string | null;
+  };
 };
+
+export type ReviewAction = "approve" | "reject" | "edit_approve" | "undo";
+
+/** One row of the append-only audit log behind the gate. */
+export type ReviewDecision = {
+  id: string;
+  action: ReviewAction;
+  reviewer: string;
+  at: string;
+  note: string | null;
+  previous_text: string | null;
+  edited_text: string | null;
+  result_claim_id: string | null;
+  claim: { id: string; type: ClaimType; type_label: string; text: string; meeting_id: string };
+};
+
+export type DecidedClaim = {
+  id: string;
+  type: ClaimType;
+  status: ClaimStatus;
+  text: string;
+  confidence: number;
+  edited_from: string | null;
+  decided_at: string | null;
+};
+
+export type BulkApproveResult = {
+  approved: DecidedClaim[];
+  errors: Array<{ claim_id: string; code: string; message: string }>;
+  approved_count: number;
+  error_count: number;
+};
+
+/** Which call a claim came from — the chip under every line of the document. */
+export type ClaimSource = {
+  meeting_id: string;
+  meeting_title: string | null;
+  meeting_date: string | null;
+};
+
+/** Which call a whole version was merged from. */
+export type SourceMeeting = { id: string; title: string | null; date: string | null };
 
 export type BriefClaim = {
   claim_id: string;
@@ -108,6 +171,7 @@ export type BriefClaim = {
   confidence: number;
   introduced_in_version: number;
   meeting_id: string;
+  source: ClaimSource | null;
   evidence: { verbatim_quote: string; speaker: string; timestamp_label: string; redacted: boolean };
 };
 
@@ -119,7 +183,9 @@ export type BriefVersionSummary = {
   added: number;
   removed: number;
   edited: number;
+  counts: { added: number; removed: number; edited: number };
   total: number;
+  source_meeting: SourceMeeting | null;
 };
 
 export type BriefVersion = {
@@ -128,7 +194,17 @@ export type BriefVersion = {
   created_by?: string;
   note?: string | null;
   total: number;
+  source_meeting: SourceMeeting | null;
   claims_by_type: Array<{ type: ClaimType; label: string; claims: BriefClaim[] }>;
+};
+
+export type BriefEdit = {
+  claim_id: string;
+  type: ClaimType;
+  type_label: string;
+  from: string;
+  to: string;
+  source: SourceMeeting | null;
 };
 
 export type BriefDiff = {
@@ -136,7 +212,7 @@ export type BriefDiff = {
   to: number;
   added: BriefClaim[];
   removed: BriefClaim[];
-  edited: Array<{ claim_id: string; type: ClaimType; type_label: string; before: string; after: string }>;
+  edited: BriefEdit[];
   unchanged: number;
 };
 

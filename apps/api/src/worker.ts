@@ -1,9 +1,25 @@
 import { Worker, type Job } from "bullmq";
-import { QUEUE, closeQueues, connection, type ExtractJob, type IngestRecordingJob, type IngestTranscriptJob, type WebhookJob } from "./queue.js";
+import {
+  CALENDAR_SWEEP_PATTERN,
+  QUEUE,
+  calendarSyncQueue,
+  closeQueues,
+  connection,
+  type CalendarSyncJob,
+  type SuggestActionsJob,
+  type DigestJob,
+  type ExtractJob,
+  type IngestRecordingJob,
+  type IngestTranscriptJob,
+  type WebhookJob,
+} from "./queue.js";
 import { processWebhook } from "./jobs/webhook.js";
 import { failRecordingIngest, ingestRecording } from "./jobs/ingest-recording.js";
 import { failTranscriptIngest, ingestTranscript } from "./jobs/ingest-transcript.js";
 import { failExtraction, runExtraction } from "./jobs/extract.js";
+import { syncActiveConnections, syncCalendarConnection } from "./jobs/calendar-sync.js";
+import { runActionItemSuggestions } from "./jobs/suggest-action-items.js";
+import { runDigest } from "./jobs/digest.js";
 import { disconnect } from "./db.js";
 import { logger } from "./logger.js";
 import { env } from "./env.js";
@@ -35,6 +51,33 @@ const workers = [
   }),
 
   new Worker<ExtractJob>(QUEUE.extract, (job) => runExtraction(job.data), {
+    connection,
+    concurrency: 2,
+  }),
+
+  new Worker<CalendarSyncJob>(
+    QUEUE.calendarSync,
+    async (job) => {
+      const { connectionId, tenantId } = job.data;
+      if (connectionId && tenantId) await syncCalendarConnection({ connectionId, tenantId });
+      else await syncActiveConnections();
+    },
+    // One at a time: the sweep fans out internally, and running several sweeps
+    // concurrently would race two syncs onto the same connection's sync token.
+    { connection, concurrency: 1 },
+  ),
+
+  new Worker<SuggestActionsJob>(
+    QUEUE.suggestActions,
+    (job) => runActionItemSuggestions(job.data).then(() => undefined),
+    { connection, concurrency: 2 },
+  ),
+
+  // runDigest already catches and logs every failure itself (see
+  // jobs/digest.ts) — this worker's own `failed` handler below never needs a
+  // case for it, which is what keeps a digest failure from ever marking a
+  // meeting failed.
+  new Worker<DigestJob>(QUEUE.digest, (job) => runDigest(job.data), {
     connection,
     concurrency: 2,
   }),
@@ -76,8 +119,24 @@ for (const worker of workers) {
   });
 }
 
+/**
+ * The repeatable sweep. `jobId` is fixed so restarting a worker replaces the
+ * schedule rather than adding a second one — without it, every deploy would
+ * leave another sweep running forever.
+ */
+await calendarSyncQueue.add(
+  "sweep",
+  {},
+  { repeat: { pattern: CALENDAR_SWEEP_PATTERN }, jobId: "calendar-sweep" },
+);
+
 log.info(
-  { queues: workers.map((w) => w.name), region: env.RECALL_REGION, model: env.OPENAI_MODEL },
+  {
+    queues: workers.map((w) => w.name),
+    region: env.RECALL_REGION,
+    model: env.OPENAI_MODEL,
+    calendarSweep: CALENDAR_SWEEP_PATTERN,
+  },
   "worker started",
 );
 

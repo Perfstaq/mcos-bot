@@ -17,13 +17,22 @@
     "dev:web": "npm run dev -w @mcos/web",
     "build": "npm run build -w @mcos/api && npm run build -w @mcos/web",
     "test": "npm run test -w @mcos/api",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present && npm run typecheck:e2e",
+    "typecheck:e2e": "tsc -p e2e/tsconfig.json --noEmit",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:migrate": "npm run db:migrate -w @mcos/api",
     "db:seed": "npm run db:seed -w @mcos/api --",
     "db:studio": "npm run db:studio -w @mcos/api",
     "setup": "npm install && npm run db:up && npm run db:migrate && npm run db:seed:demo",
-    "db:seed:demo": "npm run db:seed -w @mcos/api -- --demo"
+    "db:seed:demo": "npm run db:seed -w @mcos/api -- --demo",
+    "seed:golden": "npm run seed:golden -w @mcos/api",
+    "demo:reset": "npm run demo:reset -w @mcos/api",
+    "eval:extraction": "npm run eval:extraction -w @mcos/api --",
+    "test:e2e:install": "playwright install --with-deps chromium",
+    "test:e2e": "playwright test --config e2e/playwright.config.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1"
   }
 }

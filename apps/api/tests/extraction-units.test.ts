@@ -1,7 +1,12 @@
 import { ClaimType } from "@prisma/client";
 import { describe, expect, it } from "vitest";
 import { chunkBySpeakerTurns, estimateTokens, segmentHandle } from "../src/domain/chunking.js";
-import { dedupeKey, normalizeClaimText, quoteAppearsIn } from "../src/domain/claims.js";
+import {
+  dedupeKey,
+  dedupeNearIdenticalClaims,
+  normalizeClaimText,
+  quoteAppearsIn,
+} from "../src/domain/claims.js";
 import { parseTranscript } from "../src/domain/transcript.js";
 import { formatTimestamp } from "../src/domain/transcript.js";
 import transcriptDownload from "./fixtures/transcript-download.json" with { type: "json" };
@@ -116,6 +121,64 @@ describe("claim dedupe", () => {
   });
 });
 
+describe("near-identical claim dedupe", () => {
+  const claim = (type: ClaimType, text: string, confidence = 0.9) => ({ type, text, confidence });
+
+  it("collapses an exact duplicate and counts it", () => {
+    const { kept, duplicates } = dedupeNearIdenticalClaims([
+      claim(ClaimType.pain_point, "Mid-market buyers find the pricing page confusing."),
+      claim(ClaimType.pain_point, "  mid-market buyers find the PRICING page confusing!  "),
+    ]);
+    expect(kept).toHaveLength(1);
+    expect(duplicates).toBe(1);
+  });
+
+  it("collapses near-identical wording drift across chunk overlap", () => {
+    const { kept, duplicates } = dedupeNearIdenticalClaims([
+      claim(ClaimType.pain_point, "Mid-market buyers find the pricing page confusing at the tier boundaries."),
+      claim(ClaimType.pain_point, "Mid-market buyers find the pricing pages confusing at tier boundaries."),
+    ]);
+    expect(kept).toHaveLength(1);
+    expect(duplicates).toBe(1);
+  });
+
+  it("keeps the highest-confidence copy even when it arrives second", () => {
+    const low = claim(ClaimType.icp_fact, "ICP sweet spot is companies with 200-2,000 seats.", 0.6);
+    const high = claim(ClaimType.icp_fact, "The ICP sweet spot is companies with 200-2,000 seats.", 0.9);
+    const { kept, duplicates } = dedupeNearIdenticalClaims([low, high]);
+    expect(kept).toEqual([high]);
+    expect(duplicates).toBe(1);
+  });
+
+  it("does NOT merge genuinely different claims — that is the reviewer's call", () => {
+    const { kept, duplicates } = dedupeNearIdenticalClaims([
+      claim(ClaimType.pain_point, "Support costs scale linearly with ticket volume."),
+      claim(ClaimType.pain_point, "Nobody owns the ticket queue full-time, so the backlog grows."),
+    ]);
+    expect(kept).toHaveLength(2);
+    expect(duplicates).toBe(0);
+  });
+
+  it("keeps identical wording apart across claim types", () => {
+    const { kept } = dedupeNearIdenticalClaims([
+      claim(ClaimType.objection, "Zendesk does not get cheaper as you grow."),
+      claim(ClaimType.competitor_mention, "Zendesk does not get cheaper as you grow."),
+    ]);
+    expect(kept).toHaveLength(2);
+  });
+
+  it("counts every collapsed copy, not just the first", () => {
+    const text = "Buying trigger is a compliance audit deadline.";
+    const { kept, duplicates } = dedupeNearIdenticalClaims([
+      claim(ClaimType.icp_fact, text),
+      claim(ClaimType.icp_fact, text),
+      claim(ClaimType.icp_fact, text),
+    ]);
+    expect(kept).toHaveLength(1);
+    expect(duplicates).toBe(2);
+  });
+});
+
 describe("evidence validation", () => {
   const segmentTexts = [
     "Then let us stop positioning against Zendesk on features we should position as the layer that makes support cost curve flat not as a better help desk",
@@ -141,5 +204,51 @@ describe("evidence validation", () => {
 
   it("rejects a quote too short to verify anything", () => {
     expect(quoteAppearsIn("flat", segmentTexts)).toBe(false);
+  });
+
+  // --- Adversarial cases: the fuzzy floor is for transcription drift, not
+  // --- paraphrase. Each of these reuses real vocabulary from the segment and
+  // --- must still be dropped.
+
+  it("rejects a quote that reorders the segment's own words", () => {
+    // Every content word here appears in the segment — a bag-of-words overlap
+    // check would wave it through. It was never said in this order.
+    expect(
+      quoteAppearsIn(
+        "the layer that makes support position as we should cost curve flat",
+        segmentTexts,
+      ),
+    ).toBe(false);
+  });
+
+  it("rejects a paraphrase that keeps the substance but not the words", () => {
+    expect(
+      quoteAppearsIn("we ought to frame ourselves as keeping the support budget level", segmentTexts),
+    ).toBe(false);
+  });
+
+  it("rejects a quote corrupted well past the similarity floor", () => {
+    expect(
+      quoteAppearsIn(
+        "we could position as the platform which keeps support spending curves flatter",
+        segmentTexts,
+      ),
+    ).toBe(false);
+  });
+
+  it("accepts punctuation, casing and whitespace drift", () => {
+    expect(
+      quoteAppearsIn(
+        "  We should position as the layer that makes support-cost-curve flat!  ",
+        segmentTexts,
+      ),
+    ).toBe(true);
+  });
+
+  it("accepts a single-word transcription slip in a long quote", () => {
+    // "the" transcribed as "a" — the kind of drift the 0.85 floor exists for.
+    expect(
+      quoteAppearsIn("we should position as a layer that makes support cost curve flat", segmentTexts),
+    ).toBe(true);
   });
 });

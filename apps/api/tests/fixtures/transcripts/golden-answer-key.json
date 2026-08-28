@@ -1,0 +1,286 @@
+[
+  {
+    "type": "positioning_statement",
+    "text_gist": "Position PerfStaq for mid-market IT teams underserved by legacy ITSM.",
+    "evidence_segment_ids": [
+      "s0116",
+      "s0118"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "positioning_statement",
+    "text_gist": "Not a ticketing tool: the operating system for IT service delivery for teams too small for ServiceNow.",
+    "evidence_segment_ids": [
+      "s0121"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "positioning_statement",
+    "text_gist": "Position as the modern, fast alternative for IT teams without a dedicated ServiceNow admin.",
+    "evidence_segment_ids": [
+      "s0125"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "positioning_statement",
+    "text_gist": "Lead with time-to-value, not a feature-parity fight with enterprise ITSM players.",
+    "evidence_segment_ids": [
+      "s0126"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "positioning_statement",
+    "text_gist": "Category is self-service ITSM for lean IT teams, not another help desk clone.",
+    "evidence_segment_ids": [
+      "s0130"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "positioning_statement",
+    "text_gist": "Win by being the system a 5-person IT team can run themselves, no consultants.",
+    "evidence_segment_ids": [
+      "s0134"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "icp_fact",
+    "text_gist": "ICP sweet spot is 200-2,000 seats.",
+    "evidence_segment_ids": [
+      "s0026"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "icp_fact",
+    "text_gist": "Buyer is usually a director of IT or head of infrastructure, not the CIO.",
+    "evidence_segment_ids": [
+      "s0038"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "icp_fact",
+    "text_gist": "ICP runs today on a shared inbox and spreadsheets, not a competing ITSM tool.",
+    "evidence_segment_ids": [
+      "s0043"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "icp_fact",
+    "text_gist": "Buying trigger is a compliance audit or a customer security questionnaire deadline.",
+    "evidence_segment_ids": [
+      "s0048"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "pain_point",
+    "text_gist": "Ticket backlog grows because nobody owns the queue full-time.",
+    "evidence_segment_ids": [
+      "s0052"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "pain_point",
+    "text_gist": "Can't report ticket volume/SLA compliance to leadership; it all lives in email threads.",
+    "evidence_segment_ids": [
+      "s0059"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "pain_point",
+    "text_gist": "New-hire onboarding takes days with no single system tracking access requests.",
+    "evidence_segment_ids": [
+      "s0064",
+      "s0066"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "pain_point",
+    "text_gist": "Employees DM the IT lead directly because they don't know where to submit a request.",
+    "evidence_segment_ids": [
+      "s0072"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "pain_point",
+    "text_gist": "On-call IT gets paged for password resets at midnight; no self-service reset.",
+    "evidence_segment_ids": [
+      "s0075"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "objection",
+    "text_gist": "Buyers worry a security review will take too long and stall the purchase.",
+    "evidence_segment_ids": [
+      "s0079"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "objection",
+    "text_gist": "Buyers assume the product is too lightweight to pass a SOC 2 vendor questionnaire.",
+    "evidence_segment_ids": [
+      "s0084"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "objection",
+    "text_gist": "Legal wants SSO and audit logging confirmed before signing.",
+    "evidence_segment_ids": [
+      "s0089"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "objection",
+    "text_gist": "IT directors worry switching systems implies they mismanaged the old one.",
+    "evidence_segment_ids": [
+      "s0094"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "messaging_decision",
+    "text_gist": "Decision: stop saying 'ticketing system' everywhere, starting with the website.",
+    "evidence_segment_ids": [
+      "s0150"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "messaging_decision",
+    "text_gist": "Decision: every deck leads with time-to-value and the 6-day Acme number, not the feature grid.",
+    "evidence_segment_ids": [
+      "s0156"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "messaging_decision",
+    "text_gist": "Decision: pull the enterprise case studies from the mid-market deck.",
+    "evidence_segment_ids": [
+      "s0158"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "competitor_mention",
+    "text_gist": "Zendesk: incumbent helpdesk, but no IT asset tracking.",
+    "evidence_segment_ids": [
+      "s0101",
+      "s0102"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "competitor_mention",
+    "text_gist": "ServiceNow is aspirational but unaffordable with a 6-month rollout at this size.",
+    "evidence_segment_ids": [
+      "s0109",
+      "s0110"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "competitor_mention",
+    "text_gist": "Jira Service Management occasionally comes up, mostly as a pricing comparison.",
+    "evidence_segment_ids": [
+      "s0112"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "proof_point",
+    "text_gist": "Acme was live in 6 days with zero implementation consultants.",
+    "evidence_segment_ids": [
+      "s0137"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "proof_point",
+    "text_gist": "Bramford cut ticket resolution time by 35% in the first month.",
+    "evidence_segment_ids": [
+      "s0141"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "proof_point",
+    "text_gist": "Contoso passed a SOC 2 vendor review using the audit log export in under a week.",
+    "evidence_segment_ids": [
+      "s0145"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": null,
+    "text_gist": "Small talk about call audio quality — not a claim.",
+    "evidence_segment_ids": [
+      "s0000"
+    ],
+    "must_extract": false
+  },
+  {
+    "type": null,
+    "text_gist": "Small talk / logistics — not a claim.",
+    "evidence_segment_ids": [
+      "s0003"
+    ],
+    "must_extract": false
+  },
+  {
+    "type": null,
+    "text_gist": "Abandoned tangent about a sports game — not a claim.",
+    "evidence_segment_ids": [
+      "s0006"
+    ],
+    "must_extract": false
+  },
+  {
+    "type": null,
+    "text_gist": "Joke about renaming the product — not a claim.",
+    "evidence_segment_ids": [
+      "s0194"
+    ],
+    "must_extract": false
+  },
+  {
+    "type": null,
+    "text_gist": "Scheduling chatter — not a claim.",
+    "evidence_segment_ids": [
+      "s0221"
+    ],
+    "must_extract": false
+  },
+  {
+    "type": null,
+    "text_gist": "Logistics about sharing the recording — not a claim.",
+    "evidence_segment_ids": [
+      "s0219"
+    ],
+    "must_extract": false
+  },
+  {
+    "type": null,
+    "text_gist": "Scheduling a follow-up — not a claim (the objection itself is captured separately).",
+    "evidence_segment_ids": [
+      "s0224"
+    ],
+    "must_extract": false
+  }
+]

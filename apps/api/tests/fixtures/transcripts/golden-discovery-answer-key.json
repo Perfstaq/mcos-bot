@@ -1,0 +1,90 @@
+[
+  {
+    "type": "icp_fact",
+    "text_gist": "Prospect: ~450 employees, 3-person IT team — inside the 200-2,000 seat ICP range.",
+    "evidence_segment_ids": [
+      "s0010"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "icp_fact",
+    "text_gist": "Buying trigger is a SOC 2 audit in 8 weeks with board pressure for a system of record.",
+    "evidence_segment_ids": [
+      "s0041"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "pain_point",
+    "text_gist": "Ticket backlog grows because nobody owns the queue full-time (corroborates the workshop finding).",
+    "evidence_segment_ids": [
+      "s0024"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "pain_point",
+    "text_gist": "New-hire access requests stall because approvals are split across inboxes.",
+    "evidence_segment_ids": [
+      "s0030"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "objection",
+    "text_gist": "Legal requires a completed security questionnaire before signing; has killed deals before.",
+    "evidence_segment_ids": [
+      "s0047"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "competitor_mention",
+    "text_gist": "Prospect runs Zendesk today for ticketing but has no asset tracking, kept in a separate spreadsheet.",
+    "evidence_segment_ids": [
+      "s0020"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "positioning_statement",
+    "text_gist": "Pitched as built for IT teams that outgrew a shared inbox but don't need ServiceNow.",
+    "evidence_segment_ids": [
+      "s0055"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": "proof_point",
+    "text_gist": "Acme was live in 6 days with no consultants (cross-meeting corroboration).",
+    "evidence_segment_ids": [
+      "s0059"
+    ],
+    "must_extract": true
+  },
+  {
+    "type": null,
+    "text_gist": "Small talk about travel — not a claim.",
+    "evidence_segment_ids": [
+      "s0004"
+    ],
+    "must_extract": false
+  },
+  {
+    "type": null,
+    "text_gist": "Scheduling a follow-up call — not a claim.",
+    "evidence_segment_ids": [
+      "s0067"
+    ],
+    "must_extract": false
+  },
+  {
+    "type": null,
+    "text_gist": "Logistics about who else to loop in — not a claim.",
+    "evidence_segment_ids": [
+      "s0069"
+    ],
+    "must_extract": false
+  }
+]

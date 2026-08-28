@@ -1,0 +1,111 @@
+# ---------------------------------------------------------------------------
+# MCOS — Terraform variables, EXAMPLE.
+#
+# Copy to env/staging.tfvars and env/production.tfvars and fill in. Those files
+# are gitignored. Apply with:
+#
+#   terraform workspace select production
+#   terraform apply -var-file=env/production.tfvars
+#
+# NOTHING SECRET GOES IN HERE. No API keys, no passwords, no connection
+# strings. Credentials live in Secrets Manager and are written with the AWS CLI
+# once — see docs/RUNBOOK.md. Account ids appear only inside ARNs you paste in
+# (the ACM certificate, the SNS topic), which is why these files are not
+# committed.
+# ---------------------------------------------------------------------------
+
+# Must equal the Terraform workspace name. The plan fails if it does not.
+environment = "production"
+
+aws_region = "ap-south-1"
+
+# owner/repo. Used for tagging and for the GitHub OIDC trust policy — a typo
+# here means the deploy role trusts the wrong repository.
+repository = "your-org/mcos"
+
+# --- TLS and DNS -----------------------------------------------------------
+# The certificate must already be ISSUED, in ap-south-1, and cover domain_name.
+# ACM validation is a DNS change, so it is not managed here.
+domain_name         = "app.example.com"
+acm_certificate_arn = "arn:aws:acm:ap-south-1:000000000000:certificate/00000000-0000-0000-0000-000000000000"
+
+# Lock this down if the product is not meant to be publicly reachable.
+# ingress_cidrs = ["0.0.0.0/0"]
+
+# Optional. The bucket and its policy are created outside this stack; see
+# README.md for the ap-south-1 bucket policy caveat.
+# alb_access_logs_bucket = "example-alb-logs"
+
+# --- Sizing ----------------------------------------------------------------
+# THESE ARE THE VARIABLES TO CHANGE FIRST if an apply fails in ap-south-1 with
+# an unavailable instance class. Nothing else has to move.
+db_instance_class = "db.m6g.large"
+redis_node_type   = "cache.t4g.medium"
+
+api_cpu    = 1024
+api_memory = 2048
+
+worker_cpu    = 1024
+worker_memory = 2048
+
+api_desired_count    = 2
+worker_desired_count = 2
+
+# --- Data ------------------------------------------------------------------
+db_multi_az              = true
+db_backup_retention_days = 14
+db_allocated_storage     = 100
+
+redis_num_cache_clusters = 2
+
+# --- Application -----------------------------------------------------------
+# Recall has no India region. This is NOT an AWS region, and a bot, an API key
+# and a webhook secret are all scoped to whichever one you pick.
+recall_region = "ap-northeast-1"
+
+r2_bucket = "mcos-artifacts"
+
+openai_model            = "gpt-5.6-terra"
+openai_reasoning_effort = "low"
+
+# Drop names to disable a provider entirely. A half-configured OAuth provider
+# is refused by env.ts, which is the behaviour you want.
+optional_secrets = [
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_CLIENT_SECRET",
+  "MICROSOFT_CLIENT_ID",
+  "MICROSOFT_CLIENT_SECRET",
+]
+
+log_retention_days = 30
+
+# --- Alarms ----------------------------------------------------------------
+# Without this the alarms exist and notify nobody.
+alarm_sns_topic_arn = "arn:aws:sns:ap-south-1:000000000000:mcos-production-alerts"
+
+# --- CI/CD -----------------------------------------------------------------
+# Set to false in the SECOND environment if both share one AWS account: the
+# account can hold only one OIDC provider per issuer URL.
+create_github_oidc_provider = true
+
+github_deploy_branches = ["refs/heads/main"]
+
+# The GitHub environment whose approval gates production. Must match the
+# `environment:` in .github/workflows/deploy.yml.
+github_deploy_environment = "production"
+
+# ---------------------------------------------------------------------------
+# staging differs mostly by being allowed to be cheaper and more debuggable:
+#
+#   environment                 = "staging"
+#   single_nat_gateway          = true
+#   db_multi_az                 = false
+#   db_deletion_protection      = false
+#   alb_deletion_protection     = false
+#   db_backup_retention_days    = 7
+#   api_desired_count           = 1
+#   worker_desired_count        = 1
+#   enable_execute_command      = true
+#   create_github_oidc_provider = false   # if it shares an account with prod
+#   github_deploy_environment   = ""      # no approval gate on staging
+# ---------------------------------------------------------------------------

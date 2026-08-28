@@ -11,7 +11,8 @@ export default async function setup(): Promise<void> {
 
   const admin = new PrismaClient({ datasourceUrl: adminDatabaseUrl() });
   try {
-    await admin.$executeRawUnsafe("CREATE DATABASE mcos_test");
+    const dbName = new URL(testDatabaseUrl()).pathname.replace(/^\//, "");
+    await admin.$executeRawUnsafe(`CREATE DATABASE "${dbName}"`);
   } catch (error) {
     const message = (error as Error).message;
     if (!message.includes("already exists")) throw error;

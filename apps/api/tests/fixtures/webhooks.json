@@ -20,6 +20,13 @@
       "bot": { "id": "b0000000-0000-4000-8000-00000000bot1", "metadata": {} }
     }
   },
+  "bot.recording_permission_allowed": {
+    "event": "bot.recording_permission_allowed",
+    "data": {
+      "data": { "code": "recording_permission_allowed", "sub_code": null, "updated_at": "2026-08-20T10:00:07.114Z" },
+      "bot": { "id": "b0000000-0000-4000-8000-00000000bot1", "metadata": {} }
+    }
+  },
   "bot.in_call_recording": {
     "event": "bot.in_call_recording",
     "data": {
@@ -45,6 +52,13 @@
     "event": "bot.fatal",
     "data": {
       "data": { "code": "fatal", "sub_code": "meeting_not_found", "updated_at": "2026-08-20T10:00:19.882Z" },
+      "bot": { "id": "b0000000-0000-4000-8000-00000000bot1", "metadata": {} }
+    }
+  },
+  "bot.recording_permission_denied": {
+    "event": "bot.recording_permission_denied",
+    "data": {
+      "data": { "code": "recording_permission_denied", "sub_code": "denied_by_host", "updated_at": "2026-08-20T10:00:07.114Z" },
       "bot": { "id": "b0000000-0000-4000-8000-00000000bot1", "metadata": {} }
     }
   },

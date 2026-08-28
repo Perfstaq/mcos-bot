@@ -17,12 +17,24 @@ export const QUEUE = {
   ingestRecording: "ingest-recording",
   ingestTranscript: "ingest-transcript",
   extract: "extract",
+  calendarSync: "calendar-sync",
+  suggestActions: "suggest-actions",
+  digest: "digest",
 } as const;
 
 export type WebhookJob = { webhookEventId: string };
 export type IngestRecordingJob = { meetingId: string; tenantId: string; recordingId: string };
 export type IngestTranscriptJob = { meetingId: string; tenantId: string; transcriptId: string };
 export type ExtractJob = { meetingId: string; tenantId: string };
+/** Rides the same trigger as extraction (transcript_ready) but not the same
+ *  queue: a stalled or slow digest call must never hold back extraction, and
+ *  a failed one must never look like the pipeline broke — see jobs/digest.ts. */
+export type DigestJob = { meetingId: string; tenantId: string };
+/** A targeted sync carries both ids; a bare `{}` means "sweep every active
+ *  connection". The shape mirrors jobs/calendar-sync.ts, which owns the work. */
+export type CalendarSyncJob = { connectionId?: string; tenantId?: string };
+
+export type SuggestActionsJob = { meetingId: string; tenantId: string };
 
 /**
  * Retries are generous and backed off: every job in this pipeline talks to a
@@ -52,7 +64,44 @@ export const extractQueue = new Queue<ExtractJob>(QUEUE.extract, {
   defaultJobOptions: { ...defaultJobOptions, attempts: 3, backoff: { type: "exponential", delay: 15_000 } },
 });
 
-export const allQueues = [webhookQueue, ingestRecordingQueue, ingestTranscriptQueue, extractQueue];
+export const calendarSyncQueue = new Queue<CalendarSyncJob>(QUEUE.calendarSync, {
+  connection,
+  // A calendar sync that fails is retried by the next sweep anyway, so a long
+  // retry chain here just delays the sweep behind a connection that is broken.
+  defaultJobOptions: { ...defaultJobOptions, attempts: 2 },
+});
+
+/** How often the sweep runs. Google and Microsoft both push change
+ *  notifications, but the watch channels expire and a poll is the floor that
+ *  keeps a missed notification from stranding a calendar indefinitely. */
+export const CALENDAR_SWEEP_PATTERN = "*/10 * * * *";
+
+export const suggestActionsQueue = new Queue<SuggestActionsJob>(QUEUE.suggestActions, {
+  connection,
+  // Suggestions are a convenience layered on a meeting that is already fully
+  // processed. A failure here must never look like the pipeline broke, so it
+  // retries twice and then stops quietly.
+  defaultJobOptions: { ...defaultJobOptions, attempts: 2 },
+});
+
+export const digestQueue = new Queue<DigestJob>(QUEUE.digest, {
+  connection,
+  // Same posture as suggestActionsQueue: a convenience layered on top of an
+  // already-processed meeting. Two attempts, then quiet — jobs/digest.ts
+  // already treats every failure as non-fatal, so a worker-level retry storm
+  // would just delay the fallback the job already provides for free.
+  defaultJobOptions: { ...defaultJobOptions, attempts: 2 },
+});
+
+export const allQueues = [
+  webhookQueue,
+  ingestRecordingQueue,
+  ingestTranscriptQueue,
+  extractQueue,
+  calendarSyncQueue,
+  suggestActionsQueue,
+  digestQueue,
+];
 
 export async function closeQueues(): Promise<void> {
   await Promise.all(allQueues.map((q) => q.close()));

@@ -4,7 +4,7 @@ import { runWithContext } from "./context.js";
 import { prisma } from "./db.js";
 import { dedupeKey } from "./domain/claims.js";
 import { PROMPT_VERSION } from "./integrations/openai.js";
-import { env } from "./env.js";
+import { passwordSourceMessage, seedWorkspace } from "./seed-workspace.js";
 
 /**
  * Seeds the demo tenant, and — with --demo — a fully populated meeting that
@@ -121,12 +121,9 @@ const DEMO_CLAIMS: Array<{
 async function main(): Promise<void> {
   const withDemo = process.argv.includes("--demo") || process.env.SEED_DEMO === "1";
 
-  const tenant = await rawPrisma.tenant.upsert({
-    where: { slug: env.DEFAULT_TENANT_SLUG },
-    create: { slug: env.DEFAULT_TENANT_SLUG, name: "Freshworks (demo)" },
-    update: {},
-  });
-  console.log(`tenant ${tenant.slug} (${tenant.id})`);
+  const { tenantId, email } = await seedWorkspace();
+  const tenant = await rawPrisma.tenant.findUniqueOrThrow({ where: { id: tenantId } });
+  console.log(passwordSourceMessage(email));
 
   if (!withDemo) {
     console.log("Seeded tenant only. Re-run with --demo for a populated meeting.");
@@ -225,6 +222,7 @@ async function main(): Promise<void> {
             meetingId: meeting.id,
             evidenceSourceId: evidence.id,
             extractionRunId: run.id,
+            extractedByModel: "seed",
             type: claim.type,
             text: claim.text,
             confidence: claim.confidence,

@@ -5,7 +5,7 @@ import { transition, markFailed } from "../domain/state.js";
 import { parseTranscript } from "../domain/transcript.js";
 import { getTranscript, type RecallTranscriptEntry } from "../integrations/recall.js";
 import { keys, putObject } from "../integrations/r2.js";
-import { extractQueue, type IngestTranscriptJob } from "../queue.js";
+import { digestQueue, extractQueue, type IngestTranscriptJob } from "../queue.js";
 import { logger } from "../logger.js";
 import { withTenantContext } from "./context.js";
 
@@ -31,6 +31,7 @@ export async function ingestTranscript(job: IngestTranscriptJob): Promise<void> 
     if (existing) {
       log.info({ meetingId: meeting.id }, "transcript already ingested");
       await enqueueExtraction(meeting.id, meeting.tenantId);
+      await enqueueDigest(meeting.id, meeting.tenantId);
       return;
     }
 
@@ -145,11 +146,18 @@ export async function ingestTranscript(job: IngestTranscriptJob): Promise<void> 
     );
 
     await enqueueExtraction(meeting.id, meeting.tenantId);
+    await enqueueDigest(meeting.id, meeting.tenantId);
   });
 }
 
 async function enqueueExtraction(meetingId: string, tenantId: string): Promise<void> {
   await extractQueue.add("extract", { meetingId, tenantId }, { jobId: `extract-${meetingId}` });
+}
+
+/** Rides the same transcript_ready trigger as extraction but its own queue —
+ *  see the DigestJob comment in queue.ts for why they must not share one. */
+async function enqueueDigest(meetingId: string, tenantId: string): Promise<void> {
+  await digestQueue.add("digest", { meetingId, tenantId }, { jobId: `digest-${meetingId}` });
 }
 
 export async function failTranscriptIngest(job: IngestTranscriptJob, error: Error): Promise<void> {

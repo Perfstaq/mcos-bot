@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2023", "DOM"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": [
+    "**/*.ts",
+    // Pulled in explicitly, not just transitively: server.ts is what imports
+    // @fastify/static, and its module augmentation of FastifyReply
+    // ("sendFile") only applies to files this program actually reaches
+    // through it. Without this, apps/api/src/http.ts — reached transitively
+    // via seed-workspace -> auth -> authz -> http — type-checks against a
+    // FastifyReply that has never seen that augmentation, which is a
+    // property of this program's file set, not a real error in http.ts
+    // (apps/api's own tsconfig.json, which includes server.ts directly,
+    // checks the same file cleanly).
+    "../apps/api/src/server.ts"
+  ]
+}
