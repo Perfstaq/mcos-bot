@@ -221,6 +221,32 @@ describe("baseline captions are static sentence blocks", () => {
     expect(g9.pass).toBe(false);
     expect((g9.measured as { violations: number }).violations).toBeGreaterThan(0);
   });
+
+  /**
+   * §12.45's bug, reproduced in the baseline and caught the same way.
+   *
+   * `BaselineReel` first computed its caption size from a module constant while
+   * the plan still carried the template's 0.075·W display size, so `gateG9`
+   * predicted a six-line 510px block where the renderer drew three lines. The
+   * gate was internally consistent and wrong, and only a frame disagreed with
+   * it. Running QC on the baseline is worth something only if its failures are
+   * measured on what it actually draws, so the size lives on the plan and the
+   * composition reads it.
+   */
+  it("carries its caption size on the plan, so G9 measures the size the renderer draws", () => {
+    const style = baselinePlan().templateStyle!;
+    expect(style.sizes.karaoke).toBeCloseTo(0.045 * 1080, 6);
+    // No emphasis treatment at all, so the emphasis size is not a larger one.
+    expect(style.sizes.emphasis).toBe(style.sizes.karaoke);
+    // And it is genuinely different from the template's display karaoke,
+    // which is what made the mismatch possible in the first place.
+    expect(style.sizes.karaoke).toBeLessThan(0.075 * 1080);
+    const source = fs.readFileSync(
+      path.join(repoRoot, "packages/render/src/baseline/BaselineReel.tsx"),
+      "utf-8",
+    );
+    expect(source).toMatch(/fontSize:\s*style\.sizes\.karaoke/);
+  });
 });
 
 describe("baseline motion", () => {

@@ -227,12 +227,34 @@ export function buildBaselinePlan(input: BuildBaselinePlanInput): RenderPlan {
   const height = input.height ?? 1920;
 
   // Typography parity: the same resolved style the real render uses, with the
-  // two motion terms zeroed. `punchScale: 0` disables the emphasis punch at
-  // its source rather than in the composition, so a reader of the plan can see
-  // that the baseline has no punch without opening the renderer.
+  // motion terms zeroed and the caption size replaced by the baseline's own.
+  //
+  // `punchScale: 0` disables the emphasis punch at its source rather than in
+  // the composition, so a reader of the plan can see that the baseline has no
+  // punch without opening the renderer.
+  //
+  // ── Why the sizes are overwritten here and not read from a constant in the
+  // composition (this was a bug, caught by a frame) ──────────────────────────
+  // `BaselineReel` first computed its own font size from
+  // `BASELINE_CAPTION_TYPE_SCALE`, leaving `sizes.karaoke` on the plan at the
+  // template's 0.075·W display size. `gateG9` reads the PLAN, so it predicted
+  // a six-line 510px block where the renderer drew three lines — and it was
+  // the frame, not the gate, that showed the disagreement.
+  //
+  // That is §12.45 exactly ("`textWidthPx` measured the plan's stored casing
+  // while `Reel.tsx` draws karaoke with `textTransform: uppercase` … every
+  // check agreed with every other check, and all of them were wrong
+  // together"), reproduced by the same mistake: a renderer that computes a
+  // number the plan was supposed to carry. A wrongly-measured failure is not
+  // evidence, and running QC on the baseline is only worth anything if its
+  // numbers describe its pixels. `sizes.emphasis` is set to the same value
+  // because the baseline gives the emphasis word no treatment at all.
+  const resolved = resolveTemplateStyle(template, { width, height, hookText: input.hook });
+  const captionSizePx = BASELINE_CAPTION_TYPE_SCALE * width;
   const templateStyle = {
-    ...resolveTemplateStyle(template, { width, height, hookText: input.hook }),
+    ...resolved,
     punchScale: 0,
+    sizes: { ...resolved.sizes, karaoke: captionSizePx, emphasis: captionSizePx },
   };
 
   const words = [...input.words].sort((a, b) => a.start - b.start);

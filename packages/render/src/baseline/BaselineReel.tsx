@@ -11,7 +11,7 @@ import {
 import { DROP_SHADOW, LINE_HEIGHT, textBoxBounds } from "../captions/layout.js";
 import { EmbeddedFonts } from "../compositions/Reel.js";
 import type { Anchor, Banner, CaptionChunk, Cut, Handle, RenderPlan, TemplateStyle } from "../plan.js";
-import { BASELINE_CAPTION_TYPE_SCALE, BASELINE_EASE_FRAMES, baselineEnvelopeKnots } from "./plan.js";
+import { BASELINE_EASE_FRAMES, baselineEnvelopeKnots } from "./plan.js";
 
 /**
  * BaselineReel.tsx — the NAIVE BASELINE composition (W4.2). **Not production.**
@@ -152,21 +152,40 @@ const BaselineCaptionBlock: React.FC<{
   const anchor = chunk.anchor!;
   const opacity = baselineEnvelope(frame, frames);
 
+  // A flex row of one span per word with `gap: width * 0.02`, wrapping —
+  // structurally identical to how `Reel.tsx` lays a chunk out, and identical
+  // to the model `gateG9`'s `wrapWords` measures with. That is the point: the
+  // gate must be predicting THIS layout, not a different one. Rendering the
+  // sentence as a single text node with ordinary spaces put the two ~10px per
+  // word apart, which is enough to move a line break and therefore the block
+  // height every G9 bound reads.
+  //
+  // It stays a BLOCK caption regardless: every word appears at once, at one
+  // size, at one opacity, with no per-word timing and no accent. The spans are
+  // a layout mechanism, not a reveal.
   return (
     <div
       style={{
         ...anchorStyle(anchor, width),
+        display: "flex",
+        gap: width * 0.02,
+        justifyContent: "center",
+        flexWrap: "wrap",
         opacity,
         fontFamily: style.fonts.karaoke,
         fontWeight: 700,
         textTransform: "uppercase",
-        fontSize: BASELINE_CAPTION_TYPE_SCALE * width,
+        fontSize: style.sizes.karaoke,
         letterSpacing: `${style.tracking.karaoke}em`,
         lineHeight: LINE_HEIGHT,
         color: "#FFFFFF",
       }}
     >
-      {chunk.words.map((w) => w.word).join(" ")}
+      {chunk.words.map((w, i) => (
+        <span key={`${w.word}-${i}`} style={{ display: "inline-block" }}>
+          {w.word}
+        </span>
+      ))}
     </div>
   );
 };
