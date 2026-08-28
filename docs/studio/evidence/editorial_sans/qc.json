@@ -1,6 +1,6 @@
 {
   "analyzerVersion": "qc-render@0.1.0",
-  "mp4": "/Users/sathvik/aix/st-t/docs/studio/evidence/editorial_sans/editorial_sans.mp4",
+  "mp4": "/Users/sathvik/aix/st-w4/docs/studio/evidence/editorial_sans/editorial_sans.mp4",
   "gates": [
     {
       "id": "G1a",
@@ -10,9 +10,9 @@
       "pass": true,
       "measured": {
         "ratio": 1,
-        "withinCount": 27,
-        "totalCuts": 27,
-        "gridQuality": 2.2934,
+        "withinCount": 30,
+        "totalCuts": 30,
+        "gridQuality": 2.4342,
         "gridQualityOk": true
       },
       "target": "≥85% within 150ms of the embedded grid, AND (for beat_track grids) grid_quality present and ≥ 80% of the reference's 2.2003 (guards a degraded/absent grid gaming the gate)"
@@ -21,18 +21,20 @@
       "id": "G1b",
       "name": "Beat lock — render fidelity",
       "hard": true,
-      "computable": true,
-      "pass": false,
-      "measured": {
-        "matchedRatio": 0.074,
-        "matched": 2,
-        "totalPlanCuts": 27,
-        "detectedCuts": 29,
-        "windowMs": 66,
-        "informationalPixelBeatLockRatio": 0.759,
-        "referenceBaseline": 0.821
+      "computable": false,
+      "pass": null,
+      "notApplicable": {
+        "code": "continuous_playback_no_discontinuities",
+        "see": "ARCHITECTURE §12.3, §12.13"
       },
-      "target": "≥90% of the plan's cut times have a detected cut within ±2 frames (66ms). Pixel-derived ratio is informational only, never gated."
+      "measured": {
+        "removesFootage": false,
+        "planCuts": 30,
+        "detectedCuts": 0,
+        "windowMs": 66
+      },
+      "target": "≥90% of the plan's cut times have a detected cut within ±2 frames (66ms) — scored only for plans that remove footage",
+      "note": "not applicable: this plan is a continuous playthrough (every shot's source span continues where the last ended), so the render contains no content discontinuities for a scene detector to find. Real jump cuts need the footage-removal stage of 03 §6, which under ARCHITECTURE §12.13 requires a licensed music bed — no audio asset exists in this repo yet. Excluded from the pass/fail rollup, NOT passed. This gate resumes scoring automatically for any plan whose cuts actually remove footage."
     },
     {
       "id": "G2",
@@ -40,7 +42,7 @@
       "hard": true,
       "computable": true,
       "pass": true,
-      "measured": 29.5,
+      "measured": 30.2,
       "target": "25-40 cuts/minute"
     },
     {
@@ -49,7 +51,7 @@
       "hard": true,
       "computable": true,
       "pass": true,
-      "measured": 1.51,
+      "measured": 1.38,
       "target": "1.0-2.0s"
     },
     {
@@ -58,7 +60,7 @@
       "hard": true,
       "computable": true,
       "pass": true,
-      "measured": 1,
+      "measured": 0.81,
       "target": "≥0.6s"
     },
     {
@@ -86,7 +88,7 @@
       "computable": true,
       "pass": true,
       "measured": {
-        "chunks": 62,
+        "chunks": 89,
         "outOfRangeEmphasis": 0
       },
       "target": "≤1 emphasis word per chunk (schema-enforced) and it must index a real word"
@@ -99,7 +101,7 @@
       "pass": true,
       "measured": {
         "violations": 0,
-        "cutsChecked": 28
+        "cutsChecked": 31
       },
       "target": "0 cuts landing mid-word (source in/out points)"
     },
@@ -134,7 +136,7 @@
       "computable": true,
       "pass": null,
       "measured": {
-        "checksum": "sha256:e46dc4ee6fc16aa7f07322ec8de501592d7a72a5504bc33ac7eac8654645342e"
+        "checksum": "sha256:4b7aa6411ebb8e2b2f248fba15464be42052d1e0c810770c137fabc82721b8d3"
       },
       "target": "same plan+footage ⇒ identical checksum",
       "note": "no --prev-checksum given — recorded for a future comparison, not scored this run"
@@ -143,10 +145,10 @@
       "id": "G14",
       "name": "Provenance",
       "hard": false,
-      "computable": false,
-      "pass": null,
+      "computable": true,
+      "pass": true,
       "measured": {
-        "contentBriefId": null
+        "contentBriefId": "cca7adf4-2404-455c-90ae-e907587f6284"
       },
       "target": "render links to claim_ids + framework_id",
       "note": "thin placeholder: only checks contentBriefId is non-empty — claim_ids/framework_id live on Agent B's ContentBrief model, not yet built"
@@ -158,10 +160,10 @@
       "computable": true,
       "pass": true,
       "measured": {
-        "shots": 28,
+        "shots": 31,
         "staticShots": 0,
-        "minDelta": 0.0509,
-        "maxDelta": 0.0793,
+        "minDelta": 0.0507,
+        "maxDelta": 0.0784,
         "threshold": 0.01
       },
       "target": "100% of shots have scale delta >1%"
@@ -182,6 +184,14 @@
       "target": "0 text blocks within 12% of the left/right/bottom edge; banner top exempt to 8% (ARCHITECTURE §12.7); 0 karaoke blocks whose top is above the face floor at 0.717 (ARCHITECTURE §12.19)"
     }
   ],
-  "overallPass": false,
+  "overallPass": true,
+  "excludedGates": [
+    {
+      "id": "G1b",
+      "code": "continuous_playback_no_discontinuities",
+      "see": "ARCHITECTURE §12.3, §12.13"
+    }
+  ],
+  "scoredGateCount": 12,
   "fingerprintAcceptanceFloor": 0.8009999999999999
 }

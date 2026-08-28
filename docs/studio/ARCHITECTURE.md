@@ -1939,3 +1939,96 @@ render as the professional one. That question is about the motion system, not th
 cut placement, caption behaviour, motion and grade; do not mark the PerfStaq render down for saying
 what the speaker said. A better take raises both sides equally and changes nothing about which one
 looks edited.
+
+### 12.45 The four rulings landed, and a measurement bug the frames caught
+
+All three templates now render from the fixture and score **PASS — 12 hard gates
+scored, 1 excluded (G1b, n/a by derivation)**. The plans come through the real chain
+(gate approve over HTTP → `plan.build` → `RenderPlan` row), G1a is 100% on all three,
+and the manifest records the 1080 proxy's sha256 with `treeDirty: false`.
+
+| gate | statement_serif | staccato_condensed | editorial_sans |
+|---|---|---|---|
+| G1a beat lock | 100% (26/26) | 100% (28/28) | 100% (30/30) |
+| G1b | n/a | n/a | n/a |
+| G2 cuts/min | 26.1 | 28.2 | 30.2 |
+| G3 median shot | 1.68s | 1.62s | 1.38s |
+| G4 min shot | 0.65s | 0.80s | 0.81s |
+| G5–G10 | 0 violations | 0 violations | 0 violations |
+| G11 loudness | −13.9 | −13.9 | −14.0 |
+| G12/G14 | pass | pass | pass |
+
+**§12.21's honest-labelling note is closed by building the thing, not by relabelling
+it.** G11 was "not a capability" — the old fixture happened to be at −14 and passed
+through untouched. This one is **−16.1 in**, so it came out **−16.1 and failed by
+2.1 LU**, which is exactly what §12.21 predicted a different recording would show.
+`render-plan.mjs` now runs a two-pass ffmpeg `loudnorm` (measure, then apply with the
+measured values; single-pass drifts on speech with four pauses over 1.5s). The video
+stream is **copied**, never re-encoded, so a frame of the normalised file is still a
+frame of the render the gates scored. −16.2 → −14.0, measured on the artifact.
+
+**§12.23 is also closed, and it cost one render to close it.** The note — "a
+per-worktree venv or a checked prerequisite would save a render's worth of disk,
+worth fixing before the next agent renders" — was still open. The next agent
+rendered, and lost a 70MB MP4 at the QC step to exactly the missing
+`ANALYZER_PYTHON`. The harness now proves the venv exists *and* can import
+`scenedetect/librosa/numpy` before it renders anything.
+
+#### The bug the frames caught, which no gate could
+
+§12.43's containment check passed on the first corrected render, and the frame still
+showed caption ink 23px inside the footage. Measuring accent pixels rather than
+trusting the check found why:
+
+**`textWidthPx` measured the plan's stored casing while `Reel.tsx` draws karaoke with
+`textTransform: uppercase`.** Capitals are 20–35% wider in these faces, so every
+karaoke width was short — G9's horizontal bound, the wrapped line **count**, and
+therefore the block height that G9's vertical bound, the face floor and the new
+containment check all read. A chunk every check called single-line wrapped to **two**
+on screen; its first line rode up into the video band, and its second line was
+invisible because the word was still `pending` at opacity 0. Every check agreed with
+every other check, and all of them were wrong together.
+
+It hid for §12.34's reason once more: the banner is the only layer anyone had checked
+against a rendered frame, and hook text is already uppercase in the brief, so it
+agreed either way. Fixed with `asRendered()` inside the wrapper rather than at each
+call site, so a new caller cannot forget it (§12.32's posture). Chunk counts move
+70 → 89 as chunks that never fitted are now split. Mutation-verified.
+
+**And a stale comment was part of the cause.** `measure.ts` claimed
+`studio-templates.test.ts` "pins the measured width of a known string against the
+value the renderer actually produced, so a font swap that moved the metrics could not
+pass silently." No such test existed. The comment described the protection someone
+intended, and reading it was a reason not to look — which is worse than no comment.
+The test exists now.
+
+**Post-fix, measured on the artifact, not on the plan:** caption ink occupies rows
+1590–1669 against a bottom bar of 1560–1689. Wholly contained, 30px clear of the
+footage and 20px inside G9's bottom margin.
+
+#### `07 §2`, answered on these renders
+
+- **First 2 seconds?** Yes. The banner reads instantly and the subject fills the frame.
+- **Anything look generated?** No longer at 7.47s or 30.0s — those were the hands and
+  the low-opacity-over-skin cases, and both are gone now that captions are in the bar
+  on black. Nothing else in the sampled frames reads as machine output.
+- **Cuts intentional?** Yes — G1a 100%, medians 1.68/1.62/1.38s, no two adjacent shots
+  the same length.
+- **One idea per chunk?** Yes, and now editorially as well as mechanically: stopword
+  emphasis went 5/35 → **0**. The emphasis run reads *wondering · latest · Raj · not ·
+  device · called · founded · Goel · … · gravity · humans · slowly · harder*.
+- **Anti-amateur checklist (`02 §8`)?** All clear.
+- **Would an agency send this unedited?** **On the motion system, yes** — per §12.44
+  that is the question being asked. Not on the *script*: the fixture is an unedited
+  take and the pipeline faithfully renders its retakes, its inconsistent name and its
+  flubbed ending. That is the take's problem and it raises both sides of `07 §3`
+  equally.
+
+**One thing the ruling cost, recorded rather than argued.** With all three templates
+using the same three bar positions at the same y, the templates now differ only in
+typography, grade and cut rhythm — caption *placement* no longer distinguishes them.
+That is the right trade (text on a gesturing subject is worse than text that looks
+similar across templates), but it is a real reduction in variety, and `04 §4`'s
+matcher already treats `framing` and `layer_set` as inert terms for a related reason.
+If the templates should look more different from one another, that now has to come
+from somewhere other than where the captions sit.
