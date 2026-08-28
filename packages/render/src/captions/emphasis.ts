@@ -76,6 +76,15 @@ const STOPWORDS = new Set([
   "i", "you", "he", "she", "it", "we", "they", "me", "him", "her", "us", "them", "my", "your", "his",
   "its", "our", "their", "this", "that", "these", "those", "there", "here", "so", "just", "very",
   "really", "like", "well", "okay", "ok", "um", "uh", "yeah",
+  // "one" is deliberately BOTH a stopword and a number word (§12.43). As a
+  // spoken word it is far more often a determiner or pronoun — "one of the
+  // reasons", "the one thing" — than a numeral, and it is the last stopword
+  // left standing after the claim-token fix, winning chunks like "might be
+  // one" only because "might" and "be" are stopwords too so nothing else
+  // could. Kept in NUMBER_WORDS so the numeral reading still SCORES, and
+  // added here so `stopwordMayBeEmphasised` demands a digit or a proper noun
+  // before it can be emphasised — which "1" satisfies and "one" does not.
+  "one",
 ]);
 
 const NUMBER_WORDS = new Set([
@@ -96,7 +105,15 @@ export function claimTokenSet(claimTexts: string[]): Set<string> {
   for (const text of claimTexts) {
     for (const raw of text.split(/\s+/)) {
       const t = normalizeToken(raw);
-      if (t) set.add(t);
+      // Stopwords are excluded (ARCHITECTURE §12.43). `appears_in_claim_text`
+      // is the heaviest term in 02 §3 at 2.0, and it is meant to mean "this
+      // word is the approved claim's payload". Nearly every claim text
+      // contains "is", "the" and "you", so admitting them makes the strongest
+      // signal fire on the least informative words — which is how `is` and
+      // `you` reached accent orange at emphasis size on the first real
+      // fixture. A stopword's presence in a sentence is not evidence about
+      // that sentence.
+      if (t && !STOPWORDS.has(t)) set.add(t);
     }
   }
   return set;
@@ -158,6 +175,49 @@ export function scoreWord(word: ScoredWord, indexInSentence: number, ctx: Emphas
 }
 
 /**
+ * A stopword needs a reason that is NOT loudness (ARCHITECTURE §12.43).
+ *
+ * The score alone does not enforce this. A stopword carries −2.0 and the
+ * audio-energy term is 1.5 × z, so a z of 2.0 — a speaker leaning on "is" or
+ * "you", which is ordinary spoken emphasis and not editorial emphasis — clears
+ * the 1.0 threshold on volume by itself. On the first real fixture that put
+ * `is`, `you`, `one` and `the` in accent orange at emphasis type size: 5 of 35
+ * emphasised chunks, with G8 mechanically clean the whole time, because G8
+ * counts emphasis words per chunk and never asks whether the word deserved it.
+ *
+ * So audio energy becomes a TIEBREAK for stopwords rather than a qualifier:
+ * a stopword may be emphasised only when something semantic also argues for
+ * it — it is in the approved claim's own text, it is a contrast word ("not",
+ * "never" — §12.17 records "not" as a correct emphasis), or it is a number or
+ * proper noun. Loudness can then still choose *between* qualifying words; it
+ * can no longer nominate one on its own.
+ */
+export function stopwordMayBeEmphasised(
+  word: ScoredWord,
+  indexInSentence: number,
+  ctx: EmphasisContext,
+): boolean {
+  // NB: claim-text membership is deliberately NOT a qualifier here — a
+  // stopword can no longer be in `claimTokens` at all (see `claimTokenSet`),
+  // so checking it would be dead code pretending to be a rule.
+  if (isContrastWord(word.word)) return true;
+
+  // A DIGIT or a proper noun qualifies; a number-WORD that is also a stopword
+  // does not. "3 reasons" and "Goel" are unambiguous emphasis targets; "one"
+  // in "might be one of the reasons" is a quantifier the sentence leans on
+  // grammatically, and it won those chunks only because "might" and "be" are
+  // also stopwords so nothing else could. Telling quantifier-"one" from
+  // numeral-"one" needs part-of-speech tagging we do not have — the same
+  // shape of gap §11.2 R6 deferred for OCR — and under 02 §3's own "restraint
+  // over decoration" the right behaviour when the signal is ambiguous is no
+  // emphasis, not a guess.
+  const bare = word.word.replace(/[^\p{L}\p{N}'%$.,-]/gu, "");
+  if (/\d/.test(bare)) return true;
+  if (indexInSentence > 0 && /^\p{Lu}/u.test(bare)) return true;
+  return false;
+}
+
+/**
  * The index of the single emphasis word in `words`, or null for none.
  * `sentenceOffset` is the position of `words[0]` within its sentence, so the
  * proper-noun heuristic can tell a real capital from a sentence-initial one
@@ -172,7 +232,11 @@ export function pickEmphasis(
   let bestIndex: number | null = null;
   let bestScore = threshold;
   for (let i = 0; i < words.length; i++) {
-    const score = scoreWord(words[i]!, sentenceOffset + i, ctx);
+    const w = words[i]!;
+    const indexInSentence = sentenceOffset + i;
+    // §12.43's floor: loudness alone never nominates a stopword.
+    if (isStopword(w.word) && !stopwordMayBeEmphasised(w, indexInSentence, ctx)) continue;
+    const score = scoreWord(w, indexInSentence, ctx);
     if (score > bestScore) {
       bestScore = score;
       bestIndex = i;

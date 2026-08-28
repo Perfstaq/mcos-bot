@@ -172,3 +172,52 @@ export function lineCount(
 ): number {
   return Math.max(1, wrapLines(text, fontSizePx, token, maxWidthPx, opts).length);
 }
+
+/**
+ * §12.43 — a predicate for `buildCaptionTrack`'s `fits`: can this chunk be
+ * drawn on ONE line in the box it is headed for?
+ *
+ * Single-line is the requirement because the bottom letterbox bar is 129.6px
+ * at the default content region and a second line does not fit. A chunk that
+ * wraps there has nowhere legal to go, and the containment check would reject
+ * it at a point where nothing can be done about it — so it is prevented at
+ * chunking time instead, where splitting is free and harmless (each half
+ * carries its own word timings).
+ *
+ * **Measured at the widest case, deliberately.** Which word gets emphasis is
+ * decided by `pickEmphasis` AFTER chunking, so at this point any word might
+ * draw at `emphasisPx`. Assuming the longest one does is the only bound that
+ * cannot be wrong later; assuming none does would let a chunk pass here and
+ * wrap on screen, which is the failure this exists to prevent.
+ */
+export function makeSingleLineFitPredicate(opts: {
+  karaokePx: number;
+  emphasisPx: number;
+  token: MetricToken;
+  trackingEm: number;
+  wordGapPx: number;
+  boxWidthPx: number;
+}): (words: { word: string }[]) => boolean {
+  return (words) => {
+    if (words.length <= 1) return true;
+    // Widest assignment: the longest word (by rendered width at emphasis size)
+    // is the emphasis one.
+    let widestIndex = 0;
+    let widest = -1;
+    for (let i = 0; i < words.length; i++) {
+      const w = textWidthPx(words[i]!.word, opts.emphasisPx, opts.token, opts.trackingEm);
+      if (w > widest) {
+        widest = w;
+        widestIndex = i;
+      }
+    }
+    const measured: MeasuredWord[] = words.map((w, i) => ({
+      text: w.word,
+      fontSizePx: i === widestIndex ? opts.emphasisPx : opts.karaokePx,
+    }));
+    return wrapWords(measured, opts.token, opts.boxWidthPx, {
+      wordGapPx: opts.wordGapPx,
+      trackingEm: opts.trackingEm,
+    }).length <= 1;
+  };
+}

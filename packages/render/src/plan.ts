@@ -105,7 +105,7 @@ export type CaptionWord = z.infer<typeof CaptionWordSchema>;
 export const AnchorSchema = z.object({
   x: z.number(),
   y: z.number(),
-  align: z.enum(["center", "left"]),
+  align: z.enum(["center", "left", "right"]),
 });
 export type Anchor = z.infer<typeof AnchorSchema>;
 

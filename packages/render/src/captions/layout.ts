@@ -101,21 +101,47 @@ export function letterboxVideoBand(width: number = FRAME.width, height: number =
  * and it also records that `02 §2.2`'s four-position list and §12.5's
  * resolution of it are stale on this point.
  */
-export type CaptionPosition = "center_low" | "lower_left" | "center";
+export type CaptionPosition = "center_low" | "lower_left" | "lower_right" | "center";
 
-/** 02 §2.2's rotation list, in rotation order. */
+/**
+ * The DEFAULT rotation — all three inside the bottom letterbox bar (§12.43).
+ *
+ * `center` is deliberately absent. It is the only in-video position and is now
+ * **opt-in**: a template may list it in `captionPositions`, but doing so puts
+ * text over the subject and needs a stated reason, because on this product's
+ * common case — a founder talking to camera and gesturing while they do it —
+ * "below the chin" is not the same as "clear of the subject". §12.16 reasoned
+ * about the face and was silent about the hands; the hands were in the frame
+ * the whole time.
+ */
 export const CAPTION_POSITIONS: readonly CaptionPosition[] = [
   "center_low",
   "lower_left",
-  "center",
+  "lower_right",
 ] as const;
+
+/** Positions that sit inside a letterbox bar rather than over the footage. */
+export const BAR_CAPTION_POSITIONS: readonly CaptionPosition[] = [
+  "center_low",
+  "lower_left",
+  "lower_right",
+] as const;
+
+export function isBarPosition(position: CaptionPosition): boolean {
+  return BAR_CAPTION_POSITIONS.includes(position);
+}
 
 export type Anchor = {
   /** 0..1 of frame width — the text block's horizontal centre. */
   x: number;
   /** 0..1 of frame height — the text block's vertical centre. */
   y: number;
-  align: "center" | "left";
+  /**
+   * `right` exists because §12.43 pins the bar positions to ONE vertical line
+   * (see `ANCHORS`), so all three of G6's distinct positions have to be
+   * horizontal. Left and centre are only two.
+   */
+  align: "center" | "left" | "right";
 };
 
 /**
@@ -149,11 +175,34 @@ export type Anchor = {
  * width. At 0.3 the box was 626px, which wrapped ordinary three-word chunks
  * to two and three lines and pushed them through the bottom margin; the fix
  * for a too-tall block is usually a wider box, not a higher anchor.
+ *
+ * ── §12.43: the bar positions have exactly one legal y ──────────────────────
+ * The bottom bar runs from the content region's edge (0.8125 at the default
+ * 0.625 region) to G9's bottom margin (0.88) — **129.6px**. A single line
+ * containing the emphasis word is 0.101·W × 1.05 = **114.5px**. Requiring the
+ * block to sit wholly inside the bar leaves the centre only
+ *
+ *   [0.8125·H + 57.2,  0.88·H − 57.2]  =  [1617.2, 1632.4]px  — 15px of range
+ *
+ * so there is one vertical position and the three rotation positions must
+ * differ HORIZONTALLY. That is not a stylistic choice; it is what 129.6px of
+ * bar permits, and it is why `lower_right` had to exist. It also means a
+ * TWO-line chunk (up to 200px measured) cannot go in the bar at all — hence
+ * the fit predicate in `chunk.ts`, which splits chunks until they can.
  */
+export const BAR_CAPTION_Y = 0.846;
 const ANCHORS: Record<CaptionPosition, Anchor> = {
+  // ── The three bar positions (§12.43) ──────────────────────────────────────
+  // y is IDENTICAL across all three, and that is forced, not chosen. Derived
+  // in `BAR_CAPTION_Y` below.
+  lower_left: { x: SAFE_MARGIN_RATIO, y: BAR_CAPTION_Y, align: "left" },
+  center_low: { x: 0.5, y: BAR_CAPTION_Y, align: "center" },
+  lower_right: { x: 1 - SAFE_MARGIN_RATIO, y: BAR_CAPTION_Y, align: "right" },
+
+  // ── Opt-in, in-video (§12.43) ─────────────────────────────────────────────
+  // Retained at its §12.16-derived value: centred, over the chest, below the
+  // chin at 0.717. A template that lists it accepts text over the subject.
   center: { x: 0.5, y: 0.785, align: "center" },
-  lower_left: { x: 0.12, y: 0.8, align: "left" },
-  center_low: { x: 0.5, y: 0.818, align: "center" },
 };
 
 /** The measured chin line under the corrected content region — the bound the
@@ -224,6 +273,12 @@ export function textBoxBounds(
   const safeRight = (1 - marginRatio) * width;
   if (anchor.align === "left") {
     return { left: Math.max(safeLeft, anchor.x * width), right: safeRight };
+  }
+  // Mirror image of `left`: the box ENDS at its anchor and runs back to the
+  // safe margin, so a right-aligned block's last glyph lands on the anchor
+  // rather than its first.
+  if (anchor.align === "right") {
+    return { left: safeLeft, right: Math.min(safeRight, anchor.x * width) };
   }
   const centre = anchor.x * width;
   const halfWidth = Math.min(centre - safeLeft, safeRight - centre);
@@ -354,6 +409,43 @@ export function faceFloorViolationsForBlock(
     return [`top ${(top / height).toFixed(4)} above the face floor ${faceFloorRatio}`];
   }
   return [];
+}
+
+/**
+ * §12.43 — a text block must sit wholly inside ONE region: the footage band,
+ * the top bar, or the bottom bar. Empty array means contained.
+ *
+ * This is its own bound because the existing two miss it from both sides. G9
+ * bounds the block against the FRAME edges and is happy at 0.88; the face
+ * floor bounds it against the CHIN and is happy anywhere below 0.717. A block
+ * centred between them can still lie half on the subject's chest and half on
+ * black — which is exactly what shipped at 1.20s, one line on the shirt and
+ * the next on the bar, looking like a layout accident because it was one.
+ *
+ * Scored on the same wrapped height G9 uses, so the two cannot disagree about
+ * how tall the block is.
+ */
+export function regionContainmentViolations(
+  anchor: Anchor,
+  blockHeightPx: number,
+  height: number = FRAME.height,
+  regionRatio: number = CONTENT_REGION_RATIO,
+): string[] {
+  const region = contentRegion(height, regionRatio);
+  const top = anchor.y * height - blockHeightPx / 2;
+  const bottom = anchor.y * height + blockHeightPx / 2;
+  const eps = 1e-6;
+
+  const wholly =
+    (bottom <= region.top + eps) || // entirely in the top bar
+    (top >= region.bottom - eps) || // entirely in the bottom bar
+    (top >= region.top - eps && bottom <= region.bottom + eps); // entirely in the footage
+
+  if (wholly) return [];
+  return [
+    `block ${(top / height).toFixed(4)}..${(bottom / height).toFixed(4)} straddles a region edge ` +
+      `(content region ${(region.top / height).toFixed(4)}..${(region.bottom / height).toFixed(4)})`,
+  ];
 }
 
 /**

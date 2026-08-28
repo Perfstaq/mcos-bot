@@ -38,6 +38,7 @@ import {
   LINE_HEIGHT,
   faceFloorOriginY,
   faceFloorViolationsForBlock,
+  regionContainmentViolations,
   letterboxVideoBand,
   pickEmphasis,
   positionForShot,
@@ -368,14 +369,19 @@ describe("caption layout — letterbox only, no luminance (ARCHITECTURE §11.1 R
     const karaokeSize = fontSizePx("karaoke");
     const emphasisSize = fontSizePx("emphasis");
     for (const position of CAPTION_POSITIONS) {
-      // Two lines: a 3-word chunk at emphasis size can wrap in its box.
-      for (const [size, lines] of [
-        [karaokeSize, 1],
-        [emphasisSize, 1],
-        [emphasisSize, 2],
-      ] as const) {
-        expect(g9Violations("karaoke", anchorFor(position), size, lines), `${position} @${size}px ×${lines}`).toEqual([]);
+      // ONE line, at either size. The two-line case this used to assert is
+      // unreachable since §12.43: every default position is inside the bottom
+      // bar, the bar is 129.6px, and the chunker's fit predicate splits any
+      // chunk that would wrap. A second line there fails G9's bottom margin,
+      // which the sibling test below now pins as the expected rejection.
+      for (const size of [karaokeSize, emphasisSize] as const) {
+        expect(g9Violations("karaoke", anchorFor(position), size, 1), `${position} @${size}px`).toEqual([]);
       }
+      // And the bar really cannot take a second line — asserted, not assumed.
+      expect(
+        g9Violations("karaoke", anchorFor(position), emphasisSize, 2).length,
+        `${position} must reject 2 lines`,
+      ).toBeGreaterThan(0);
     }
     const handleSize = fontSizePx("handle");
     expect(g9Violations("handle", handleAnchor("upper_right"), handleSize)).toEqual([]);
@@ -441,10 +447,17 @@ describe("caption layout — letterbox only, no luminance (ARCHITECTURE §11.1 R
     const emphasisSize = fontSizePx("emphasis");
     for (const position of CAPTION_POSITIONS) {
       const anchor = anchorFor(position);
-      // Clear of the face at the two-line height real chunks actually reach.
-      const twoLine = textBoxVerticalExtent(anchor, emphasisSize, 2);
+      // One line is the height real chunks reach since §12.43 — the fit
+      // predicate guarantees it, and the bar has room for nothing else.
+      const oneLine = textBoxVerticalExtent(anchor, emphasisSize, 1);
       expect(anchor.y, `${position} anchor below the face floor`).toBeGreaterThan(FACE_FLOOR_RATIO);
-      expect(twoLine.bottom, `${position} bottom margin`).toBeLessThanOrEqual(0.88 * 1920 + 1e-6);
+      expect(oneLine.bottom, `${position} bottom margin`).toBeLessThanOrEqual(0.88 * 1920 + 1e-6);
+      // §12.43 — and wholly inside the bottom bar, not straddling its edge.
+      expect(
+        regionContainmentViolations(anchor, emphasisSize * LINE_HEIGHT),
+        `${position} region containment`,
+      ).toEqual([]);
+      expect(oneLine.top, `${position} sits below the content region`).toBeGreaterThanOrEqual(region.bottom - 1e-6);
     }
   });
 
@@ -462,6 +475,9 @@ describe("caption layout — letterbox only, no luminance (ARCHITECTURE §11.1 R
     for (const position of CAPTION_POSITIONS) {
       const anchor = anchorFor(position);
       // One and two lines are what real chunks reach, and both must clear.
+      // Only one line is reachable since §12.43; the 2-line case is kept as a
+      // bound that must ALSO hold, since the face floor does not depend on the
+      // bar's capacity and a future opt-in `center` template would use it.
       for (const lines of [1, 2]) {
         const { top } = textBoxVerticalExtent(anchor, emphasisSize, lines);
         expect(top, `${position} ${lines}-line top vs face floor`).toBeGreaterThanOrEqual(floorPx);

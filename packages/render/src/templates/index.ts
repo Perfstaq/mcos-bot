@@ -134,9 +134,9 @@ const STATEMENT_SERIF: Template = {
   // 01 §6: warm-shadow, slightly crushed blacks, elevated contrast.
   grade: { contrast: 1.08, saturation: 1.06, warmTint: 0.06, vignette: 0.12 },
   rhythm: { establishSec: [2.5, 3.5], accelerateSec: [0.8, 1.3], holdSec: [3.5, 4.5], burstShots: [3, 5] },
-  // 01 §4 samples the reference at centre-low, lower-left and centre; the
-  // fourth position is 02 §2.2's own list completing the rotation.
-  captionPositions: ["center_low", "lower_left", "center"],
+  // §12.43 — all three inside the bottom bar. `center` is in-video and now
+  // opt-in; this template has no reason to put text on the subject.
+  captionPositions: ["center_low", "lower_left", "lower_right"],
   scrim: "never",
   handleCorners: ["upper_right", "upper_left"],
 };
@@ -172,7 +172,7 @@ const STACCATO_CONDENSED: Template = {
   // shift. A different look, still "one look per template" (02 §6).
   grade: { contrast: 1.14, saturation: 0.98, warmTint: 0.0, vignette: 0.16 },
   rhythm: { establishSec: [2.0, 2.8], accelerateSec: [1.0, 1.4], holdSec: [3.0, 3.8], burstShots: [4, 6] },
-  captionPositions: ["lower_left", "center", "center_low"],
+  captionPositions: ["lower_left", "lower_right", "center_low"],
   scrim: "never",
   handleCorners: ["upper_left", "upper_right"],
 };
@@ -207,8 +207,8 @@ const EDITORIAL_SANS: Template = {
   },
   // Flattest of the three: near-neutral, minimal vignette. Restraint as a look.
   grade: { contrast: 1.05, saturation: 1.02, warmTint: 0.02, vignette: 0.08 },
-  rhythm: { establishSec: [2.8, 3.6], accelerateSec: [1.1, 1.6], holdSec: [3.8, 4.6], burstShots: [3, 4] },
-  captionPositions: ["center", "center_low", "lower_left"],
+  rhythm: { establishSec: [2.2, 2.8], accelerateSec: [1.05, 1.45], holdSec: [2.8, 3.4], burstShots: [5, 6] },
+  captionPositions: ["lower_right", "center_low", "lower_left"],
   scrim: "never",
   handleCorners: ["upper_right", "upper_left"],
 };

@@ -1,11 +1,12 @@
 import { BANNER_ANCHOR, HANDLE_OPACITY, anchorFor, buildBanner, buildCaptionTrack } from "@mcos/render/captions";
 import { gateG1a } from "@mcos/render/gates/g1a";
+import { planDecidableGateResults, type WordsFile } from "@mcos/render/gates/plan-gates";
 import type { GateResult } from "@mcos/render/gates/types";
 import { shotCamera } from "@mcos/render/motion";
 import { assertValidRenderPlan, PLAN_VERSION, type BeatGrid, type Cut, type RenderPlan } from "@mcos/render/plan";
-import { planBeatLockedCuts, type Bed, type PlannerResult, type WordInterval } from "@mcos/render/planner";
+import { planBeatLockedCuts, type Bed, type PlannerResult, type RhythmOptions, type WordInterval } from "@mcos/render/planner";
 import { getTemplate, templateHandleCornerForShot, templatePositionForShot } from "@mcos/render/templates";
-import { BannerFitError, resolveTemplateStyle } from "@mcos/render/templates/resolve";
+import { BannerFitError, captionFitPredicate, resolveTemplateStyle } from "@mcos/render/templates/resolve";
 
 /**
  * plan-builder.ts — the pure half of `plan.build` (ARCHITECTURE §12.12).
@@ -40,6 +41,8 @@ export type PlanInfeasibleCode =
   | "banner_wrap"
   | "footage_too_short"
   | "g1a_below_gate"
+  // §12.42 — any of G2–G10, all decidable before a render exists.
+  | "plan_gate_below_threshold"
   | "invalid_grid_configuration"
   | "no_locked_cut_path"
   | "unknown_template";
@@ -129,6 +132,16 @@ export type BuildRenderPlanInput = {
   /** §12.13. v1 ships continuous playthrough only; the field exists so the
    *  selection stage cannot be added without answering the ruling. */
   removesFootage?: boolean;
+  /**
+   * Overrides the template's own rhythm curve.
+   *
+   * ARCHITECTURE §12.30 R8 accepted this field on the script builder for style
+   * transfer ("Agent I's `plan-build.ts` wants the same field") and it never
+   * landed here, so the API path could not be given a re-timed curve at all.
+   * Optional and defaulted to `template.rhythm`, so every existing caller is
+   * unaffected.
+   */
+  rhythm?: RhythmOptions;
   fps?: number;
   width?: number;
   height?: number;
@@ -259,7 +272,7 @@ export function buildRenderPlan(input: BuildRenderPlanInput): BuiltPlan {
     durationSec: input.durationSec,
     beds: [bed],
     seed: input.seed,
-    rhythm: template.rhythm,
+    rhythm: input.rhythm ?? template.rhythm,
     gatePct: 0,
   });
 
@@ -310,6 +323,9 @@ export function buildRenderPlan(input: BuildRenderPlanInput): BuiltPlan {
     cutTimesMs: planned.cutTimesSec.map((t) => Math.round(t * 1000)),
     claimTexts: input.claimTexts,
     positionForShot: (shotIndex) => templatePositionForShot(template, shotIndex),
+    // §12.43 — the bars cannot hold a wrapped chunk, so a chunk that would
+    // wrap is split before it is ever positioned.
+    fits: captionFitPredicate(template, width),
   });
 
   const banner = buildBanner(input.hookText, input.emphasisWord);
@@ -398,5 +414,37 @@ export function buildApprovedRenderPlan(input: BuildRenderPlanInput): BuiltPlan 
       { ...measured, lockPct: built.planner.lockPct },
     );
   }
+
+  // ARCHITECTURE §12.42 — and then EVERY other plan-decidable hard gate.
+  //
+  // ADR-8's sentence is "a plan failing the gate is rejected at plan-build so
+  // it never costs a render". It was wired for G1a alone, so G2–G10 were
+  // reachable only after an MP4 existed. §12.41 is what that cost in practice:
+  // `editorial_sans` materialised a plan at 23.1 cuts/min against G2's 25
+  // floor, and nothing objected until the QC step of a completed render.
+  //
+  // G10's word list is the one already in `input` — the same words the cut
+  // legality was computed from. Rebuilding it here rather than taking a new
+  // parameter keeps the gate measuring the plan's OWN inputs, so it cannot be
+  // handed a different recording's words (which is precisely the defect
+  // §12.40a records in the evidence harness).
+  const wordsFile: WordsFile = {
+    segments: [{ words: input.words.map((w) => ({ word: w.word, start: w.start, end: w.end })) }],
+  };
+  const failed = planDecidableGateResults(built.plan, wordsFile).filter(
+    (g) => g.computable && g.pass === false,
+  );
+  if (failed.length) {
+    const detail = failed
+      .map((g) => `${g.id} (${g.name}): measured ${JSON.stringify(g.measured)} against ${g.target}`)
+      .join("; ");
+    throw new PlanInfeasibleError(
+      "plan_gate_below_threshold",
+      `the plan fails ${failed.length} plan-decidable hard gate${failed.length > 1 ? "s" : ""} — ${detail}. ` +
+        "Rejected at plan.build so it never costs a render (ADR-8, §12.42).",
+      { failedGates: failed.map((g) => ({ id: g.id, measured: g.measured, target: g.target })) },
+    );
+  }
+
   return built;
 }

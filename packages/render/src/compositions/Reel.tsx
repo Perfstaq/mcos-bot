@@ -140,7 +140,7 @@ function anchorStyle(anchor: Anchor, width: number): React.CSSProperties {
     top: `${anchor.y * 100}%`,
     transform: "translateY(-50%)",
     width: right - left,
-    textAlign: anchor.align === "left" ? "left" : "center",
+    textAlign: anchor.align === "left" ? "left" : anchor.align === "right" ? "right" : "center",
     textShadow,
   };
 }
@@ -299,7 +299,8 @@ const CaptionChunkLayer: React.FC<{
         ...anchorStyle(anchor, width),
         display: "flex",
         gap,
-        justifyContent: anchor.align === "left" ? "flex-start" : "center",
+        justifyContent:
+          anchor.align === "left" ? "flex-start" : anchor.align === "right" ? "flex-end" : "center",
         flexWrap: "wrap",
       }}
     >

@@ -13,6 +13,14 @@ import {
   anchorFor,
   blockHeightPx,
   faceFloorViolationsForBlock,
+  regionContainmentViolations,
+  splitChunksToFit,
+  buildEmphasisContext,
+  pickEmphasis,
+  scoreWord,
+  claimTokenSet,
+  EMPHASIS_THRESHOLD,
+  BAR_CAPTION_POSITIONS,
   g9Violations,
   g9ViolationsForBlock,
   handleAnchor,
@@ -34,6 +42,7 @@ import {
 import {
   BannerFitError,
   PUNCH_SCALE,
+  captionFitPredicate,
   maxBannerLines,
   measureBannerLines,
   resolveTemplateStyle,
@@ -411,54 +420,77 @@ describe("G9 safety of every template's own geometry", () => {
     }
   });
 
-  it("keeps a realistic 3-word emphasised chunk inside the margins at every position", () => {
-    // Ordinary caption words, one at emphasis size — the shape real chunks
-    // take. These reach two lines at most, which every position must hold.
+  it("splits a realistic 3-word emphasised chunk, then clears every bound at every position", () => {
+    // ── What changed, and why the split is the assertion ────────────────────
+    // "MORE THAN WORK" with the middle word at emphasis size measures 200px
+    // over two lines. Before §12.43 that was fine: the positions sat in the
+    // video band, which had room. Now every position is in the 129.6px bottom
+    // bar, so this chunk does not fit and the fit predicate splits it BEFORE a
+    // position is assigned. The invariant is therefore not "a 3-word chunk
+    // fits" — it does not — but "whatever the chunker actually emits fits".
+    let rejectedBySomeTemplate = false;
     for (const id of TEMPLATE_IDS) {
       const t = TEMPLATES[id];
       const s = resolveTemplateStyle(t, { width: WIDTH, height: HEIGHT, hookText: "SHORT HOOK" });
-      for (const position of t.captionPositions) {
-        const anchor = anchorFor(position);
-        const { left, right } = textBoxBounds(anchor, WIDTH);
-        const words = [
-          { text: "MORE", fontSizePx: s.sizes.karaoke },
-          { text: "THAN", fontSizePx: s.sizes.emphasis },
-          { text: "WORK", fontSizePx: s.sizes.karaoke },
-        ];
-        const lines = wrapWords(words, s.fontTokens.karaoke, right - left, {
-          wordGapPx: WIDTH * 0.02,
-          trackingEm: s.tracking.karaoke,
-        });
-        const height = blockHeightPx(lines, LINE_HEIGHT);
-        expect(lines.length).toBeLessThanOrEqual(2);
-        expect(
-          g9ViolationsForBlock("karaoke", anchor, height, WIDTH, HEIGHT),
-          `${id} @ ${position} (${lines.length} lines, ${Math.round(height)}px)`,
-        ).toEqual([]);
+      const fits = captionFitPredicate(t, WIDTH);
+      const chunk = [{ word: "MORE" }, { word: "THAN" }, { word: "WORK" }];
+
+      // Whether THIS chunk needs splitting is a property of the template's
+      // face, not a universal: `staccato_condensed`'s condensed karaoke font
+      // fits all three words on one line where the serif and sans do not.
+      // Asserting the split for every template would be asserting the metrics,
+      // so the invariant is the one below — whatever comes out, fits.
+      rejectedBySomeTemplate ||= !fits(chunk);
+
+      const pieces = splitChunksToFit(
+        [chunk.map((w) => ({ word: w.word, startMs: 0, endMs: 1, rms: null }))],
+        fits,
+      );
+
+      for (const piece of pieces) {
+        for (const position of t.captionPositions) {
+          const anchor = anchorFor(position);
+          const { left, right } = textBoxBounds(anchor, WIDTH);
+          // Widest case: the longest word draws at emphasis size, which is
+          // what the predicate assumed when it accepted this piece.
+          const words = piece.map((w, i) => ({
+            text: w.word,
+            fontSizePx: i === 0 ? s.sizes.emphasis : s.sizes.karaoke,
+          }));
+          const lines = wrapWords(words, s.fontTokens.karaoke, right - left, {
+            wordGapPx: WIDTH * 0.02,
+            trackingEm: s.tracking.karaoke,
+          });
+          const height = blockHeightPx(lines, LINE_HEIGHT);
+          const where = `${id} @ ${position} "${piece.map((w) => w.word).join(" ")}" (${lines.length} lines, ${Math.round(height)}px)`;
+          expect(lines.length, where).toBe(1);
+          expect(g9ViolationsForBlock("karaoke", anchor, height, WIDTH, HEIGHT), where).toEqual([]);
+          expect(faceFloorViolationsForBlock(anchor, height, HEIGHT), where).toEqual([]);
+          expect(regionContainmentViolations(anchor, height, HEIGHT), where).toEqual([]);
+        }
       }
     }
+
+    // ...and the predicate is load-bearing rather than vacuously true: at
+    // least one shipped template's metrics reject this chunk. Without this a
+    // predicate that always returned `true` would pass everything above.
+    expect(rejectedBySomeTemplate, "captionFitPredicate must actually reject something").toBe(true);
   });
 
-  it("scores a three-line chunk at EVERY position — the limit, asserted rather than hidden", () => {
-    // Three long words with one at emphasis size wrap to three lines (284.6px).
-    // This used to be pinned at `center_low` alone and titled "does not fit
-    // anywhere". Scoring all three positions, as §12.19 required, shows that
-    // claim was never measured — it is true of two positions and false of the
-    // third, and the single-position test could not tell the difference.
+  it("rejects a three-line chunk at EVERY bar position — and the chunker never makes one", () => {
+    // ── This test was inverted, not deleted (§12.39's posture) ───────────────
+    // It used to record which single position could hold a three-line block:
+    // `center_low` failed G9's bottom, `center` failed the face floor, and
+    // `lower_left` cleared both "by 17.0px and 5.8px". That was true of the
+    // OLD geometry, where the positions sat in the video band at three
+    // different heights.
     //
-    // The two bounds catch DIFFERENT positions, which is the whole reason
-    // §12.19 asked for the face floor:
-    //
-    //   center_low  bottom 0.8921 → G9. Clears the chin by 51.6px.
-    //   center      top    0.7109 → face floor. Clears every G9 margin —
-    //                               this is the block that used to pass
-    //                               silently with text across a face.
-    //   lower_left  top    0.7259, bottom 0.8741 → clears both, by 17.0px and
-    //                               5.8px. It genuinely fits.
-    //
-    // The honest thing is to pin what each position does, not to tune an
-    // anchor until a "fits nowhere" headline came true — that is exactly the
-    // move that put a caption on a subject's mouth (§12.16).
+    // §12.43 moved every default position into the bottom bar, where the
+    // usable height is 129.6px against a three-line block's 284.6px. So the
+    // answer is now the same at every position — it fits nowhere — and the
+    // interesting assertion moved: the chunker's fit predicate guarantees a
+    // three-line chunk is never built in the first place, so this bound is a
+    // backstop rather than a thing the rotation has to dodge.
     const s = resolveTemplateStyle(TEMPLATES.statement_serif, {
       width: WIDTH,
       height: HEIGHT,
@@ -470,46 +502,32 @@ describe("G9 safety of every template's own geometry", () => {
       { text: "RELENTLESSLY", fontSizePx: s.sizes.karaoke },
     ];
 
-    // Which bound rejects a three-line block, per position. `null` means the
-    // block fits there — recorded as a fact, not smoothed over.
-    const expected: Record<string, "g9" | "faceFloor" | null> = {
-      center_low: "g9",
-      center: "faceFloor",
-      lower_left: null,
-    };
-
-    for (const position of CAPTION_POSITIONS) {
+    for (const position of BAR_CAPTION_POSITIONS) {
       const anchor = anchorFor(position);
       const { left, right } = textBoxBounds(anchor, WIDTH);
       const lines = wrapWords(words, s.fontTokens.karaoke, right - left, { wordGapPx: WIDTH * 0.02 });
       expect(lines.length, `${position} line count`).toBe(3);
-
       const height = blockHeightPx(lines, LINE_HEIGHT);
       expect(height, `${position} block height`).toBeCloseTo(284.6, 1);
 
+      // Every bar position rejects it, and it is the BOTTOM margin that does
+      // the rejecting — the block is too tall for the bar, not misplaced.
       const g9 = g9ViolationsForBlock("karaoke", anchor, height, WIDTH, HEIGHT);
-      const face = faceFloorViolationsForBlock(anchor, height, HEIGHT);
-
-      if (expected[position] === "g9") {
-        expect(g9.length, `${position} must fail G9`).toBeGreaterThan(0);
-        expect(g9.join(" "), `${position} G9 reason`).toContain("bottom");
-        expect(face, `${position} clears the face`).toEqual([]);
-      } else if (expected[position] === "faceFloor") {
-        // The case §12.19 names: inside every margin, on top of the subject.
-        expect(g9, `${position} clears G9`).toEqual([]);
-        expect(face.length, `${position} must fail the face floor`).toBeGreaterThan(0);
-      } else {
-        expect(g9, `${position} clears G9`).toEqual([]);
-        expect(face, `${position} clears the face`).toEqual([]);
-      }
+      expect(g9.length, `${position} must fail G9`).toBeGreaterThan(0);
+      expect(g9.join(" "), `${position} G9 reason`).toContain("bottom");
+      // ...and it straddles the region edge, which is the §12.43 bound.
+      expect(
+        regionContainmentViolations(anchor, height, HEIGHT).length,
+        `${position} must fail containment`,
+      ).toBeGreaterThan(0);
     }
 
-    // Three lines therefore survive at exactly one of three positions, so
-    // whether such a chunk is safe is decided by the shot's position rotation.
-    // Nothing in the chunker prevents one (G5 bounds WORDS, not lines), so
-    // this is the gate's job and gateG9 now scores both bounds on every chunk.
-    const survives = CAPTION_POSITIONS.filter((p) => expected[p] === null);
-    expect(survives).toEqual(["lower_left"]);
+    // The predicate that makes the above unreachable in practice. Splitting
+    // this chunk is what the plan builders do before a position is ever
+    // assigned, so no rotation order can produce a three-line block.
+    const fits = captionFitPredicate(TEMPLATES.statement_serif, WIDTH);
+    expect(fits(words.map((w) => ({ word: w.text }))), "3 long words must NOT fit on one line").toBe(false);
+    expect(fits([{ word: "MORE" }, { word: "THAN" }]), "2 short words must fit").toBe(true);
   });
 });
 
@@ -604,6 +622,114 @@ describe("every template builds a plan that passes every plan-scorable gate", ()
       for (const cut of raw.cuts) {
         expect(Object.keys(cut).some((k) => ["enter", "transition", "sfx"].includes(k))).toBe(false);
       }
+    }
+  });
+});
+
+/**
+ * ARCHITECTURE §12.41 — the seed sweep the ruling requires.
+ *
+ * `editorial_sans` shipped a rhythm curve centred ~26–27 cuts/min against
+ * G2's 25 floor: about 5% of margin, so whether it passed was a **seed draw**.
+ * It failed 3 of 8 seeds on the locked-off fixture and 1 of 8 on the reference,
+ * and nothing caught it because the committed evidence happens to use seed 42,
+ * which passes. Production uses `planSeed(job)`, which is arbitrary.
+ *
+ * A single-seed test cannot see this class of defect at all — that is the whole
+ * point. Fixed seed SET, both clips, all three rhythm gates: tuning one band
+ * into range while pushing another out is the failure mode a cuts-only sweep
+ * would wave through.
+ */
+describe("rhythm gates hold across seeds, not just the evidence seed (§12.41)", () => {
+  const SEEDS = [1, 7, 42, 99, 123, 777, 2024, 31337] as const;
+
+  function rhythmOf(plan: RenderPlan) {
+    const durations = plan.cuts.map((c) => (c.outputEndMs - c.outputStartMs) / 1000).sort((a, b) => a - b);
+    return {
+      cutsPerMin: (plan.cuts.length - 1) / (plan.durationInFrames / plan.fps / 60),
+      median: durations[durations.length >> 1]!,
+      min: durations[0]!,
+    };
+  }
+
+  it.each(TEMPLATE_IDS)("%s — every seed lands inside G2, G3 and G4", (id) => {
+    const outOfBand: string[] = [];
+    for (const seed of SEEDS) {
+      const plan = planFor(id, seed);
+      const { cutsPerMin, median, min } = rhythmOf(plan);
+      const problems: string[] = [];
+      if (cutsPerMin < 25 || cutsPerMin > 40) problems.push(`G2 ${cutsPerMin.toFixed(1)}/min`);
+      if (median < 1.0 || median > 2.0) problems.push(`G3 median ${median.toFixed(2)}s`);
+      if (min < 0.6) problems.push(`G4 min ${min.toFixed(2)}s`);
+      if (problems.length) outOfBand.push(`seed ${seed}: ${problems.join(", ")}`);
+    }
+    expect(outOfBand, `${id} out of band on ${outOfBand.length}/${SEEDS.length} seeds`).toEqual([]);
+  });
+
+  it("would have caught the defect it was written for", () => {
+    // Guards the guard. `editorial_sans`'s OLD curve — the one that shipped —
+    // is re-run here through the same planner. If this ever stops producing an
+    // out-of-band seed, the sweep has lost its teeth (a wider band, a changed
+    // planner) and the test above is no longer evidence of anything.
+    const { words, beats } = referenceInputs();
+    const offBand = SEEDS.filter((seed) => {
+      const plan = buildTemplatePlan({
+        templateId: "editorial_sans",
+        words,
+        durationSec: REFERENCE_DURATION_SEC,
+        beats,
+        seed,
+        hook: "THE POWER OF OBSESSION",
+        emphasisWord: "OBSESSION",
+        handleText: "@PERFSTAQ",
+        footage: { assetId: "reference-proxy", r2Key: "demo/reference-16x9-proxy.mp4" },
+        // The pre-§12.41 curve, verbatim.
+        rhythm: { establishSec: [2.8, 3.6], accelerateSec: [1.1, 1.6], holdSec: [3.8, 4.6], burstShots: [3, 4] },
+      });
+      const { cutsPerMin } = rhythmOf(plan);
+      return cutsPerMin < 25 || cutsPerMin > 40;
+    });
+    expect(offBand.length, "the old curve must still fail at least one seed").toBeGreaterThan(0);
+  });
+});
+
+/** ARCHITECTURE §12.43 — emphasis is editorial, not acoustic. */
+describe("stopword emphasis floor (§12.43)", () => {
+  it("never lets loudness alone nominate a stopword", () => {
+    // A speaker leaning hard on "you" against ten ordinary words: z ≈ 3.2, so
+    // the audio term contributes ≈ +4.8 against the stopword's −2.0 and the
+    // word clears the 1.0 threshold comfortably ON VOLUME ALONE. That is the
+    // shape of the defect — ordinary spoken stress read as editorial emphasis.
+    const quiet = Array.from({ length: 10 }, (_, i) => ({
+      word: `word${i}`,
+      startMs: i * 100,
+      endMs: i * 100 + 80,
+      rms: 0.1,
+    }));
+    const loudYou = { word: "you", startMs: 2000, endMs: 2200, rms: 0.9 };
+    const ctx = buildEmphasisContext([...quiet, loudYou], ["compound slowly"]);
+
+    // The scorer still rates it above threshold — so the block below is the
+    // FLOOR doing the work, not an incidentally low score.
+    expect(scoreWord(loudYou, 1, ctx)).toBeGreaterThan(EMPHASIS_THRESHOLD);
+    expect(pickEmphasis([loudYou], ctx, 1), "a loud stopword must not be emphasised").toBeNull();
+  });
+
+  it("still emphasises a contrast word, which IS a stopword-shaped exception", () => {
+    // §12.17 recorded "not" as a correct emphasis (CONTRAST_WORDS, +0.8).
+    // The floor must not undo that.
+    const ctx = buildEmphasisContext([{ word: "not", startMs: 0, endMs: 200, rms: 0.5 }], ["do not compound"]);
+    expect(pickEmphasis([{ word: "not", startMs: 0, endMs: 200, rms: 0.9 }], ctx, 1)).toBe(0);
+  });
+
+  it("drops stopwords from the claim-token set, the heaviest term in the scorer", () => {
+    // `appears_in_claim_text` weighs 2.0 and is meant to mean "the approved
+    // claim's payload". Nearly every claim contains "is" and "the".
+    const tokens = claimTokenSet(["Gravity is one of the reasons we age"]);
+    expect(tokens.has("gravity")).toBe(true);
+    expect(tokens.has("reasons")).toBe(true);
+    for (const stop of ["is", "of", "the", "we", "one"]) {
+      expect(tokens.has(stop), `"${stop}" must not count as claim payload`).toBe(false);
     }
   });
 });

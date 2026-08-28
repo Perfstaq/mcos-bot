@@ -10,7 +10,7 @@ import {
   templatePositionForShot,
   TEMPLATE_IDS,
 } from "@mcos/render/templates";
-import { BannerFitError, resolveTemplateStyle } from "@mcos/render/templates/resolve";
+import { BannerFitError, captionFitPredicate, resolveTemplateStyle } from "@mcos/render/templates/resolve";
 
 /**
  * build-template-plan.ts — assemble a real `RenderPlan` for a named template.
@@ -165,6 +165,9 @@ export function buildTemplatePlan(input: BuildTemplatePlanInput): RenderPlan {
     cutTimesMs: planned.cutTimesSec.map((t) => Math.round(t * 1000)),
     claimTexts: [input.hook],
     positionForShot: (shotIndex) => templatePositionForShot(template, shotIndex),
+    // §12.43 — the bars cannot hold a wrapped chunk, so a chunk that would
+    // wrap is split before it is ever positioned.
+    fits: captionFitPredicate(template, width),
   });
 
   const banner = buildBanner(input.hook, input.emphasisWord);

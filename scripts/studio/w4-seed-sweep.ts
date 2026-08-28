@@ -19,9 +19,15 @@ for (const templateId of TEMPLATE_IDS) {
     });
     const cuts = plan.cuts.length - 1;
     const perMin = cuts / (plan.durationInFrames / plan.fps / 60);
-    const ok = perMin >= 25 && perMin <= 40;
+    const durs = plan.cuts.map((c) => (c.outputEndMs - c.outputStartMs) / 1000).sort((a, b) => a - b);
+    const median = durs[durs.length >> 1]!;
+    const min = durs[0]!;
+    // G2 25-40, G3 median 1.0-2.0, G4 min >= 0.6 — the three plan-decidable
+    // rhythm gates. Tuning one of them into band while pushing another out is
+    // the failure mode this sweep exists to make visible.
+    const ok = perMin >= 25 && perMin <= 40 && median >= 1.0 && median <= 2.0 && min >= 0.6;
     if (!ok) fails++;
-    row.push(`${seed}:${perMin.toFixed(1)}${ok ? "" : "✗"}`);
+    row.push(`${seed}:${perMin.toFixed(1)}/${median.toFixed(2)}/${min.toFixed(2)}${ok ? "" : "✗"}`);
   }
   process.stdout.write(`${templateId.padEnd(20)} ${row.join("  ")}   [${fails}/8 fail G2]\n`);
 }
