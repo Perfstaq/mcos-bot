@@ -142,6 +142,16 @@ const schema = z.object({
   REMOTION_LAMBDA_SERVE_URL: optional(z.string()),
   REMOTION_LAMBDA_REGION: optional(z.string()),
   REMOTION_LAMBDA_BUCKET: optional(z.string()),
+
+  // --- Content Studio: reference-reel retention (04 §5, ARCHITECTURE §12.36) -
+  // How long a `reference` MediaAsset's R2 bytes survive after fingerprinting
+  // before `media.purge-references` deletes them. In an env var, not
+  // hardcoded (CLAUDE.md convention, same as every other tunable in this
+  // file) — the number is a policy decision, not a constant. 30 is the
+  // ceiling `04_STYLE_TRANSFER.md §5` already names for a consented tenant;
+  // see §12.36 for why it is the uniform default rather than an immediate
+  // delete (no consent flag exists yet to gate a shorter one).
+  RETENTION_DAYS: z.coerce.number().int().positive().default(30),
 });
 
 export type Env = z.infer<typeof schema>;

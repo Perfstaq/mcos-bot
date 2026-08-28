@@ -4,7 +4,7 @@ import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { Upload } from "@aws-sdk/lib-storage";
 import { env } from "../env.js";
-import { presignGet, putObject, r2, type UploadResult } from "./r2.js";
+import { deleteObjects, presignGet, putObject, r2, type UploadResult } from "./r2.js";
 
 /**
  * Content Studio's R2 key namespace — built ON `r2.ts`'s exports, never
@@ -84,4 +84,4 @@ export async function uploadFileToR2(args: {
 }
 
 export type { UploadResult };
-export { presignGet, putObject };
+export { presignGet, putObject, deleteObjects };

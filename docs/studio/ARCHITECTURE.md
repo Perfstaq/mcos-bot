@@ -1600,3 +1600,62 @@ fed it differently-shaped data. Do not conclude from "the number matches" that t
 - **Stale comments:** `stages/fingerprint.py:734` cites banner persistence 0.906 against the
   fixture's 0.896; `style-transfer.ts:543-548` and its test still say the observations question
   "needs a human ruling" — §12.30 R7 has since ruled exactly F's way, so cite the ruling.
+
+### 12.36 The reference-reel purge — closing §12.35's named gap
+
+§12.35 flagged this and left it unowned: `MediaAsset.purgedAt` exists, its comment already
+declares the policy, M1's ingest paths already set the column on `Artifact` — and nothing purged a
+`reference` asset. `media.purge-references` (`jobs/media-purge.ts`, `queue.ts`, `worker.ts`) is that
+job: a daily BullMQ sweep that deletes the R2 object for a `reference` `MediaAsset` once it is older
+than `RETENTION_DAYS` and its fingerprint extraction succeeded, and sets `purgedAt`. It never touches
+`MediaAnalysis`.
+
+**The retention window: 30 days, uniformly, and why that is not quite what `04 §5` says.** The spec's
+literal words are "deleted after analysis (or retained ≤30 days with tenant consent)" — i.e. the
+default is immediate deletion, and 30 days is a consented exception. §12.35 already recorded the
+fact that makes that unbuildable as written: **no consent flag exists on any branch.** Building one —
+a schema column, a tenant-facing toggle, a UI affordance to set it — is its own feature with its own
+review surface, not a resolvable part of "the smallest job in the closeout." Choosing between
+"implement consent" and "implement the purge" for this workstream, the purge is the one with the
+actual privacy exposure attached to it (indefinite retention, today, in production if this shipped
+unfixed) — consent tiering is a refinement of a working purge, not a precondition for one existing at
+all.
+
+**Ruling: `RETENTION_DAYS` (env, default 30) applies uniformly to every reference reel**, consented or
+not. This is the spec's own stated *ceiling* promoted to the *default floor of protection*: no tenant
+ever retains a reference longer than 30 days, which is strictly tighter than the current bug
+(unbounded retention) and never looser than what §5 already permits a consented tenant. It is
+deliberately a stopgap, not a final design — the honest gap it leaves is that a tenant who never
+consented still gets 30 days rather than near-zero. Once a consent flag exists, the natural
+tightening is: unconsented defaults to a short window (or immediate purge, matching §5's literal
+floor), consented can opt into the full 30. Nothing here forecloses that — `RETENTION_DAYS` is
+already the single knob that change would tune, and `isEligibleForPurge` is already the one function
+that would grow a consent check.
+
+**What survives and why.** `MediaAnalysis.fingerprint` — the `EditFingerprint` — is never deleted,
+never read, never modified by this job. That asymmetry is Agent F's own design landing exactly as
+intended: the fingerprint lives on its own row, with its own provenance (`fingerprintVersion`,
+`analyzerVersion`), precisely so the source video is disposable and the structural description of it
+is not. `MediaAsset.r2Key` is left in place too (same posture as `Artifact.purgedAt` in
+`routes/meetings.ts` — the historical key stays legible even though the object behind it is gone);
+only the bytes at that key and the row's null `purgedAt` change.
+
+**The footage/render exclusion is structural, not conditional.** `sweepPurgeReferences`'s only query
+pins `kind: reference` — there is no parameter, override, or code path that could widen it, and
+`isEligibleForPurge` (the pure selection predicate, tested directly and hostilely) checks `kind`
+again on every call regardless of what the caller already filtered. A future edit that wanted to
+purge footage or renders would have to touch both the query literal and the predicate's own
+rejection — it cannot happen by loosening one filter.
+
+**Tenant isolation and idempotency, same mechanism as `calendar-sync.ts`'s sweep.** Enumerating
+candidates crosses tenants by definition, so it is the one read in the job that uses `rawPrisma`;
+every actual purge (`purgeReferenceAsset`) then runs inside `withTenantContext(tenantId, …)` and
+re-reads the row through the tenant-scoped `prisma` client before touching it — a foreign `assetId`
+resolves to `null` there, structurally, the same guarantee every other tenant-scoped write in this
+codebase gets from `db.ts`, not a property this job had to invent. Delete-then-mark ordering (delete
+the R2 object, then set `purgedAt`) makes a crash mid-purge safe to retry: `DeleteObjectCommand` on an
+already-gone key is not an error, and a row's `purgedAt` only ever gets set on a completed pass, so a
+retried sweep re-selects it and finishes rather than double-purging or silently skipping it. A
+per-asset failure is caught and counted, not thrown — one broken delete must not block every other
+tenant's eligible purge for the day, and a row that failed simply stays eligible for tomorrow's sweep,
+which is a simpler and tighter retry loop than any explicit backoff bookkeeping this job could add.

@@ -28,6 +28,7 @@ export const QUEUE = {
   planBuild: "plan.build",
   renderSubmit: "render.submit",
   renderQc: "render.qc",
+  mediaPurgeReferences: "media.purge-references",
 } as const;
 
 export type WebhookJob = { webhookEventId: string };
@@ -78,6 +79,11 @@ export type RenderSubmitJob = { tenantId: string; renderId: string };
 /** Runs `scripts/qc-render.ts` (07_QUALITY_GATES §1) against a finished
  *  render: G1b (render fidelity) plus G2-G14, writing `Render.qc`. */
 export type RenderQcJob = { tenantId: string; renderId: string };
+/** The daily reference-reel retention sweep (04 §5, ARCHITECTURE §12.36).
+ *  Crosses tenants by definition — same shape as `{}` on the calendar sweep
+ *  above — so it carries no payload at all rather than an unused optional
+ *  field. See `jobs/media-purge.ts`. */
+export type MediaPurgeReferencesJob = Record<string, never>;
 
 /**
  * Retries are generous and backed off: every job in this pipeline talks to a
@@ -139,12 +145,13 @@ export const digestQueue = new Queue<DigestJob>(QUEUE.digest, {
 /**
  * Content Studio queues (additive). Per 03_RENDER_PIPELINE §3:
  *
- * | Queue          | Concurrency | Timeout | Notes                              |
- * |----------------|-------------|---------|-------------------------------------|
- * | media.analyze  | 2           | 15m     | worker-media.ts; ffmpeg + sidecar   |
- * | plan.build     | 4           | 60s     | worker.ts; pure computation         |
- * | render.submit  | 4           | 20m     | worker.ts; Remotion Lambda API calls|
- * | render.qc      | 4           | 5m      | worker-media.ts; PySceneDetect+ffmpeg|
+ * | Queue                  | Concurrency | Timeout | Notes                              |
+ * |------------------------|-------------|---------|-------------------------------------|
+ * | media.analyze          | 2           | 15m     | worker-media.ts; ffmpeg + sidecar   |
+ * | plan.build             | 4           | 60s     | worker.ts; pure computation         |
+ * | render.submit          | 4           | 20m     | worker.ts; Remotion Lambda API calls|
+ * | render.qc              | 4           | 5m      | worker-media.ts; PySceneDetect+ffmpeg|
+ * | media.purge-references | 1           | n/a     | worker.ts; R2 delete + Prisma only, daily sweep (ARCHITECTURE §12.36) |
  *
  * Concurrency is set on each `Worker` (worker.ts/worker-media.ts), not here.
  * "Timeout" has no first-class BullMQ primitive; it is enforced two ways —
@@ -158,6 +165,9 @@ export const digestQueue = new Queue<DigestJob>(QUEUE.digest, {
  * Retries: 2 with exponential backoff (03 §3), same posture as
  * suggestActionsQueue/digestQueue — a third automatic retry on a render job
  * just delays the honest failure the UI already knows how to show.
+ * `media.purge-references` reuses this posture too even though it is a sweep,
+ * not a single-resource job — see its own doc comment on why a per-asset
+ * failure never fails the whole run.
  */
 const studioJobOptions = { ...defaultJobOptions, attempts: 2 };
 
@@ -177,6 +187,16 @@ export const renderQcQueue = new Queue<RenderQcJob>(QUEUE.renderQc, {
   connection,
   defaultJobOptions: studioJobOptions,
 });
+export const mediaPurgeReferencesQueue = new Queue<MediaPurgeReferencesJob>(QUEUE.mediaPurgeReferences, {
+  connection,
+  defaultJobOptions: studioJobOptions,
+});
+
+/** How often the reference-reel retention sweep runs. Daily, off-peak — there
+ *  is no freshness requirement (unlike the calendar sweep's missed-webhook
+ *  concern above): a reel that turns eligible at noon can wait until the next
+ *  early-morning pass without anyone noticing. */
+export const MEDIA_PURGE_SWEEP_PATTERN = "0 4 * * *";
 
 export const allQueues = [
   webhookQueue,
@@ -190,6 +210,7 @@ export const allQueues = [
   planBuildQueue,
   renderSubmitQueue,
   renderQcQueue,
+  mediaPurgeReferencesQueue,
 ];
 
 export async function closeQueues(): Promise<void> {

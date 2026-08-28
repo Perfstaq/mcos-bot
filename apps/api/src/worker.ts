@@ -1,16 +1,19 @@
 import { Worker, type Job } from "bullmq";
 import {
   CALENDAR_SWEEP_PATTERN,
+  MEDIA_PURGE_SWEEP_PATTERN,
   QUEUE,
   calendarSyncQueue,
   closeQueues,
   connection,
+  mediaPurgeReferencesQueue,
   type CalendarSyncJob,
   type SuggestActionsJob,
   type DigestJob,
   type ExtractJob,
   type IngestRecordingJob,
   type IngestTranscriptJob,
+  type MediaPurgeReferencesJob,
   type PlanBuildJob,
   type RenderSubmitJob,
   type WebhookJob,
@@ -24,6 +27,7 @@ import { runActionItemSuggestions } from "./jobs/suggest-action-items.js";
 import { runDigest } from "./jobs/digest.js";
 import { failPlanBuild, runPlanBuild } from "./jobs/plan-build.js";
 import { failRenderSubmit, runRenderSubmit } from "./jobs/render-submit.js";
+import { sweepPurgeReferences } from "./jobs/media-purge.js";
 import { disconnect } from "./db.js";
 import { logger } from "./logger.js";
 import { env } from "./env.js";
@@ -107,6 +111,17 @@ const workers = [
     concurrency: 4,
     lockDuration: 20 * 60 * 1000,
   }),
+
+  // Reference-reel retention (ARCHITECTURE §12.36). Pure R2-delete + Prisma
+  // work like plan.build/render.submit above — no ffmpeg/faster-whisper/
+  // librosa — so this lives on THIS worker, not worker-media.ts, same
+  // reasoning as those two. Concurrency 1: it is one sweep a day, not a
+  // stream of per-resource jobs, and there is nothing to gain from running
+  // two sweeps at once.
+  new Worker<MediaPurgeReferencesJob>(QUEUE.mediaPurgeReferences, () => sweepPurgeReferences(), {
+    connection,
+    concurrency: 1,
+  }),
 ];
 
 for (const worker of workers) {
@@ -155,14 +170,20 @@ for (const worker of workers) {
 }
 
 /**
- * The repeatable sweep. `jobId` is fixed so restarting a worker replaces the
- * schedule rather than adding a second one — without it, every deploy would
- * leave another sweep running forever.
+ * The repeatable sweeps. `jobId` is fixed on each so restarting a worker
+ * replaces the schedule rather than adding a second one — without it, every
+ * deploy would leave another sweep running forever.
  */
 await calendarSyncQueue.add(
   "sweep",
   {},
   { repeat: { pattern: CALENDAR_SWEEP_PATTERN }, jobId: "calendar-sweep" },
+);
+
+await mediaPurgeReferencesQueue.add(
+  "sweep",
+  {},
+  { repeat: { pattern: MEDIA_PURGE_SWEEP_PATTERN }, jobId: "media-purge-references-sweep" },
 );
 
 log.info(
@@ -171,6 +192,7 @@ log.info(
     region: env.RECALL_REGION,
     model: env.OPENAI_MODEL,
     calendarSweep: CALENDAR_SWEEP_PATTERN,
+    mediaPurgeSweep: MEDIA_PURGE_SWEEP_PATTERN,
   },
   "worker started",
 );
