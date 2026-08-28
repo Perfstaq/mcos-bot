@@ -3,7 +3,6 @@ import { ActionItemStatus, Prisma } from "@prisma/client";
 import { z } from "zod";
 import {
   hasRole,
-  meetingAccess,
   requireActor,
   requireMeetingRead,
   requireMeetingWrite,
