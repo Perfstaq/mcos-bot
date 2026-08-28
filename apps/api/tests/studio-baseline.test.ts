@@ -327,9 +327,13 @@ describe("the baseline is fenced off from production", () => {
   const ALLOWED = new Set([
     "packages/render/src/Root.tsx",
     "scripts/studio/render-evidence.ts",
-    "scripts/studio/build-comparison.ts",
     "apps/api/tests/studio-baseline.test.ts",
   ]);
+  // `build-comparison.ts` is deliberately NOT on that list. It drives the
+  // baseline by shelling out to `render-evidence.ts --baseline` and imports
+  // nothing from `baseline/`, so exempting it would widen the fence for a file
+  // that does not need it — and an allowlist entry nobody needs is how an
+  // allowlist stops meaning anything.
 
   function* walk(dir: string): Generator<string> {
     if (!fs.existsSync(dir)) return;
