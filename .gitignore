@@ -55,3 +55,10 @@ packages/render/out/
 # committed artifacts checkable without the video itself.
 docs/studio/evidence/**/*.mp4
 docs/studio/evidence/**/.props.json
+
+# W4.3 comparison: same ruling, more files. Both arms, the side-by-side grid
+# and the copied source are MP4s and stay out of git; the qc JSONs, the
+# baseline plans and the stacked PNG frames are committed, and
+# docs/studio/comparison/manifest.json records every MP4's sha256.
+docs/studio/comparison/**/*.mp4
+docs/studio/comparison/**/.props.json

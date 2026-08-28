@@ -258,6 +258,24 @@ describe("baseline motion", () => {
     expect(output).toEqual([0, 1, 1, 0]);
   });
 
+  /**
+   * A regression test for a bug that killed the first baseline render.
+   *
+   * The knots clamped the hold segment with `Math.max(ease, total - ease)`, so
+   * a 12-frame chunk produced `[0, 6, 6, 12]` — not strictly increasing, which
+   * `interpolate` rejects at frame 0. Short chunks are not exotic here: the
+   * naive splitter emits whatever the transcript's punctuation gives it.
+   */
+  it("produces a strictly increasing input range at every chunk length", () => {
+    for (let frames = 1; frames <= 400; frames++) {
+      const { input, output } = baselineEnvelopeKnots(frames);
+      expect(input.length, `frames=${frames}`).toBe(output.length);
+      for (let i = 1; i < input.length; i++) {
+        expect(input[i]!, `frames=${frames} knot ${i}`).toBeGreaterThan(input[i - 1]!);
+      }
+    }
+  });
+
   it("its composition uses interpolate() and calls no spring at all", () => {
     const source = fs.readFileSync(
       path.join(repoRoot, "packages/render/src/baseline/BaselineReel.tsx"),

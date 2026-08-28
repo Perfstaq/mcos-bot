@@ -137,9 +137,19 @@ export const BASELINE_EASE_FRAMES = 12;
  * comment.
  */
 export function baselineEnvelopeKnots(totalFrames: number): { input: number[]; output: number[] } {
-  const ease = Math.min(BASELINE_EASE_FRAMES, Math.max(1, Math.floor(totalFrames / 2)));
+  // `interpolate` requires a STRICTLY increasing input range, and the first
+  // version of this clamped the hold segment with `Math.max(ease, total-ease)`
+  // — which for a 12-frame chunk produced `[0, 6, 6, 12]` and killed the render
+  // at frame 0. Short chunks are not an edge case here: the naive splitter
+  // emits whatever the transcript's punctuation gives it, and "Right." is
+  // four frames long.
+  if (totalFrames < 4) {
+    // No room for two ramps and a hold — show it flat rather than fabricate one.
+    return { input: [0, Math.max(1, totalFrames)], output: [1, 1] };
+  }
+  const ease = Math.max(1, Math.min(BASELINE_EASE_FRAMES, Math.floor((totalFrames - 1) / 2)));
   return {
-    input: [0, ease, Math.max(ease, totalFrames - ease), totalFrames],
+    input: [0, ease, totalFrames - ease, totalFrames],
     output: [0, 1, 1, 0],
   };
 }
