@@ -44,20 +44,27 @@ const BEATS = JSON.parse(readFileSync(BEATS_PATH, "utf8"));
 const HOME = { "x-tenant-slug": "freshworks-demo", "x-reviewer-email": "reviewer@test.example" };
 
 // ── The fixture, measured. ──────────────────────────────────────────────────
-// `rotation=-90` in side data: the stream says 3840x2160, every decoder
-// (cv2, ffmpeg, Chromium) delivers 2160x3840. The row records what the
-// PIXELS are, not what ffprobe's raw stream fields say.
+// The MASTER carries `rotation=-90`: its stream says 3840x2160 while every
+// decoder (cv2, ffmpeg, Chromium) delivers 2160x3840. The proxy was built
+// through ffmpeg, so the rotation is already baked into its pixels and its
+// stream reports 1080x1920 with no side data. Either way the row records what
+// the PIXELS are, never what ffprobe's raw stream fields say — which is the
+// distinction the first ingest path will have to get right (§12.40).
 const FIXTURE = {
-  path: "/Users/sathvik/aix/studio-assets/talking-head-v1.mp4",
-  sha256: "7dbc78becc858b491c0a648ffba9ebc259298b56e43abd7e8c09a80f92417aa1",
-  bytes: 374131431n,
+  // The 1080x1920 proxy, not the 4K master: the content region is 1080px wide
+  // and the master is 2160, so the downscale is lossless FOR THIS PIPELINE and
+  // it is what makes the render fit the disk budget. Inverse of §12.18's
+  // upscaling complaint. Master sha256 7dbc78be…17aa1.
+  path: "/Users/sathvik/aix/studio-assets/talking-head-v1-1080.mp4",
+  sha256: "dd17a3609eca17ea613babf9c32f4892cc213e0edc20bf26fb38c719185af7b6",
+  bytes: 85125521n,
   // Container duration (59.656437s), not the audio stream's 59.605 — plan-build
   // explicitly prefers the container, and the tail is silent.
   durationMs: 59656,
-  width: 2160,
-  height: 3840,
+  width: 1080,
+  height: 1920,
   // avg_frame_rate = 160920000/5362367. `r_frame_rate` is 120/1 and is a LIE.
-  fps: 30.009,
+  fps: 30.008,
 };
 
 function log(step: string, detail: string): void {
@@ -113,7 +120,7 @@ async function main(): Promise<void> {
     data: {
       tenantId: tenant.id,
       kind: "footage",
-      r2Key: `${tenant.id}/studio/footage/talking-head-v1.mp4`,
+      r2Key: `${tenant.id}/studio/footage/talking-head-v1-1080.mp4`,
       contentType: "video/mp4",
       bytes: FIXTURE.bytes,
       checksum: `sha256:${FIXTURE.sha256}`,
@@ -121,7 +128,7 @@ async function main(): Promise<void> {
       width: FIXTURE.width,
       height: FIXTURE.height,
       fps: FIXTURE.fps,
-      originalName: "talking-head-v1.mp4",
+      originalName: "talking-head-v1-1080.mp4",
     },
   });
   await db.mediaAnalysis.create({

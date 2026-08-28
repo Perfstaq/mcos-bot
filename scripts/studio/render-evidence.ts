@@ -434,9 +434,50 @@ function renderTemplate(
   };
 }
 
+/**
+ * ARCHITECTURE §12.23, closed — check the analyzer venv BEFORE rendering.
+ *
+ * The note has been open since T's evidence round: "`qc-render` needs
+ * `ANALYZER_PYTHON` pointing at the analyzer venv, which only [st-p] has. The
+ * first run rendered a full MP4 and threw the work away at the QC step. The
+ * harness correctly refused to write evidence for a crashed QC, but a
+ * per-worktree venv or a checked prerequisite would save a render's worth of
+ * disk. Worth fixing before the next agent renders."
+ *
+ * It was not fixed, and it cost exactly one more render — three minutes of
+ * encode and 70MB — to rediscover. A precondition that is knowable in
+ * milliseconds should never be discovered after the expensive part: this is
+ * the same "fail on the cheap side" reasoning `resolveTemplateStyle` already
+ * applies to the banner wrap ("an unrenderable hook should cost a
+ * millisecond, not a DP sweep").
+ */
+function assertAnalyzerAvailable(): void {
+  const python =
+    process.env.ANALYZER_PYTHON ?? path.join(repoRoot, "services/analyzer/.venv/bin/python");
+  if (!existsSync(python)) {
+    throw new Error(
+      `analyzer venv not found at ${python} (ANALYZER_PYTHON ${process.env.ANALYZER_PYTHON ? "points there" : "is unset"}).\n` +
+        "  qc-render needs it for PySceneDetect, so a render would complete and then be discarded.\n" +
+        "  Either: ANALYZER_PYTHON=/path/to/analyzer/.venv/bin/python npx tsx scripts/studio/render-evidence.ts …\n" +
+        "  or:     cd services/analyzer && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt",
+    );
+  }
+  // Present but unusable is the same lost render, so prove it can import what
+  // the QC step will actually ask of it.
+  const probe = spawnSync(python, ["-c", "import scenedetect, librosa, numpy"], { stdio: "pipe" });
+  if (probe.status !== 0) {
+    throw new Error(
+      `analyzer venv at ${python} cannot import scenedetect/librosa/numpy — qc-render would crash after the render.\n` +
+        `  ${String(probe.stderr).trim().split("\n").slice(-1)[0] ?? ""}`,
+    );
+  }
+}
+
 function runRender(): void {
   const footage = path.resolve(arg("footage"));
   if (!existsSync(footage)) throw new Error(`footage not found: ${footage}`);
+  // Before anything expensive.
+  assertAnalyzerAvailable();
   const keepMp4 = flag("keep-mp4");
   const reuseMp4 = flag("reuse-mp4");
   const only = process.argv.includes("--template") ? arg("template") : null;
