@@ -109,8 +109,18 @@ export const AnchorSchema = z.object({
 });
 export type Anchor = z.infer<typeof AnchorSchema>;
 
+/**
+ * G5's bound, named so the schema refinement and the gate cite one constant.
+ *
+ * It used to be `.max(3)` inline on `words` below. It is enforced from
+ * `RenderPlanSchema`'s refinement instead, for one reason and with the
+ * guarantee unchanged: a plan that does not declare `captionMode: "block"`
+ * still cannot represent a fourth word. See `CaptionModeSchema`.
+ */
+export const KARAOKE_MAX_WORDS_PER_CHUNK = 3;
+
 export const CaptionChunkSchema = z.object({
-  words: z.array(CaptionWordSchema).min(1).max(3), // G5: ≤3 words visible at once
+  words: z.array(CaptionWordSchema).min(1), // G5: ≤3 words — enforced on the PLAN, see KARAOKE_MAX_WORDS_PER_CHUNK
   /**
    * G6 wants ≥3 distinct. Left as a free string rather than an enum so plans
    * written against the scaffold's examples still validate; the canonical set
@@ -260,6 +270,41 @@ export const FramingSchema = z.enum(["letterbox", "fill"]);
 export type Framing = z.infer<typeof FramingSchema>;
 
 // ---------------------------------------------------------------------------
+// captionMode — BASELINE ONLY (W4.2). Nothing in production ever sets it.
+// ---------------------------------------------------------------------------
+/**
+ * How the renderer draws a caption chunk.
+ *
+ * **`"block"` exists solely for the W4.2 naive baseline** — the deliberately
+ * amateur comparison render in `src/baseline/`, which draws whole sentences
+ * statically with no karaoke and no per-word timing. No production builder
+ * emits it: `plan-builder.ts` and `build-template-plan.ts` leave it absent, and
+ * `studio-baseline.test.ts` asserts they always will.
+ *
+ * ── Why this is a schema field and not a fork of the schema ─────────────────
+ * The baseline is only worth rendering if the REAL gates score it, and the
+ * gates take a `RenderPlan`. `gateG5` measures `words.length` per chunk, so a
+ * block caption has to arrive as its actual words or G5 reports 1 and passes —
+ * a green number describing a wall of text, which is the exact shape of lie
+ * §12.21 and §12.10 were both written about. Collapsing a sentence into one
+ * `CaptionWord` would make the baseline LOOK compliant on the one gate its
+ * captions most obviously break.
+ *
+ * ── What the production guarantee was, and that it is unchanged ─────────────
+ * `CaptionChunkSchema.words` carried `.max(3)`, so ADR-4's "a template
+ * physically cannot reach for an effect that does not exist in the contract"
+ * held for caption density too: a 4-word chunk was unrepresentable. That is
+ * preserved exactly. The bound moved from the chunk to `RenderPlanSchema`'s
+ * refinement below, where it applies to every plan that does not declare
+ * `captionMode: "block"` — which is every plan any production path builds. A
+ * production plan is refused a fourth word by the schema now as before; only a
+ * plan that has explicitly announced itself as the baseline is exempt, and such
+ * a plan fails G5 at `plan.build` (§12.42) so it can never be persisted.
+ */
+export const CaptionModeSchema = z.enum(["karaoke", "block"]);
+export type CaptionMode = z.infer<typeof CaptionModeSchema>;
+
+// ---------------------------------------------------------------------------
 // RenderPlan — the reproducible artifact (G13). Given the same plan +
 // footage, the render is byte-reproducible; a re-render never re-runs an LLM
 // or recomputes analysis.
@@ -293,6 +338,26 @@ export const RenderPlanSchema = z.object({
    *  the per-frame luminance decision 02 §2.2 asked for. Drop shadow is
    *  always on and is not a policy. */
   scrim: z.enum(["never", "always"]).optional(),
+  /** BASELINE ONLY — absent on every production plan. See `CaptionModeSchema`. */
+  captionMode: CaptionModeSchema.optional(),
+}).superRefine((plan, ctx) => {
+  // G5's ≤3, enforced here rather than as `.max(3)` on the chunk so that the
+  // W4.2 baseline's block captions can carry their real words and be MEASURED
+  // by G5 instead of silently satisfying it. For every other plan — i.e. every
+  // plan production builds — this is the identical constraint it replaced.
+  if (plan.captionMode === "block") return;
+  plan.captions.forEach((chunk, i) => {
+    if (chunk.words.length > KARAOKE_MAX_WORDS_PER_CHUNK) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["captions", i, "words"],
+        message:
+          `${chunk.words.length} words in one chunk — a karaoke chunk may hold at most ` +
+          `${KARAOKE_MAX_WORDS_PER_CHUNK} (G5). Only a plan declaring \`captionMode: "block"\` ` +
+          "(the W4.2 baseline, which is never persisted) may exceed it.",
+      });
+    }
+  });
 });
 export type RenderPlan = z.infer<typeof RenderPlanSchema>;
 

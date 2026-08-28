@@ -107,7 +107,7 @@ function fallbackStyle(width: number): TemplateStyle {
  * families we embedded. A `data:` URL cannot hang on a network, so unlike a
  * fetched font this can never stall the render past a decode.
  */
-const EmbeddedFonts: React.FC = () => {
+export const EmbeddedFonts: React.FC = () => {
   const [handle] = React.useState(() => delayRender("embedded fonts decoding"));
 
   React.useEffect(() => {

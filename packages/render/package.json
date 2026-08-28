@@ -20,7 +20,8 @@
     "./gates/types": "./dist/gates/types.js",
     "./gates/g1a": "./dist/gates/g1a.js",
     "./compositions/Reel": "./dist/compositions/Reel.js",
-    "./gates/plan-gates": "./dist/gates/plan-gates.js"
+    "./gates/plan-gates": "./dist/gates/plan-gates.js",
+    "./baseline/plan": "./dist/baseline/plan.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
