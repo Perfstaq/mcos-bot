@@ -10,6 +10,7 @@ import {
   type ContentChannel,
 } from "../api.js";
 import { IconCheck, IconPencil, IconQuote, IconRetry, IconX } from "../components/Icons.js";
+import { PlanBuilds } from "../components/PlanBuilds.js";
 
 type QueueResponse = { briefs: ContentBrief[]; total: number };
 type GenerateResponse = {
@@ -238,6 +239,13 @@ export function ContentReviewQueue() {
           {generating ? "Generating…" : "Generate from current brief"}
         </button>
       </header>
+
+      {/* ARCHITECTURE §12.25/§12.38 — a failed plan build used to vanish
+          entirely. It surfaces here, in normal flow under the header, because
+          no breakpoint removes this position: the rail it first lived in is
+          `display: none` below 1240px, which would have hidden the failure
+          surface on exactly the windows a user is most likely to have open. */}
+      <PlanBuilds />
 
       <div className="panes">
         <nav className="pane rail-types">

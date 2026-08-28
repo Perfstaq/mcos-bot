@@ -61,10 +61,11 @@ model Tenant {
 
   // Content Studio (additive — ARCHITECTURE.md §3). MotionTemplate is a
   // global catalog (no tenant_id) and has no back-relation here.
-  mediaAssets   MediaAsset[]
-  mediaAnalyses MediaAnalysis[]
-  renderPlans   RenderPlan[]
-  renders       Render[]
+  mediaAssets    MediaAsset[]
+  mediaAnalyses  MediaAnalysis[]
+  renderPlans    RenderPlan[]
+  renderAttempts RenderAttempt[]
+  renders        Render[]
 
   // Content Studio — brief integration (additive — ARCHITECTURE.md §6, ADR-6).
   contentBriefs         ContentBrief[]
@@ -1218,6 +1219,88 @@ model RenderPlan {
   @@index([tenantId, contentBriefId])
   @@index([tenantId, createdAt])
   @@map("render_plans")
+}
+
+// ---------------------------------------------------------------------------
+// RenderAttempt — where a FAILED plan build lives (ARCHITECTURE.md §12.25,
+// §12.38).
+//
+// `03 §7` requires every failure state to be surfaced and retryable, and
+// `plan_infeasible` had nowhere durable to go: RenderPlan is append-only and a
+// failed build creates no row at all, `Render.failedStage` enumerates "plan"
+// but no Render exists until AFTER a plan, and there was no
+// GET /content/plans/:id. A user who posted a plan request and hit
+// `plan_infeasible` saw nothing, forever.
+//
+// **Why not a status column on RenderPlan.** That would mean render_plans rows
+// which are not plans, and "a row exists ⇔ a complete, reproducible plan
+// exists" is exactly what its append-only purity buys (G13: qc-render scores
+// G1a against the grid embedded in the exact row a render was built from).
+// **Why not materialise a Render to hold the failure.** That inverts the
+// pipeline's own ordering — a render of a plan that does not exist.
+//
+// So: a separate, deliberately MUTABLE row, keyed on the plan id
+// `POST /content/plans` already pre-allocates and returns. That key choice is
+// what makes the handle the route hands back pollable, and it is why this
+// table needs no id of its own. On success the RenderPlan is created with the
+// same id and the attempt is marked `built` — the two rows are the same
+// identity seen from the status side and the artifact side.
+//
+// Deliberately NOT in APPEND_ONLY_MODELS (domain/append-only.ts). A status row
+// whose whole job is to change is the opposite case from RenderPlan, and one
+// row per attempt is what makes "exactly one attempt row per failure"
+// checkable.
+// ---------------------------------------------------------------------------
+
+enum RenderAttemptStatus {
+  queued
+  built
+  /** A named, user-actionable `plan_infeasible(reason)` — footage too short,
+   *  the grid configuration §12.13 forbids, G1a below the gate. The user can
+   *  act on it: different footage, a different template, a re-analysis. */
+  infeasible
+  /** Anything else that went permanently wrong. Not user-actionable in the
+   *  same way — kept distinct so an operator can tell "we refused this plan"
+   *  from "we broke". */
+  failed
+
+  @@map("render_attempt_status")
+}
+
+model RenderAttempt {
+  /** The PRE-ALLOCATED plan id from POST /content/plans — not a new identity.
+   *  A built attempt and its RenderPlan share this id by construction. */
+  id       String @id
+  tenantId String @map("tenant_id")
+
+  contentBriefId String @map("content_brief_id")
+  templateId     String @map("template_id")
+  footageAssetId String @map("footage_asset_id")
+
+  status RenderAttemptStatus @default(queued)
+
+  /** The stable half a UI switches on: a `PlanInfeasibleCode`
+   *  (`footage_too_short`, `g1a_below_gate`, …) or `plan_build_error`. */
+  failureCode String? @map("failure_code")
+  /** The half a human reads. 03 §7 wants a reason, not a verdict. */
+  failureMessage String? @map("failure_message")
+  /** Measured numbers worth showing beside the reason — G1a's lock %, the
+   *  footage duration that was too short. */
+  failureDetail Json? @map("failure_detail")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // NO relation to RenderPlan. The FK would have to point the wrong way (a
+  // plan may not exist) and a nullable self-referencing pair invites exactly
+  // the "rows that are not plans" confusion §12.25 rejected. The shared id IS
+  // the link; routes/content.ts looks the plan up by it.
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, status])
+  @@index([tenantId, contentBriefId])
+  @@map("render_attempts")
 }
 
 enum RenderStatus {

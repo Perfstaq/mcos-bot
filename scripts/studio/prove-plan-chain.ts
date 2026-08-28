@@ -269,6 +269,135 @@ async function main(): Promise<void> {
       : "content-gate's undo guard did NOT hold — an approved-built plan now hangs off a non-approved brief",
   );
 
+  /* ------- run 2c: §12.25/§12.38 — a plan that CANNOT be built, end to end */
+  //
+  // The failure surface, driven the same way as everything else here: real
+  // route, real Redis, real registered processor, real row. A unit test proves
+  // `recordRenderAttemptFailure` writes what it is handed; it cannot prove that
+  // a user who posts a plan request and hits `plan_infeasible` can SEE the
+  // reason — which is the entire content of §12.25.
+  //
+  // Worth stating what this specifically exercises: this script builds its OWN
+  // Worker, so worker.ts's permanent-failure handler (and therefore
+  // `failPlanBuild`) never runs. If the attempt row appears anyway, the
+  // recording is a property of the JOB rather than of the worker wiring —
+  // which is the arrangement §12.33 flagged as thin and the reason the failure
+  // is recorded from inside `runPlanBuild` rather than only from the handler.
+  process.stdout.write("\n── run 2c · §12.25 · plan_infeasible → is it visible? ──\n");
+
+  // Footage whose media.analyze FAILED. The route accepts it (it is a real
+  // footage asset in this tenant); the job cannot plan from it.
+  const brokenFootage = await db.mediaAsset.create({
+    data: {
+      tenantId: tenant.id,
+      kind: "footage",
+      r2Key: `${tenant.id}/studio/footage/never-analyzed.mp4`,
+      contentType: "video/mp4",
+      bytes: 1_000_000n,
+      durationMs: 30_000,
+      originalName: "never-analyzed.mp4",
+    },
+  });
+  await db.mediaAnalysis.create({
+    data: {
+      tenantId: tenant.id,
+      assetId: brokenFootage.id,
+      status: "failed",
+      error: "faster-whisper died",
+      analyzerVersion: "0.2.0+faster-whisper1.1.0+librosa0.11.0+whisper-model-base",
+      finishedAt: new Date(),
+    },
+  });
+
+  const briefId3 = await seedProposedBrief();
+  await http(`/api/v1/content/briefs/${briefId3}/approve`);
+  const planned3 = await http("/api/v1/content/plans", {
+    content_brief_id: briefId3,
+    template_id: template.id,
+    footage_asset_id: brokenFootage.id,
+  });
+  const planId3 = planned3.json().id as string;
+
+  // Pollable BEFORE the worker touches it — the handle the route returned has
+  // something on the other end from the instant the caller holds it.
+  const queuedRead = await app.inject({ method: "GET", url: `/api/v1/content/plans/${planId3}`, headers: HOME });
+  log("GET /content/plans/:id", `${queuedRead.statusCode} · status=${queuedRead.json().status} (before the worker ran)`);
+
+  const outcome3 = await waitFor(planId3);
+  log("worker outcome", outcome3.ok ? "completed (WRONG — this plan is infeasible)" : "failed ✓");
+
+  const failedRead = await app.inject({ method: "GET", url: `/api/v1/content/plans/${planId3}`, headers: HOME });
+  const failedBody = failedRead.json() as {
+    status: string;
+    failure_code: string | null;
+    failure_message: string | null;
+    retryable: boolean;
+    plan: unknown;
+  };
+  const attemptRows = await db.renderAttempt.count({ where: { id: planId3 } });
+  const planRows = await db.renderPlan.count({ where: { id: planId3 } });
+
+  log("GET after failure", `${failedRead.statusCode} · status=${failedBody.status} · retryable=${failedBody.retryable}`);
+  log("failure_code", failedBody.failure_code ?? "— (NOTHING SURFACED ✗)");
+  log("failure_message", (failedBody.failure_message ?? "—").slice(0, 96));
+  log("rows", `${attemptRows} attempt · ${planRows} plan (RenderPlan stays pure)`);
+
+  const failureVisible =
+    failedRead.statusCode === 200 &&
+    failedBody.status === "infeasible" &&
+    failedBody.failure_code === "analysis_missing" &&
+    Boolean(failedBody.failure_message) &&
+    failedBody.retryable === true &&
+    failedBody.plan === null &&
+    attemptRows === 1 &&
+    planRows === 0;
+  log("verdict", failureVisible ? "the user can see WHY, and that it is retryable ✓" : "the failure is still invisible ✗");
+
+  /* ---- run 2d: and the retry actually clears it, on the same plan id ---- */
+  process.stdout.write("\n── run 2d · 03 §7 · retry the failed plan ──\n");
+
+  // media.analyze re-runs and succeeds. This is the real remedy for
+  // `analysis_missing`, not a test hook.
+  await db.mediaAnalysis.update({
+    where: { assetId: brokenFootage.id },
+    data: {
+      status: "succeeded",
+      error: null,
+      words: WORDS,
+      beats: BEATS,
+      tempoBpm: BEATS.tempoBpm,
+      beatMethod: BEATS.method,
+    },
+  });
+  await db.mediaAsset.update({
+    where: { id: brokenFootage.id },
+    data: { durationMs: Math.round(WORDS.durationSec * 1000), width: 1920, height: 1080, fps: 30 },
+  });
+
+  outcomes.delete(planId3); // or `waitFor` returns the previous run's verdict
+  const retried = await http(`/api/v1/content/plans/${planId3}/retry`);
+  log("POST /content/plans/:id/retry", `${retried.statusCode} · status=${retried.json().status} · same id=${retried.json().id === planId3}`);
+
+  const outcome4 = await waitFor(planId3);
+  log("worker outcome", outcome4.ok ? "completed ✓" : `FAILED: ${outcome4.err}`);
+
+  const retriedRead = await app.inject({ method: "GET", url: `/api/v1/content/plans/${planId3}`, headers: HOME });
+  const retriedBody = retriedRead.json() as { status: string; failure_code: string | null; plan: { id: string } | null };
+  const attemptsAfter = await db.renderAttempt.count({ where: { id: planId3 } });
+  const planAfter = await db.renderPlan.findUnique({ where: { id: planId3 } });
+
+  log("GET after retry", `status=${retriedBody.status} · failure_code=${retriedBody.failure_code ?? "null"}`);
+  log("rows", `${attemptsAfter} attempt (not 2) · plan ${planAfter ? planAfter.id : "MISSING ✗"}`);
+
+  const retryWorked =
+    retried.statusCode === 200 &&
+    retriedBody.status === "built" &&
+    retriedBody.failure_code === null &&
+    retriedBody.plan?.id === planId3 &&
+    attemptsAfter === 1 &&
+    planAfter !== null;
+  log("verdict", retryWorked ? "retry cleared the failure on the same id ✓" : "retry did not resolve ✗");
+
   /* ------------------------------- run 3 (opt-in): does the plan RENDER? */
   //
   // `--render <footage.mp4>` shells to the SAME entrypoint `render.submit`
@@ -329,7 +458,11 @@ async function main(): Promise<void> {
 
   // `undoGuardHeld` is reported, not asserted: it is `content-gate.ts`'s
   // property, and this agent's boundary forbids fixing it there.
-  const ok = !outcome2.ok && !row2 && g1a.pass;
+  //
+  // `failureVisible` and `retryWorked` ARE asserted — §12.25's whole claim is
+  // that a failure must be impossible to lose, and a proof that only reports
+  // whether it was lost is not a proof.
+  const ok = !outcome2.ok && !row2 && g1a.pass && failureVisible && retryWorked;
 
   await worker.close();
   await app.close();

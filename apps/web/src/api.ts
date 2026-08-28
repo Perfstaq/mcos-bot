@@ -289,6 +289,51 @@ export type ContentBrief = {
 
 export type ContentBriefRefusal = { archetype: ContentArchetype; reason: string };
 
+/* ------------------------------------------- plan builds (ARCHITECTURE §12.25) */
+
+export type PlanAttemptStatus = "queued" | "built" | "infeasible" | "failed";
+
+/**
+ * The status of one plan build, keyed on the plan id `POST /content/plans`
+ * returns. `03 §7` requires every failure state to be surfaced and retryable;
+ * before this existed a failed build wrote nothing anywhere and the user saw
+ * nothing, forever (ARCHITECTURE §12.25).
+ *
+ * `failure_code` is the stable half a UI switches on, `failure_message` the
+ * half a human reads, `failure_detail` the measurement it was rejected on.
+ * `retryable` is computed server-side rather than inferred from `status` here,
+ * so the rule lives in one place.
+ */
+export type PlanAttempt = {
+  id: string;
+  status: PlanAttemptStatus;
+  retryable: boolean;
+  content_brief_id: string;
+  template_id: string;
+  footage_asset_id: string;
+  failure_code: string | null;
+  failure_message: string | null;
+  failure_detail: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string | null;
+  plan: { id: string; seed: number; plan_version: string; created_by: string; created_at: string } | null;
+};
+
+/** Human labels for the `PlanInfeasibleCode`s `plan-builder.ts` can emit, plus
+ *  the catch-all. A code with no entry falls back to the code itself — better
+ *  a raw string than a blank where a reason should be. */
+export const PLAN_FAILURE_LABEL: Record<string, string> = {
+  analysis_missing: "Footage not analysed",
+  analysis_incomplete: "Analysis incomplete",
+  banner_wrap: "Hook too long for the banner",
+  footage_too_short: "Footage too short",
+  g1a_below_gate: "Cuts did not lock to the beat",
+  invalid_grid_configuration: "Invalid grid configuration",
+  no_locked_cut_path: "No legal cut list",
+  unknown_template: "Template not recognised",
+  plan_build_error: "Plan build error",
+};
+
 export type ContentGateAction = "approve" | "reject" | "edit_approve" | "undo";
 
 export type ContentGateResult = {

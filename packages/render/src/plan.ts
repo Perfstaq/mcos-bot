@@ -315,3 +315,41 @@ export function cutTimesMs(plan: RenderPlan): number[] {
     .filter((t) => t > 0)
     .sort((a, b) => a - b);
 }
+
+/**
+ * One millisecond. A span boundary can round by that much; a real removal is
+ * orders of magnitude larger.
+ */
+const SOURCE_CONTINUITY_TOLERANCE_MS = 1;
+
+/**
+ * Does this plan REMOVE footage — i.e. does output time diverge from source
+ * time anywhere?
+ *
+ * A plan removes footage exactly when some shot's source span does not continue
+ * where the previous one ended. That is decidable from the cuts alone, which is
+ * why this is derived here rather than declared by a caller: a flag can be
+ * wrong about a plan, but a plan cannot be wrong about itself.
+ *
+ * Two consumers turn on this one property, and they are the same question asked
+ * from opposite ends:
+ *
+ *  - **ARCHITECTURE §12.13** — removal makes the footage's own beat grid stop
+ *    describing what the viewer hears, so removal requires a music bed whose
+ *    grid is output-time by construction.
+ *  - **ARCHITECTURE §12.3 / §12.37** — removal is also what creates the content
+ *    discontinuities G1b's scene detector looks for. No removal, nothing to
+ *    detect, and G1b is not applicable rather than failed.
+ *
+ * The two are the same coupling seen from either side, which is why §12.13
+ * could say G1a and G1b "become jointly satisfiable only under this
+ * convention". Defined next to `CutSchema` so both readings share one
+ * definition and cannot drift apart.
+ */
+export function planRemovesFootage(plan: RenderPlan): boolean {
+  return plan.cuts.some((cut, i) => {
+    if (i === 0) return false;
+    const prev = plan.cuts[i - 1]!;
+    return Math.abs(cut.sourceInMs - prev.sourceOutMs) > SOURCE_CONTINUITY_TOLERANCE_MS;
+  });
+}

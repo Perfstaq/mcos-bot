@@ -571,3 +571,217 @@ describe("plan.build — tenant isolation", () => {
     expect(await db.renderPlan.count({ where: { tenantId: other.id } })).toBe(0);
   });
 });
+
+/* ------------------------------ §12.25 / §12.38 — the attempt row is the surface */
+
+describe("plan.build — every terminal path leaves exactly one RenderAttempt", () => {
+  /**
+   * §12.25's ruling, tested as the property it is: a failed plan build used to
+   * VANISH — no plan row (append-only, and a failure is precisely the case that
+   * creates none), no Render (it comes after a plan), no status table, no
+   * `GET /content/plans/:id`. The reason existed only in a log line and a
+   * BullMQ failure payload, neither of which is a UI surface.
+   *
+   * The assertion that matters throughout is `toBe(1)`: not "a row appears" but
+   * "exactly one row appears". A failure that writes two rows is a different
+   * bug from one that writes none and reads just as badly.
+   */
+
+  it("marks the attempt built, with no residual failure, when the plan materializes", async () => {
+    const { job, brief, template, footage } = await seedApprovedChain();
+    await runPlanBuild(job);
+
+    const attempts = await db.renderAttempt.findMany({ where: { tenantId } });
+    expect(attempts).toHaveLength(1);
+    const attempt = attempts[0]!;
+    expect(attempt.id).toBe(job.planId);
+    expect(attempt.status).toBe("built");
+    expect(attempt.failureCode).toBeNull();
+    expect(attempt.failureMessage).toBeNull();
+    expect(attempt.failureDetail).toBeNull();
+    expect(attempt.contentBriefId).toBe(brief.id);
+    expect(attempt.templateId).toBe(template.id);
+    expect(attempt.footageAssetId).toBe(footage.id);
+  });
+
+  it("keeps the attempt and the plan consistent — same id, both present, agreeing", async () => {
+    const { job } = await seedApprovedChain();
+    await runPlanBuild(job);
+
+    // The shared id IS the link between them (there is deliberately no FK —
+    // the plan may never exist). This is the assertion that keeps that
+    // convention honest.
+    const plan = await db.renderPlan.findUnique({ where: { id: job.planId } });
+    const attempt = await db.renderAttempt.findUnique({ where: { id: job.planId } });
+    expect(plan).not.toBeNull();
+    expect(attempt!.status).toBe("built");
+    expect(attempt!.contentBriefId).toBe(plan!.contentBriefId);
+    expect(attempt!.templateId).toBe(plan!.templateId);
+    expect(attempt!.footageAssetId).toBe(plan!.footageAssetId);
+  });
+
+  it("records plan_infeasible(analysis_missing) as ONE infeasible attempt, with the reason readable", async () => {
+    const brief = await seedContentBrief();
+    await asTenant(() =>
+      recordContentBriefDecision({ contentBriefId: brief.id, reviewer: "reviewer@test.example", action: "approve" }),
+    );
+    const template = await seedTemplate();
+    const footage = await seedFootage({ analysis: "failed" });
+    const job = {
+      tenantId,
+      planId: crypto.randomUUID(),
+      contentBriefId: brief.id,
+      templateId: template.id,
+      footageAssetId: footage.id,
+    };
+
+    await expect(runPlanBuild(job)).rejects.toThrow(/analysis_missing/);
+
+    expect(await db.renderAttempt.count({ where: { tenantId } })).toBe(1);
+    const attempt = await db.renderAttempt.findUniqueOrThrow({ where: { id: job.planId } });
+    expect(attempt.status).toBe("infeasible");
+    expect(attempt.failureCode).toBe("analysis_missing");
+    // 03 §7: a failure state must SAY something. A UI showing only a code
+    // teaches nobody what to do next.
+    expect(attempt.failureMessage).toMatch(/media\.analyze/);
+    expect(attempt.failureMessage!.length).toBeGreaterThan(40);
+    // And the row must not still be sitting at the plan table.
+    expect(await db.renderPlan.count({ where: { id: job.planId } })).toBe(0);
+  });
+
+  it("records plan_infeasible(unknown_template) as ONE infeasible attempt", async () => {
+    const brief = await seedContentBrief();
+    await asTenant(() =>
+      recordContentBriefDecision({ contentBriefId: brief.id, reviewer: "reviewer@test.example", action: "approve" }),
+    );
+    const template = await seedTemplate(`not-a-catalogued-id-${crypto.randomUUID()}`);
+    const footage = await seedFootage();
+    const job = {
+      tenantId,
+      planId: crypto.randomUUID(),
+      contentBriefId: brief.id,
+      templateId: template.id,
+      footageAssetId: footage.id,
+    };
+
+    await expect(runPlanBuild(job)).rejects.toThrow(/unknown_template/);
+    expect(await db.renderAttempt.count({ where: { tenantId } })).toBe(1);
+    const attempt = await db.renderAttempt.findUniqueOrThrow({ where: { id: job.planId } });
+    expect(attempt.status).toBe("infeasible");
+    expect(attempt.failureCode).toBe("unknown_template");
+  });
+
+  it("records plan_infeasible(g1a_below_gate) with the MEASUREMENT, not just a verdict", async () => {
+    const { job, footage } = await seedApprovedChain();
+    await db.mediaAnalysis.update({
+      where: { assetId: footage.id },
+      data: { beats: { ...BEATS, beatTimesMs: Array.from({ length: 97 }, (_, i) => i * 20) } },
+    });
+
+    await expect(runPlanBuild(job)).rejects.toThrow(/g1a_below_gate/);
+
+    const attempt = await db.renderAttempt.findUniqueOrThrow({ where: { id: job.planId } });
+    expect(attempt.status).toBe("infeasible");
+    expect(attempt.failureCode).toBe("g1a_below_gate");
+    // ADR-8 rejects a plan before it costs a render; the number it was
+    // rejected on is what makes that decision auditable after the fact.
+    expect(attempt.failureDetail).toHaveProperty("ratio");
+  });
+
+  it("records an UNEXPECTED error as `failed`, distinct from a named infeasibility", async () => {
+    const { job } = await seedApprovedChain();
+    // A footage id that does not resolve is not a `plan_infeasible` — it is a
+    // plain Error, and an operator needs to tell "we refused this plan" from
+    // "we broke" without reading a stack trace.
+    const broken = { ...job, planId: crypto.randomUUID(), footageAssetId: crypto.randomUUID() };
+
+    await expect(runPlanBuild(broken)).rejects.toThrow();
+
+    const attempt = await db.renderAttempt.findUniqueOrThrow({ where: { id: broken.planId } });
+    expect(attempt.status).toBe("failed");
+    expect(attempt.failureCode).toBe("plan_build_error");
+    expect(attempt.failureMessage).toBeTruthy();
+  });
+
+  it("a retry that succeeds CLEARS the failure rather than leaving two truths on one row", async () => {
+    const { job, footage } = await seedApprovedChain();
+    await db.mediaAnalysis.update({
+      where: { assetId: footage.id },
+      data: { status: MediaAnalysisStatus.failed, words: null, beats: null, error: "faster-whisper died" },
+    });
+
+    await expect(runPlanBuild(job)).rejects.toThrow(/analysis_missing/);
+    expect((await db.renderAttempt.findUniqueOrThrow({ where: { id: job.planId } })).status).toBe("infeasible");
+
+    // media.analyze re-runs and succeeds; the same job is retried.
+    await db.mediaAnalysis.update({
+      where: { assetId: footage.id },
+      data: { status: MediaAnalysisStatus.succeeded, words: WORDS, beats: BEATS, error: null },
+    });
+    await runPlanBuild(job);
+
+    expect(await db.renderAttempt.count({ where: { tenantId } })).toBe(1);
+    const attempt = await db.renderAttempt.findUniqueOrThrow({ where: { id: job.planId } });
+    expect(attempt.status).toBe("built");
+    expect(attempt.failureCode).toBeNull();
+    expect(attempt.failureMessage).toBeNull();
+    expect(attempt.failureDetail).toBeNull();
+  });
+
+  it("stays at one row across repeated failures of the same plan id", async () => {
+    const brief = await seedContentBrief();
+    await asTenant(() =>
+      recordContentBriefDecision({ contentBriefId: brief.id, reviewer: "reviewer@test.example", action: "approve" }),
+    );
+    const template = await seedTemplate();
+    const footage = await seedFootage({ analysis: "failed" });
+    const job = {
+      tenantId,
+      planId: crypto.randomUUID(),
+      contentBriefId: brief.id,
+      templateId: template.id,
+      footageAssetId: footage.id,
+    };
+
+    // BullMQ retries the same job; each attempt must update the row, not add one.
+    await expect(runPlanBuild(job)).rejects.toThrow();
+    await expect(runPlanBuild(job)).rejects.toThrow();
+    await expect(runPlanBuild(job)).rejects.toThrow();
+    expect(await db.renderAttempt.count({ where: { id: job.planId } })).toBe(1);
+  });
+
+  it("an already-materialized plan re-asserts `built` on a redundant retry", async () => {
+    const { job } = await seedApprovedChain();
+    await runPlanBuild(job);
+    // Force the attempt to look wrong, then re-run: the idempotent early
+    // return must still leave a truthful status, not a stale one.
+    await db.renderAttempt.update({
+      where: { id: job.planId },
+      data: { status: "infeasible", failureCode: "stale", failureMessage: "stale" },
+    });
+
+    await runPlanBuild(job);
+
+    const attempt = await db.renderAttempt.findUniqueOrThrow({ where: { id: job.planId } });
+    expect(attempt.status).toBe("built");
+    expect(attempt.failureCode).toBeNull();
+  });
+
+  it("keeps a cross-tenant attempt out of the OWNING tenant (invariant 5)", async () => {
+    const { job } = await seedApprovedChain();
+    const other = await db.tenant.create({ data: { slug: `other-${crypto.randomUUID()}`, name: "Other" } });
+    const foreign = { ...job, tenantId: other.id, planId: crypto.randomUUID() };
+
+    await expect(runPlanBuild(foreign)).rejects.toThrow();
+
+    // The precise property. The attempt is recorded in the tenant that ASKED
+    // — that tenant supplied every value on the row and is owed the reason its
+    // request failed — but nothing appears in the tenant that owns the brief,
+    // and nothing was read across the boundary to produce it.
+    expect(await db.renderAttempt.count({ where: { tenantId } })).toBe(0);
+    const recorded = await db.renderAttempt.findUniqueOrThrow({ where: { id: foreign.planId } });
+    expect(recorded.tenantId).toBe(other.id);
+    expect(recorded.status).toBe("failed");
+    expect(await db.renderPlan.count({})).toBe(0);
+  });
+});

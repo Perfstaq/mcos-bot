@@ -485,3 +485,250 @@ describe("POST /content/plans — approved-only enforcement", () => {
     expect(response.statusCode).toBe(409);
   });
 });
+
+/* ------------------- §12.25 / §12.38 — the plan attempt is a readable surface */
+
+describe("GET /content/plans/:id — plan_infeasible has somewhere to live", () => {
+  /**
+   * The gap §12.25 named: `POST /content/plans` returned a queued handle with
+   * a pre-allocated id, and there was nothing on the other end of that id to
+   * read. A user who hit `plan_infeasible` saw nothing, forever. These tests
+   * drive the HTTP surface a Studio user actually touches — the same posture
+   * as the gate tests above.
+   */
+  async function seedTemplateAndFootage() {
+    const template = await db.motionTemplate.create({
+      data: {
+        name: `vertical-standard-${crypto.randomUUID()}`,
+        archetype: "objection_killer",
+        framing: "letterbox",
+        slots: {},
+        fonts: {},
+        grade: {},
+      },
+    });
+    const footage = await db.mediaAsset.create({
+      data: { tenantId, kind: "footage", r2Key: `tenants/${tenantId}/studio/footage/${crypto.randomUUID()}`, contentType: "video/mp4", bytes: 1000n },
+    });
+    return { templateId: template.id, footageAssetId: footage.id };
+  }
+
+  /** An approved ContentBrief. `seedBriefVersion` pins `version: 1`, which is
+   *  unique per tenant, so a test wanting two plans reuses one brief rather
+   *  than seeding a second version. */
+  async function seedApprovedBrief(): Promise<string> {
+    const { versionId } = await seedBriefVersion([{ type: ClaimType.pain_point, text: "x" }]);
+    mockGeneratesOnePerArchetype();
+    const gen = await generate({ brief_version_id: versionId, channel: "reels", count: 1 });
+    const briefId = gen.json().briefs[0].id as string;
+    await app.inject({ method: "POST", url: `/api/v1/content/briefs/${briefId}/approve`, headers: HOME, payload: {} });
+    return briefId;
+  }
+
+  /** An approved brief + inputs, enqueued — i.e. the state right after a user
+   *  clicks "build". Returns the handle the route gave back. */
+  async function enqueuePlan(existingBriefId?: string) {
+    const briefId = existingBriefId ?? (await seedApprovedBrief());
+    const { templateId, footageAssetId } = await seedTemplateAndFootage();
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/v1/content/plans",
+      headers: HOME,
+      payload: { content_brief_id: briefId, template_id: templateId, footage_asset_id: footageAssetId },
+    });
+    return { planId: response.json().id as string, briefId, templateId, footageAssetId };
+  }
+
+  it("POST /content/plans opens the attempt at ENQUEUE, so the handle is pollable immediately", async () => {
+    const { planId, briefId, templateId, footageAssetId } = await enqueuePlan();
+
+    // The row must exist before the worker runs — otherwise a job that dies
+    // before its first line still leaves the user with nothing.
+    const attempt = await db.renderAttempt.findUniqueOrThrow({ where: { id: planId } });
+    expect(attempt.status).toBe("queued");
+    expect(attempt.contentBriefId).toBe(briefId);
+    expect(attempt.templateId).toBe(templateId);
+    expect(attempt.footageAssetId).toBe(footageAssetId);
+
+    const got = await app.inject({ method: "GET", url: `/api/v1/content/plans/${planId}`, headers: HOME });
+    expect(got.statusCode).toBe(200);
+    expect(got.json()).toMatchObject({ id: planId, status: "queued", failure_code: null, plan: null });
+  });
+
+  it("surfaces the failure code, the human reason and the measurement once the build fails", async () => {
+    const { planId } = await enqueuePlan();
+    await db.renderAttempt.update({
+      where: { id: planId },
+      data: {
+        status: "infeasible",
+        failureCode: "footage_too_short",
+        failureMessage: "footage is 1.2s; the shortest legal shot list needs at least 3s",
+        failureDetail: { durationSec: 1.2, minimumSec: 3 },
+      },
+    });
+
+    const got = await app.inject({ method: "GET", url: `/api/v1/content/plans/${planId}`, headers: HOME });
+    expect(got.statusCode).toBe(200);
+    const body = got.json();
+    expect(body.status).toBe("infeasible");
+    expect(body.failure_code).toBe("footage_too_short");
+    expect(body.failure_message).toMatch(/1\.2s/);
+    expect(body.failure_detail).toEqual({ durationSec: 1.2, minimumSec: 3 });
+    // 03 §7: surfaced AND retryable. The client must not have to infer which.
+    expect(body.retryable).toBe(true);
+  });
+
+  it("reports a built plan as built, with the plan's own identity beside it", async () => {
+    const { planId, briefId, templateId, footageAssetId } = await enqueuePlan();
+    await db.renderPlan.create({
+      data: { id: planId, tenantId, contentBriefId: briefId, templateId, footageAssetId, plan: {}, seed: 7, planVersion: "1", createdBy: "test" },
+    });
+    await db.renderAttempt.update({ where: { id: planId }, data: { status: "built" } });
+
+    const got = await app.inject({ method: "GET", url: `/api/v1/content/plans/${planId}`, headers: HOME });
+    const body = got.json();
+    expect(body.status).toBe("built");
+    expect(body.retryable).toBe(false);
+    expect(body.plan).toMatchObject({ id: planId, seed: 7, plan_version: "1" });
+  });
+
+  it("still answers for a plan built before this table existed, rather than 404ing on real work", async () => {
+    // RenderPlan is append-only and predates render_attempts. A row exists ⇔ a
+    // complete plan exists, so "built" is not an invention here — it is the
+    // only thing the plan's existence can mean.
+    const { versionId } = await seedBriefVersion([{ type: ClaimType.pain_point, text: "x" }]);
+    mockGeneratesOnePerArchetype();
+    const gen = await generate({ brief_version_id: versionId, channel: "reels", count: 1 });
+    const briefId = gen.json().briefs[0].id as string;
+    const { templateId, footageAssetId } = await seedTemplateAndFootage();
+    const orphan = await db.renderPlan.create({
+      data: { tenantId, contentBriefId: briefId, templateId, footageAssetId, plan: {}, seed: 1, planVersion: "1", createdBy: "test" },
+    });
+
+    const got = await app.inject({ method: "GET", url: `/api/v1/content/plans/${orphan.id}`, headers: HOME });
+    expect(got.statusCode).toBe(200);
+    expect(got.json().status).toBe("built");
+  });
+
+  it("404s on an unknown plan id", async () => {
+    const got = await app.inject({ method: "GET", url: `/api/v1/content/plans/${crypto.randomUUID()}`, headers: HOME });
+    expect(got.statusCode).toBe(404);
+  });
+
+  it("404s on another tenant's attempt instead of reading it (invariant 5)", async () => {
+    const { planId } = await enqueuePlan();
+    const other = await db.tenant.create({ data: { slug: `other-${crypto.randomUUID()}`, name: "Other" } });
+    const OTHER = { "x-tenant-slug": other.slug, "x-reviewer-email": "reviewer@other.example" };
+
+    const got = await app.inject({ method: "GET", url: `/api/v1/content/plans/${planId}`, headers: OTHER });
+    expect(got.statusCode).toBe(404);
+  });
+
+  it("GET /content/plans lists the tenant's attempts, newest first — the surface a user can FIND", async () => {
+    // Two plans from ONE approved brief, on different footage — the realistic
+    // shape of "that failed, try the other clip".
+    const briefId = await seedApprovedBrief();
+    const first = await enqueuePlan(briefId);
+    const second = await enqueuePlan(briefId);
+    await db.renderAttempt.update({
+      where: { id: first.planId },
+      data: { status: "infeasible", failureCode: "g1a_below_gate", failureMessage: "locked 41% of cuts against a 85% gate" },
+    });
+
+    const got = await app.inject({ method: "GET", url: "/api/v1/content/plans", headers: HOME });
+    expect(got.statusCode).toBe(200);
+    const body = got.json();
+    expect(body.total).toBe(2);
+    expect(body.plans.map((p: { id: string }) => p.id)).toContain(first.planId);
+    expect(body.plans.map((p: { id: string }) => p.id)).toContain(second.planId);
+    const failed = body.plans.find((p: { id: string }) => p.id === first.planId);
+    expect(failed.failure_code).toBe("g1a_below_gate");
+  });
+
+  it("does not list another tenant's attempts", async () => {
+    await enqueuePlan();
+    const other = await db.tenant.create({ data: { slug: `other-${crypto.randomUUID()}`, name: "Other" } });
+    const OTHER = { "x-tenant-slug": other.slug, "x-reviewer-email": "reviewer@other.example" };
+
+    const got = await app.inject({ method: "GET", url: "/api/v1/content/plans", headers: OTHER });
+    expect(got.json().total).toBe(0);
+  });
+});
+
+describe("POST /content/plans/:id/retry — 03 §7's 'all retryable', made real", () => {
+  async function seedTemplateAndFootage() {
+    const template = await db.motionTemplate.create({
+      data: { name: `vertical-standard-${crypto.randomUUID()}`, archetype: "objection_killer", framing: "letterbox", slots: {}, fonts: {}, grade: {} },
+    });
+    const footage = await db.mediaAsset.create({
+      data: { tenantId, kind: "footage", r2Key: `tenants/${tenantId}/studio/footage/${crypto.randomUUID()}`, contentType: "video/mp4", bytes: 1000n },
+    });
+    return { templateId: template.id, footageAssetId: footage.id };
+  }
+
+  async function enqueueFailedPlan() {
+    const { versionId } = await seedBriefVersion([{ type: ClaimType.pain_point, text: "x" }]);
+    mockGeneratesOnePerArchetype();
+    const gen = await generate({ brief_version_id: versionId, channel: "reels", count: 1 });
+    const briefId = gen.json().briefs[0].id as string;
+    await app.inject({ method: "POST", url: `/api/v1/content/briefs/${briefId}/approve`, headers: HOME, payload: {} });
+    const { templateId, footageAssetId } = await seedTemplateAndFootage();
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/v1/content/plans",
+      headers: HOME,
+      payload: { content_brief_id: briefId, template_id: templateId, footage_asset_id: footageAssetId },
+    });
+    const planId = response.json().id as string;
+    await db.renderAttempt.update({
+      where: { id: planId },
+      data: { status: "infeasible", failureCode: "analysis_missing", failureMessage: "media.analyze has not succeeded", failureDetail: { assetId: footageAssetId } },
+    });
+    return { planId, briefId };
+  }
+
+  it("CLEARS the failure and re-queues the SAME plan id", async () => {
+    const { planId } = await enqueueFailedPlan();
+
+    const retried = await app.inject({ method: "POST", url: `/api/v1/content/plans/${planId}/retry`, headers: HOME, payload: {} });
+    expect(retried.statusCode).toBe(200);
+    expect(retried.json()).toMatchObject({ id: planId, status: "queued", failure_code: null });
+
+    // Same row, reset — not a second attempt. Keeping the id is what makes the
+    // handle the user already has keep working across a retry.
+    expect(await db.renderAttempt.count({ where: { tenantId } })).toBe(1);
+    const attempt = await db.renderAttempt.findUniqueOrThrow({ where: { id: planId } });
+    expect(attempt.status).toBe("queued");
+    expect(attempt.failureCode).toBeNull();
+    expect(attempt.failureMessage).toBeNull();
+    expect(attempt.failureDetail).toBeNull();
+  });
+
+  it("re-checks the approval — a retry is a new permission question, not a replay", async () => {
+    const { planId, briefId } = await enqueueFailedPlan();
+    await app.inject({ method: "POST", url: `/api/v1/content/briefs/${briefId}/undo`, headers: HOME, payload: {} });
+
+    const retried = await app.inject({ method: "POST", url: `/api/v1/content/plans/${planId}/retry`, headers: HOME, payload: {} });
+    expect(retried.statusCode).toBe(422);
+    // And it must not have re-queued anything on the way to refusing.
+    expect((await db.renderAttempt.findUniqueOrThrow({ where: { id: planId } })).status).toBe("infeasible");
+  });
+
+  it("refuses to retry a plan that already BUILT — RenderPlan is append-only", async () => {
+    const { planId } = await enqueueFailedPlan();
+    await db.renderAttempt.update({ where: { id: planId }, data: { status: "built", failureCode: null, failureMessage: null } });
+
+    const retried = await app.inject({ method: "POST", url: `/api/v1/content/plans/${planId}/retry`, headers: HOME, payload: {} });
+    expect(retried.statusCode).toBe(409);
+  });
+
+  it("404s on another tenant's attempt", async () => {
+    const { planId } = await enqueueFailedPlan();
+    const other = await db.tenant.create({ data: { slug: `other-${crypto.randomUUID()}`, name: "Other" } });
+    const OTHER = { "x-tenant-slug": other.slug, "x-reviewer-email": "reviewer@other.example" };
+
+    const retried = await app.inject({ method: "POST", url: `/api/v1/content/plans/${planId}/retry`, headers: OTHER, payload: {} });
+    expect(retried.statusCode).toBe(404);
+  });
+});

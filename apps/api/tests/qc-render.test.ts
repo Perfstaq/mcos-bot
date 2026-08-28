@@ -13,6 +13,7 @@ import {
   gateG13,
   gateG14,
   parseIntegratedLufs,
+  rollUpQc,
 } from "../../../scripts/qc-render.js";
 
 /**
@@ -78,24 +79,120 @@ describe("G1a — musical intent", () => {
   });
 });
 
-describe("G1b — render fidelity", () => {
-  it("passes when detected cuts match plan cuts within the frame window", () => {
+/**
+ * A plan that REMOVES footage: each shot's source span does not continue where
+ * the previous one ended, so output time ≠ source time and the boundaries are
+ * real content discontinuities a scene detector can find. Same output timeline
+ * as `plan()` — only the source spans differ — so the two fixtures isolate
+ * exactly the property G1b's applicability turns on.
+ */
+function removalPlan(): RenderPlan {
+  return plan({
+    cuts: [
+      { id: "c0", sourceInMs: 0, sourceOutMs: 2000, outputStartMs: 0, outputEndMs: 2000 },
+      { id: "c1", sourceInMs: 9000, sourceOutMs: 11000, outputStartMs: 2000, outputEndMs: 4000 },
+      { id: "c2", sourceInMs: 20000, sourceOutMs: 22000, outputStartMs: 4000, outputEndMs: 6000 },
+    ],
+  });
+}
+
+describe("G1b — render fidelity, scored only where it is applicable (ARCHITECTURE §12.37)", () => {
+  it("returns not-applicable — NOT a failure — for a continuous playthrough", () => {
+    // §12.3: a scene detector finds content DISCONTINUITIES, and a plan that
+    // plays footage continuously and only changes framing has none to find.
+    // The old behaviour scored this 2/29 and reported a hard red on every
+    // template; a permanently red gate is a dead gate.
     const g = gateG1b(plan(), [2010, 4030]);
+
+    expect(g.pass).toBeNull();
+    expect(g.computable).toBe(false);
+    expect(g.notApplicable).toEqual({
+      code: "continuous_playback_no_discontinuities",
+      see: "ARCHITECTURE §12.3, §12.13",
+    });
+  });
+
+  it("is distinguishable from a gate that genuinely passed", () => {
+    const excluded = gateG1b(plan(), [2010, 4030]);
+    const scored = gateG1b(removalPlan(), [2010, 4030]);
+
+    expect(scored.pass).toBe(true);
+    expect(scored.notApplicable).toBeUndefined();
+    // Same gate id, same detected cuts, opposite verdicts — the difference is
+    // the plan, which is the whole point.
+    expect(excluded.pass).not.toBe(scored.pass);
+  });
+
+  it("carries the evidence for the exclusion, so it is never a bare assertion", () => {
+    const g = gateG1b(plan(), [2010, 4030]);
+    const measured = g.measured as { removesFootage: boolean; planCuts: number; detectedCuts: number };
+    expect(measured.removesFootage).toBe(false);
+    expect(measured.planCuts).toBe(2);
+    expect(measured.detectedCuts).toBe(2);
+    expect(g.note).toMatch(/continuous/i);
+  });
+
+  it("still SCORES a plan that removes footage — the exclusion is derived, not hardcoded", () => {
+    // The day 03 §6's selection stage ships, G1b starts measuring again with
+    // no code change. This is that assertion.
+    const g = gateG1b(removalPlan(), [2010, 4030]);
+    expect(g.notApplicable).toBeUndefined();
+    expect(g.computable).toBe(true);
     expect(g.pass).toBe(true);
   });
 
-  it("fails when fewer than 90% of plan cuts have a matching detected cut", () => {
-    const g = gateG1b(plan(), [2010]); // only 1 of 2 cuts matched
+  it("fails a removal plan when fewer than 90% of its cuts have a matching detected cut", () => {
+    const g = gateG1b(removalPlan(), [2010]); // only 1 of 2 cuts matched
     expect(g.pass).toBe(false);
+    expect(g.notApplicable).toBeUndefined();
   });
 
   it("reports the informational pixel beat-lock ratio without gating on it", () => {
     // Detected cuts intentionally far from both plan cuts AND the beat grid —
     // matchedRatio fails, but the gate must still report the informational
     // number rather than omitting it.
-    const g = gateG1b(plan(), [2010, 4030, 5900]);
+    const g = gateG1b(removalPlan(), [2010, 4030, 5900]);
     const measured = g.measured as { informationalPixelBeatLockRatio: number | null };
     expect(measured.informationalPixelBeatLockRatio).not.toBeNull();
+  });
+
+  it("treats a one-millisecond source gap as rounding, not as a removal", () => {
+    // The same tolerance `assertOutputTimeGrid` uses: a real removal is orders
+    // of magnitude larger than ms-rounding at a span boundary.
+    const p = plan();
+    p.cuts[1]!.sourceInMs = 2001;
+    expect(gateG1b(p, [2010, 4030]).notApplicable).not.toBeUndefined();
+  });
+});
+
+describe("the QC rollup — an excluded gate is visibly excluded, never silently dropped", () => {
+  it("does not let a not-applicable hard gate turn the report red", () => {
+    const gates = [gateG1a(plan()), gateG1b(plan(), [2010, 4030])];
+    const roll = rollUpQc(gates);
+
+    expect(roll.overallPass).toBe(true);
+    expect(roll.excludedGates).toEqual([
+      { id: "G1b", code: "continuous_playback_no_discontinuities", see: "ARCHITECTURE §12.3, §12.13" },
+    ]);
+  });
+
+  it("still fails the report when an APPLICABLE hard gate fails", () => {
+    const roll = rollUpQc([gateG1a(plan()), gateG1b(removalPlan(), [2010])]);
+    expect(roll.overallPass).toBe(false);
+    expect(roll.excludedGates).toEqual([]);
+  });
+
+  it("does not count a not-applicable gate toward the scored total", () => {
+    const roll = rollUpQc([gateG1a(plan()), gateG1b(plan(), [2010, 4030])]);
+    expect(roll.scored).toBe(1);
+  });
+
+  it("excludes a not-applicable gate even if it were also marked computable", () => {
+    // Belt and braces on purpose: the rollup must not depend on `computable`
+    // and `notApplicable` agreeing. If a later gate sets one and not the
+    // other, a hard gate must not silently rejoin the pass set.
+    const g = { ...gateG1b(plan(), [2010, 4030]), computable: true, pass: false as boolean | null };
+    expect(rollUpQc([g]).overallPass).toBe(true);
   });
 });
 

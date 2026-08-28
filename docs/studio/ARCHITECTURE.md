@@ -1659,3 +1659,139 @@ retried sweep re-selects it and finishes rather than double-purging or silently 
 per-asset failure is caught and counted, not thrown — one broken delete must not block every other
 tenant's eligible purge for the day, and a row that failed simply stays eligible for tomorrow's sweep,
 which is a simpler and tighter retry loop than any explicit backoff bookkeeping this job could add.
+### 12.37 G1b is `not_applicable`, derived per-plan — resolving §12.3
+
+§12.3 diagnosed G1b correctly and then left it failing. Every template and every render reported a
+hard red on it, and §12.18's honest summary — "code-complete and pass 12 of 13 automated gates" —
+was carrying that red permanently. Two options were open: ship a licensed music bed so `03 §6`'s
+footage-removal stage could exist (§12.13 rules the two are inseparable), or mark the gate. **I
+surveyed the repo: there is no audio asset anywhere and no `data/music-library`.** Removal
+therefore cannot exist, so G1b cannot pass under any plan we are able to build. It is marked.
+
+**Ruling: G1b returns a not-applicable verdict — `pass: null` plus a machine-readable
+`notApplicable: { code, see }` — for any plan that does not remove footage. The QC report is
+green-with-exclusion, never green-by-omission.**
+
+Three properties make this an exclusion rather than a disabled gate, and each is asserted by a test
+that fails if it is removed:
+
+1. **Derived from the plan, never hardcoded.** The predicate is `planRemovesFootage(plan)` in
+   `packages/render/src/plan.ts`: a plan removes footage exactly when some shot's source span does
+   not continue where the last one ended. Nothing checks a flag, a template id or a milestone
+   number. The day the selection stage ships with a bed, its plans remove footage and G1b starts
+   scoring again with **no code change and no migration** — which is the whole difference between
+   deferring a measurement and abandoning one. A test asserts both directions on two fixtures that
+   differ only in their source spans.
+2. **Visibly excluded, never silently dropped.** `QcReport` grows `excludedGates` and
+   `scoredGateCount` as first-class fields, and the console prints `PASS (12 hard gates scored · 1
+   excluded (n/a))` with a `–` mark distinct from `·`. A green report beside an unscored gate is the
+   exact shape of the lies §12.21 and §12.10 record; the exclusion is lifted to the top of the
+   report so no reader has to reconstruct it by scanning for nulls.
+3. **Distinguished from "could not measure".** `computable: false` already meant a real contract gap
+   (G10 without `--words`). "Does not apply to this artifact" is a different claim and now says so
+   in its own field. `rollUpQc` checks `computable` **and** `notApplicable` independently, so a
+   future gate that sets one and forgets the other cannot silently rejoin the pass set — there is a
+   test that flips `computable` back to true and still expects exclusion.
+
+**Verified against the real artifacts, not fixtures.** Re-scoring the three committed evidence
+plans (`docs/studio/evidence/*/plan.json`) with their own recorded detected-cut counts:
+`statement_serif`, `staccato_condensed` and `editorial_sans` each go `removesFootage=false` ⇒ G1b
+n/a ⇒ `overallPass false → true`, **12 gates scored, 1 excluded**. That is §12.18's "12 of 13"
+arriving at an honest verdict instead of a permanent red. The committed `qc.json` files and
+`manifest.json` still record the old shape; they are dated by `renderedFromCommit` per §12.10, so
+they are stale rather than wrong, and will pick up `excludedGates` at the next regeneration. That
+needs a real render, which needs the analyzer venv §12.23 notes is missing outside `st-p`.
+
+**What would reverse this.** Any of: a licensed bed landing and `03 §6` shipping, at which point
+plans remove footage and the exclusion evaporates on its own — no reversal needed, which is the
+design. A decision that framing changes SHOULD be detectable discontinuities, which would make G1b
+measurable on continuous plans; §12.3 already refused that as gaming the gate, and reversing it
+means arguing with §12.3, not with this. Or evidence that some continuous plan does produce real
+detected cuts — the exclusion's `measured.detectedCuts` is recorded precisely so that would show up
+rather than being assumed away.
+
+**G1a is untouched**, and remains the gate that means something today (§12.3): 29/29 against a real
+librosa grid, where the human editor who cut the reference scores 0.821.
+
+**Noted, not fixed:** `assertOutputTimeGrid` in `apps/api/src/domain/studio/style-transfer.ts:483`
+carries its own copy of this predicate, written before there was a shared home for it. The two now
+agree by construction of having been written from the same ruling, which is exactly the arrangement
+§12.32 warns drifts. Collapsing it onto `planRemovesFootage` is a one-line change in a file this
+workstream had no other reason to open — left as a follow-up rather than taken as a drive-by.
+
+### 12.38 `render_attempts` — building the surface §12.25 ruled
+
+§12.25 ruled the shape and nobody built it, so `plan_infeasible` stayed invisible through two more
+merges (§12.33 records it still open). Built now, as ruled: a lightweight, deliberately **mutable**
+attempt row keyed on the plan id `POST /content/plans` already pre-allocates, so the handle the
+route was already handing back became the thing you poll. Migration is strictly additive — one
+enum, one table, its indexes, one FK; no existing table is altered (invariant 6).
+
+**`RenderPlan` stays pure.** It is read by the new routes and never written or annotated. A row
+exists ⇔ a complete, reproducible plan exists, which is what §12.25 refused to trade for a status
+column, and what lets `qc-render.ts` score G1a against the grid embedded in the exact row a render
+was built from. The two rows share an id and carry no FK between them: the plan may never exist, and
+a nullable link would reintroduce exactly the "rows that are not plans" confusion the ruling
+rejected.
+
+**What the ruling did not settle, and how it was settled.**
+
+- **The failure codes are read, not guessed.** `PlanInfeasibleCode` in `plan-builder.ts` enumerates
+  eight: `analysis_missing`, `analysis_incomplete`, `banner_wrap`, `footage_too_short`,
+  `g1a_below_gate`, `invalid_grid_configuration`, `no_locked_cut_path`, `unknown_template`. The
+  brief that assigned this work also named `template_slot_unfillable`; **no such code exists** and
+  nothing can emit it. Anything that is not a `PlanInfeasibleError` — an unresolvable footage id, a
+  dead connection — is recorded as `failed` under `plan_build_error`, kept distinct from
+  `infeasible` because a user can act on "footage too short" and cannot act on "we broke".
+- **The job records its own failure, not just the worker's handler.** §12.25 says "the processor
+  updates it". Implemented as `runPlanBuild` recording on its way out, with `failPlanBuild`
+  re-asserting on permanent failure. Two reasons, both concrete: a `plan_infeasible` is a *verdict*
+  that will fail identically on every retry, so making the user wait out two BullMQ backoffs before
+  the reason appears is a worse surface than no retries; and `failPlanBuild` only runs if the
+  worker's `failed` handler is wired, while `prove-plan-chain.ts` builds its own Worker — the seam
+  §12.33 already called thin. Recording inside the job makes the row a property of the **job**
+  rather than of the worker that happened to run it. Both paths upsert the same key, so the count
+  stays 1.
+- **Upsert, never create-or-update.** The contract is *exactly one row per plan id*; `create`
+  collides on a retry and `update` silently writes nothing when the enqueue-time row is missing,
+  restoring the vanishing failure the table exists to prevent. Upsert states the invariant instead
+  of assuming it. `domain/studio/render-attempt.ts` is the single writer, same posture
+  `content-gate.ts` holds over `ContentBrief.status`.
+- **Retry re-checks the approval; it does not replay.** `POST /content/plans/:id/retry` re-queues
+  the *same* plan id with the failure cleared, after calling `requireApprovedContentBrief` — a retry
+  is a fresh request to build from a brief that may have been undone, rejected or superseded since.
+  §12.12a's lesson applies with more force to work queued twice. `plan.build`'s `FOR UPDATE`
+  re-check at materialization is still the guarantee; this is the fast rejection.
+- **A pre-migration plan is not a 404.** `GET /content/plans/:id` falls back to the `RenderPlan` row
+  when no attempt exists and reports `built`. That is reading the plan's existence, not inventing a
+  status — append-only purity is precisely what makes it unambiguous.
+- **A cross-tenant request records in the tenant that ASKED.** Every value on such a row was
+  supplied by the caller and nothing is read across the boundary; the owning tenant gets nothing.
+  Asserted in both directions rather than left to inference.
+
+**Driven end to end, not just unit-tested** (`scripts/studio/prove-plan-chain.ts`, runs 2c/2d — real
+HTTP route → real Redis → real registered processor → real row → real HTTP read). A footage asset
+with a failed `MediaAnalysis`: `GET /content/plans/:id` returns `queued` *before the worker runs*,
+then `infeasible` / `analysis_missing` / `retryable: true` with the job's own sentence, **1 attempt
+row and 0 plan rows**. Re-analysis then `POST …/retry` returns to `queued` on the same id and
+completes `built` with the plan materialized — still **1 attempt row, not 2**. The script asserts
+both and fails the chain if either regresses.
+
+**A defect only looking caught.** The UI surface first went into `.pane.rail-types`, which
+typechecked and rendered correctly — and `styles.css` hides that rail entirely below 1240px. A
+failure surface that disappears on a narrow window is a silent failure with extra steps. Moved to a
+strip in normal flow under the screen header, verified in a browser at 1100px and 820px, with the
+reason legible, the code beside it, and Retry confirmed issuing `POST /content/plans/:id/retry`.
+This is the fifth defect this milestone invisible to every static check (§12.26's count), and it
+cost one screenshot to find.
+
+**What would reverse this.** A decision that plan status belongs on `RenderPlan` after all — which
+means arguing with §12.25's purity grounds, not with this. A move to synchronous plan building,
+which would make the attempt row redundant (there would be an HTTP response to fail into) — plausible
+given `plan.build` is 60s of pure computation with no LLM call, and it would simplify this away
+entirely. Or `Render` being materialized before its plan, which would give the failure an existing
+home; §12.25 rejected that as inverting the pipeline's ordering, and that reasoning still holds.
+
+**Left open, deliberately:** the attempt row is never garbage-collected. Rows are small and one per
+build request, so this is not urgent, but it is unbounded — the retention workstream's sweep is the
+natural owner and this table should be on its list.

@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import type { FastifyInstance } from "fastify";
-import { ContentBriefStatus, ContentChannel, MediaAssetKind } from "@prisma/client";
+import { ContentBriefStatus, ContentChannel, MediaAssetKind, RenderAttemptStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../db.js";
 import { ApiError, requireCtx } from "../http.js";
@@ -11,6 +11,7 @@ import {
 } from "../domain/content-gate.js";
 import { generateContentBriefs } from "../domain/studio/generate-content-brief.js";
 import { frameworkById } from "../domain/studio/frameworks.js";
+import { isRetryableAttemptStatus, openRenderAttempt } from "../domain/studio/render-attempt.js";
 import { HOOK_TEXT_MAX } from "../integrations/content-brief-model.js";
 import { planBuildQueue, renderSubmitQueue } from "../queue.js";
 
@@ -177,6 +178,20 @@ export async function contentRoutes(app: FastifyInstance): Promise<void> {
     }
 
     const planId = crypto.randomUUID();
+
+    // ARCHITECTURE §12.25/§12.38 — the attempt row is opened BEFORE the
+    // enqueue, so the id this route returns is pollable from the moment the
+    // caller has it. Ordered this way on purpose: if the enqueue fails, the
+    // worst case is a `queued` row for a job that never ran (visibly stuck,
+    // and retryable), rather than an id pointing at nothing.
+    await openRenderAttempt({
+      planId,
+      tenantId: ctx.tenantId,
+      contentBriefId: content_brief_id,
+      templateId: template_id,
+      footageAssetId: footage_asset_id,
+    });
+
     await planBuildQueue.add("build", {
       tenantId: ctx.tenantId,
       planId,
@@ -192,6 +207,131 @@ export async function contentRoutes(app: FastifyInstance): Promise<void> {
       template_id,
       footage_asset_id,
     };
+  });
+
+  /**
+   * The other end of the handle `POST /content/plans` returns
+   * (ARCHITECTURE §12.25, §12.38).
+   *
+   * `03 §7` requires every failure state to be surfaced and retryable, and a
+   * failed plan build used to vanish completely — no plan row, no Render, no
+   * status anywhere. This reads the attempt row, which is the only thing that
+   * exists on the failure path, and reports the plan beside it when there is
+   * one.
+   *
+   * `RenderPlan` stays PURE: it is read here, never written or annotated. A row
+   * exists if and only if a complete, reproducible plan exists, which is the
+   * property §12.25 refused to trade for a status column.
+   */
+  app.get("/content/plans/:id", async (request) => {
+    requireCtx(request);
+    const { id } = request.params as { id: string };
+
+    const [attempt, plan] = await Promise.all([
+      prisma.renderAttempt.findUnique({ where: { id } }),
+      prisma.renderPlan.findUnique({ where: { id } }),
+    ]);
+
+    if (!attempt) {
+      // A plan built before this table existed. `RenderPlan` is append-only and
+      // predates `render_attempts`, so its existence is not ambiguous: a row
+      // means a complete plan. Reporting `built` here is reading that fact, not
+      // inventing a status — and 404ing on real work would be worse than
+      // either.
+      if (plan) return serializePlanStatus(null, plan);
+      throw ApiError.notFound(`Plan ${id} not found`);
+    }
+
+    return serializePlanStatus(attempt, plan);
+  });
+
+  const plansQuerySchema = z.object({
+    status: z.nativeEnum(RenderAttemptStatus).optional(),
+    limit: z.coerce.number().int().min(1).max(200).default(50),
+  });
+
+  /** The list the Studio UI needs to FIND a failed build. Without it the only
+   *  way to reach a plan id is the POST response, which a user who navigated
+   *  away no longer has — and "surfaced" would again mean "surfaced to whoever
+   *  still had the tab open". */
+  app.get("/content/plans", async (request) => {
+    requireCtx(request);
+    const parsed = plansQuerySchema.safeParse(request.query);
+    if (!parsed.success) throw ApiError.badRequest("Invalid query", parsed.error.flatten());
+
+    const attempts = await prisma.renderAttempt.findMany({
+      where: parsed.data.status ? { status: parsed.data.status } : {},
+      orderBy: [{ createdAt: "desc" }],
+      take: parsed.data.limit,
+    });
+    const plans = await prisma.renderPlan.findMany({ where: { id: { in: attempts.map((a) => a.id) } } });
+    const byId = new Map(plans.map((p) => [p.id, p]));
+
+    return {
+      plans: attempts.map((a) => serializePlanStatus(a, byId.get(a.id) ?? null)),
+      total: attempts.length,
+    };
+  });
+
+  /**
+   * `03 §7`: every failure state is retryable. Re-queues the SAME plan id, so
+   * the handle the caller already holds keeps working across the retry and the
+   * attempt stays one row rather than accumulating one per press.
+   *
+   * The approval is re-checked here, not replayed: a retry is a fresh request
+   * to build from a brief, and the brief may have been undone, rejected or
+   * superseded since the first attempt. §12.12a's lesson — *a permission
+   * checked when work is queued is not a permission held when work runs* —
+   * applies with more force to work queued twice. `plan.build` re-checks it
+   * again under a row lock at materialization; this is the fast rejection, not
+   * the guarantee.
+   */
+  app.post("/content/plans/:id/retry", async (request) => {
+    const ctx = requireCtx(request);
+    const { id } = request.params as { id: string };
+
+    const attempt = await prisma.renderAttempt.findUnique({ where: { id } });
+    if (!attempt) throw ApiError.notFound(`Plan ${id} not found`);
+
+    if (!isRetryableAttemptStatus(attempt.status)) {
+      throw ApiError.conflict(
+        attempt.status === RenderAttemptStatus.built
+          ? `Plan ${id} already built — RenderPlan is append-only, so there is nothing to retry. ` +
+            "Build a new plan instead."
+          : `Plan ${id} is ${attempt.status} — wait for it to finish before retrying.`,
+      );
+    }
+
+    await requireApprovedContentBrief(attempt.contentBriefId);
+
+    const template = await prisma.motionTemplate.findUnique({ where: { id: attempt.templateId } });
+    if (!template || !template.active) throw ApiError.notFound(`Template ${attempt.templateId} not found`);
+
+    const footage = await prisma.mediaAsset.findUnique({ where: { id: attempt.footageAssetId } });
+    if (!footage || footage.kind !== MediaAssetKind.footage) {
+      throw ApiError.notFound(`Footage asset ${attempt.footageAssetId} not found`);
+    }
+
+    await openRenderAttempt({
+      planId: attempt.id,
+      tenantId: ctx.tenantId,
+      contentBriefId: attempt.contentBriefId,
+      templateId: attempt.templateId,
+      footageAssetId: attempt.footageAssetId,
+    });
+
+    await planBuildQueue.add("build", {
+      tenantId: ctx.tenantId,
+      planId: attempt.id,
+      contentBriefId: attempt.contentBriefId,
+      templateId: attempt.templateId,
+      footageAssetId: attempt.footageAssetId,
+    });
+
+    return serializePlanStatus(
+      await prisma.renderAttempt.findUniqueOrThrow({ where: { id: attempt.id } }),
+      null,
+    );
   });
 
   const renderSchema = z.object({ plan_id: z.string().uuid() });
@@ -252,6 +392,54 @@ function serializeContentBrief(brief: NonNullable<ContentBriefRow>) {
     generation_note: brief.generationNote,
     created_at: brief.createdAt.toISOString(),
     decided_at: brief.decidedAt?.toISOString() ?? null,
+  };
+}
+
+type RenderAttemptRow = NonNullable<Awaited<ReturnType<typeof prisma.renderAttempt.findFirst>>>;
+type RenderPlanRow = NonNullable<Awaited<ReturnType<typeof prisma.renderPlan.findFirst>>>;
+
+/**
+ * One plan id, reported as a status (ARCHITECTURE §12.25, §12.38).
+ *
+ * The attempt row carries the status and the reason; the `RenderPlan` carries
+ * the artifact. They share an id and are reported together, but the plan is
+ * never annotated to say so — `RenderPlan` stays exactly what §12.25 kept it
+ * as: a row that exists if and only if a complete, reproducible plan does.
+ *
+ * `attempt: null` means a plan built before `render_attempts` existed. The
+ * plan's own existence is the status in that case.
+ *
+ * `retryable` is computed here rather than left to the client to infer from
+ * the status string. 03 §7 requires failures to be *retryable*, and a client
+ * reconstructing the rule from an enum is a client that will get it wrong the
+ * first time a status is added.
+ */
+function serializePlanStatus(attempt: RenderAttemptRow | null, plan: RenderPlanRow | null) {
+  const status = attempt?.status ?? RenderAttemptStatus.built;
+  return {
+    id: attempt?.id ?? plan!.id,
+    status,
+    retryable: attempt ? isRetryableAttemptStatus(attempt.status) : false,
+    content_brief_id: attempt?.contentBriefId ?? plan!.contentBriefId,
+    template_id: attempt?.templateId ?? plan!.templateId,
+    footage_asset_id: attempt?.footageAssetId ?? plan!.footageAssetId,
+    failure_code: attempt?.failureCode ?? null,
+    failure_message: attempt?.failureMessage ?? null,
+    failure_detail: attempt?.failureDetail ?? null,
+    created_at: (attempt?.createdAt ?? plan!.createdAt).toISOString(),
+    updated_at: attempt?.updatedAt.toISOString() ?? null,
+    // The plan itself, when there is one. Deliberately NOT the `plan` jsonb
+    // payload — that is the render's input, often megabytes, and a status
+    // poller has no use for it.
+    plan: plan
+      ? {
+          id: plan.id,
+          seed: plan.seed,
+          plan_version: plan.planVersion,
+          created_by: plan.createdBy,
+          created_at: plan.createdAt.toISOString(),
+        }
+      : null,
   };
 }
 

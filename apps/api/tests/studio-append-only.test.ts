@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { prisma } from "../src/db.js";
-import { AppendOnlyViolationError } from "../src/domain/append-only.js";
+import { APPEND_ONLY_MODELS, AppendOnlyViolationError } from "../src/domain/append-only.js";
 
 /**
  * RenderPlan joined APPEND_ONLY_MODELS in the Prisma migration commit
@@ -42,5 +42,33 @@ describe("RenderPlan append-only enforcement", () => {
     const error = new AppendOnlyViolationError("RenderPlan", "update");
     expect(error.message).not.toMatch(/brief version/i);
     expect(error.message).toMatch(/RenderPlan/);
+  });
+});
+
+/**
+ * RenderAttempt is the deliberate OPPOSITE case, and that needs asserting
+ * rather than assuming (ARCHITECTURE §12.25, §12.38).
+ *
+ * §12.25 rejected a status column on `RenderPlan` precisely to keep it
+ * append-only — a row exists ⇔ a complete, reproducible plan exists — and put
+ * the mutable status on its own row instead. So `render_attempts` MUST be
+ * writable in place: one row per plan id, updated on every terminal path. If a
+ * later reader saw "Render*" in the studio schema and added it to
+ * `APPEND_ONLY_MODELS` out of tidiness, every failure would stop being
+ * recordable and the surface §12.25 exists to provide would silently go away
+ * again — with the guard's error swallowed by `recordRenderAttemptFailure`'s
+ * deliberate catch, so nothing would even be noisy about it.
+ *
+ * §12.7's rule applied to a schema decision: an exemption that nothing tests is
+ * indistinguishable from a bug.
+ */
+describe("RenderAttempt is deliberately NOT append-only", () => {
+  it("allows the in-place updates its whole purpose depends on", async () => {
+    // These may fail for other reasons (no such row, no tenant context) but
+    // must never fail with AppendOnlyViolationError.
+    await expect(
+      prisma.renderAttempt.updateMany({ where: { id: "does-not-exist" }, data: { failureCode: "x" } }),
+    ).resolves.toBeDefined();
+    expect(APPEND_ONLY_MODELS.has("RenderAttempt")).toBe(false);
   });
 });
