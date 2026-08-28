@@ -1826,3 +1826,92 @@ sorts first regardless of `limit`, so it demonstrated nothing. I removed it and 
 in the test file instead. A test that passes with and without the fix is worse than no test: it is
 false assurance, which is the failure mode this milestone found five separate times. **Mutate a new
 test before trusting it.**
+
+### 12.40 W4.1 on real locked-off footage — what held, and what did not
+
+First render against genuinely locked-off talking-head footage (`talking-head-v1.mp4`, sha256
+`7dbc78be…`, staged outside git per §12.10; a 1080×1920 proxy `dd17a360…` is the working source —
+the content region is 1080px wide and the master is 2160, so the downscale is lossless *for this
+pipeline*, the inverse of §12.18's upscaling complaint).
+
+**What held.** §12.22's chin-anchored face floor **works on footage never used to tune it** — no
+caption touches the jaw. G1a is 100% on all three templates (32/29/23 cuts). The gate was exercised
+for real over HTTP, producing a `ContentBriefDecision` row.
+
+**Correction to my own pre-flight claim.** I reported that "nothing in the codebase applies rotation
+metadata", from a grep. Too strong: cv2, ffmpeg and Chromium **all auto-apply the display matrix** —
+cv2 reports 2160×3840, ffmpeg stills come out portrait, and a proxy built with `scale=1080:-2` is
+portrait. The real exposure is narrower and still worth fixing: **only ffprobe's raw stream
+`width`/`height` is pre-rotation**, so the first upload path populating `MediaAsset` from those
+fields records every portrait phone video as landscape. A grep proves what code says, not what
+libraries do.
+
+**No analyzer defect.** The apparent disagreements were different quantities: "136 onsets" vs 137
+beats is §11.3's N⇒N−1 convention; the duration gap is container vs audio stream (both real, and
+`plan-build.ts:141` already prefers the container and says why); and my staged pause list was a
+**waveform silence** measurement — reproduced exactly with `silencedetect -35dB` — while the
+analyzer emits word timings and never emitted a pause list. Comparing them was my error.
+
+**Chasing the one mismatch found something real.** faster-whisper **runs word ends into silence** —
+`"temple"` spans 16.34→17.76 (1.42s) at RMS 0.025; four such words total 4.18s. Since §12.2 made
+word edges the legal cut candidates, those spans are **uncuttable**, and a caption sits on screen
+1.4s after speech stopped. It never starves the DP (largest candidate gap 1.84s against a 5.0s
+maximum). Fix when owned: trim word ends against an RMS floor — the signal is already in the payload.
+
+### 12.41 Ruling — `editorial_sans` fails G2 by seed draw; fix the template, not the gate
+
+It produced **23.1 cuts/min against G2's 25–40 band**, and a seed sweep shows it is not the
+fixture's fault: **3 of 8 seeds fail on this footage, 1 of 8 on the reference.** Its curve centres
+around 26–27 against a floor of 25 — about 5% margin — so passing has been a coin toss, and it has
+shipped with roughly a one-in-eight chance of an ungateable plan.
+
+The agent declined to retune, correctly naming the risk that tuning numbers until a gate goes green
+is §12.3's failure in costume. **The distinction: §12.3 was moving a gate's threshold to accommodate
+an algorithm that could not meet it. This is moving a template's design centre to respect a band
+fixed first.** The 25–40 band is the product contract for "a reel" (`01 §9`, `07 §1`) and predates
+the template.
+
+**Ruling: retune `editorial_sans`'s rhythm curve to centre with real margin inside the band** —
+target ~29–30 cuts/min so the full seed spread sits inside 25–40 — and add a seed-sweep test that
+fails if any seed in a fixed set lands outside. A template satisfying its own gate on 5 of 8 seeds
+is not slow, it is broken. **Do not touch G2.**
+
+### 12.42 Ruling — ADR-8's pre-render rejection is implemented for G1a only
+
+ADR-8 says a plan failing its gate is rejected at `plan.build` "so it never costs a render". That is
+wired for **G1a alone**, yet G2–G10 are all plan-decidable — §12.6 deliberately made G7 and G9 so —
+and all hard. §12.41 is the proof: a plan that could not pass G2 was materialised and would have
+burned a full render before anything noticed.
+
+**Ruling: `buildApprovedRenderPlan` evaluates every plan-decidable hard gate before persisting**,
+emitting `plan_infeasible` with the failing gate and its measured value. G11/G12/G13 need the
+rendered file and stay post-render. This is what ADR-8 meant; only its implementation was partial.
+
+### 12.43 §12.16 was right about the face and silent about the hands
+
+Two captions land on the subject's **hands** (7.47s, 30.0s). §12.16 reasoned that a 62.5% content
+region leaves room below the face. It does — and this subject gestures into that room continuously.
+The premise was correct about the one occupant it considered and said nothing about any other,
+which is the same shape as the bug it was written to fix.
+
+**Ruling: captions default to the letterbox bars.** `02 §2.2`'s in-video `center` becomes opt-in,
+available to a template only with a documented reason — restoring §11.1 R2's actual logic, that the
+bars are *structurally* safe, which is why face detection was descoped, and which §12.5 partially
+undid. G6's ≥3 distinct positions come from horizontal variation within the bars, where the
+reference's own `lower_left`/`center_low` distinction already lives. A gesturing talking head is the
+**common** case for this product, not an edge case.
+
+From the same pass, both ours: a chunk at **1.20s** straddles the video/bar boundary, one line on
+the shirt and one on black — a block must sit wholly inside one region. And **5 of 35 emphasis words
+are stopwords** (`is`, `you`, `one`, `the`): G8 is mechanically clean while being editorially wrong,
+so the scorer needs a floor a stopword cannot clear on audio energy alone.
+
+### 12.44 The fixture's content caps the comparison — for the Reviewer
+
+`talking-head-v1.mp4` is an unedited take: retakes ("temple is a… temple is an…"), a name that
+changes mid-clip, and a flubbed ending at 57.8–59.3s that the pipeline renders faithfully because
+faithful rendering is what it does. **`07 §3` asks whether a stranger can immediately pick our
+render as the professional one. That question is about the motion system, not the script.** Judge
+cut placement, caption behaviour, motion and grade; do not mark the PerfStaq render down for saying
+what the speaker said. A better take raises both sides equally and changes nothing about which one
+looks edited.
