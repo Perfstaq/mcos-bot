@@ -39,7 +39,6 @@ import {
   faceFloorOriginY,
   faceFloorViolationsForBlock,
   regionContainmentViolations,
-  letterboxVideoBand,
   pickEmphasis,
   positionForShot,
   rmsStats,

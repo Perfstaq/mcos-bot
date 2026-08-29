@@ -36,6 +36,7 @@
     "demo:reset": "npm run demo:reset -w @mcos/api",
     "eval:extraction": "npm run eval:extraction -w @mcos/api --",
     "test:e2e:install": "playwright install --with-deps chromium",
+    "pretest:e2e": "npm run build -w @mcos/render && npm run build:scripts",
     "test:e2e": "playwright test --config e2e/playwright.config.ts"
   },
   "devDependencies": {
