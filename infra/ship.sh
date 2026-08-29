@@ -13,11 +13,22 @@
 # It builds from a dedicated worktree of origin/main so that whatever you have
 # checked out in the main working copy is irrelevant to what ships.
 #
-# TAG is pinned by hand, and deliberately so. The preflight below compares it
-# against origin/main AND against the image_tag in production.auto.tfvars, and
-# both comparisons only mean something because a human wrote the value down
-# once and the machine checked it twice. Deriving TAG from origin/main would
-# turn the first check into a tautology.
+# TAG is DERIVED from origin/main, and cross-checked against the image_tag that
+# production.auto.tfvars pins.
+#
+# It was hardcoded here until a moment ago, and the header argued that a human
+# writing the value down once and the machine checking it twice was the safety.
+# That reasoning does not survive a protected main: any commit that pins TAG to
+# main's tip *becomes* main's tip, so the hardcoded value is stale the instant
+# it lands. It was only ever self-consistent for M1 because the script sat on an
+# unmerged branch while main stood still — the first time it was asked to ship
+# from main twice, it refused its own release.
+#
+# The check that actually prevents shipping the wrong build is untouched, and it
+# is the second one. Terraform registers task definitions from image_tag in
+# production.auto.tfvars; that file is gitignored, so a human still writes the
+# value down, in the one place a machine cannot derive it from. If it disagrees
+# with what we are about to build and push, this refuses before the push.
 #
 # NOTE — this ships the lean image (./Dockerfile: api + worker + migrate).
 # Dockerfile.media, which carries the Python analyzer venv, scripts/dist and
@@ -39,7 +50,6 @@ cd "$(dirname "$0")/.."
 # the worst place in this sequence to stop.
 eval "$(aws configure export-credentials --profile mcos --format env)"
 
-TAG="aeeda6d"                 # main's tip = Milestone 2 (PR #21)
 REGISTRY="138067046920.dkr.ecr.ap-southeast-2.amazonaws.com"
 REPO="mcos-production"
 WORKTREE="../mcos-deploy"
@@ -47,15 +57,13 @@ WORKTREE="../mcos-deploy"
 echo "== preflight"
 aws sts get-caller-identity --profile mcos --query Arn --output text
 git fetch origin main --quiet
-ACTUAL=$(git rev-parse --short origin/main)
-if [[ "$ACTUAL" != "$TAG" ]]; then
-  echo "   main is at $ACTUAL but this script ships $TAG." >&2
-  echo "   Update TAG (and infra/terraform/production.auto.tfvars) or rebase." >&2
-  exit 1
-fi
+TAG=$(git rev-parse --short origin/main)
+echo "   origin/main = $TAG"
 grep -q "image_tag = \"$TAG\"" infra/terraform/production.auto.tfvars || {
-  echo "   production.auto.tfvars does not pin image_tag=$TAG — refusing to deploy" >&2
-  echo "   a tag mismatch here is how a 'successful' deploy serves the wrong build." >&2
+  echo "   production.auto.tfvars does not pin image_tag=$TAG — refusing to deploy." >&2
+  echo "   Set it to \`image_tag = \"$TAG\"\` if $TAG is what you mean to ship." >&2
+  echo "   A tag mismatch here is how a 'successful' deploy serves the wrong build:" >&2
+  echo "   this script would push \$TAG while terraform registered the other one." >&2
   exit 1
 }
 
