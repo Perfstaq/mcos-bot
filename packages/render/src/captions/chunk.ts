@@ -50,6 +50,50 @@ function endsClause(word: string): boolean {
   return CLAUSE_END.test(word.trim());
 }
 
+/**
+ * Whether a chunk can be DRAWN where it is going (§12.43).
+ *
+ * The chunker's own rules are about meaning — word count, punctuation, gaps —
+ * and knew nothing about how wide the words render. That was fine while
+ * captions sat over the footage, where a block could wrap to two lines and
+ * still have room. In the bars it is not: the bottom bar is 129.6px and a
+ * second line does not fit, so a chunk that wraps has nowhere legal to go and
+ * would be rejected by the containment check with no way to fix it downstream.
+ *
+ * Passed IN rather than computed here on purpose: this file would otherwise
+ * have to import font metrics and type scales, which are template-resolved
+ * and belong on the other side of that boundary. Optional, and omitting it
+ * restores the previous word-count-only behaviour exactly.
+ */
+export type ChunkFitPredicate = (words: ScoredWord[]) => boolean;
+
+/**
+ * Split any chunk that cannot be drawn into ones that can.
+ *
+ * Greedy from the left, and it never returns an empty chunk: a single word too
+ * wide for the box is emitted alone and left to the G9 horizontal check, which
+ * is the same posture `wrapLines` takes for an unbreakable word. Splitting is
+ * always safe for timing because every chunk's start/end are read from its own
+ * words, so two halves simply show one after the other.
+ */
+export function splitChunksToFit(chunks: ScoredWord[][], fits: ChunkFitPredicate): ScoredWord[][] {
+  const out: ScoredWord[][] = [];
+  for (const chunk of chunks) {
+    let current: ScoredWord[] = [];
+    for (const word of chunk) {
+      const candidate = [...current, word];
+      if (current.length > 0 && !fits(candidate)) {
+        out.push(current);
+        current = [word];
+      } else {
+        current = candidate;
+      }
+    }
+    if (current.length) out.push(current);
+  }
+  return out;
+}
+
 /** Split a word list into 1–3 word groups by 02 §2.2's three rules. */
 export function chunkWords(words: ScoredWord[]): ScoredWord[][] {
   const chunks: ScoredWord[][] = [];
@@ -111,6 +155,12 @@ export type CaptionTrackInput = {
    * is the implementation templates pass in.
    */
   positionForShot?: (shotIndex: number) => CaptionPosition;
+  /**
+   * §12.43 — whether a chunk fits on one line where it will be drawn. Chunks
+   * that do not are split until they do. Omitted means "everything fits",
+   * which is the pre-§12.43 behaviour.
+   */
+  fits?: ChunkFitPredicate;
 };
 
 /**
@@ -122,7 +172,9 @@ export type CaptionTrackInput = {
 export function buildCaptionTrack(input: CaptionTrackInput): CaptionChunkPlan[] {
   const ctx: EmphasisContext = buildEmphasisContext(input.words, input.claimTexts);
   const offsets = sentenceOffsets(input.words);
-  const chunks = chunkWords(input.words);
+  const chunks = input.fits
+    ? splitChunksToFit(chunkWords(input.words), input.fits)
+    : chunkWords(input.words);
   const positionAt = input.positionForShot ?? positionForShot;
 
   const plans: CaptionChunkPlan[] = [];

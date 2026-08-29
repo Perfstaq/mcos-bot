@@ -1,0 +1,1203 @@
+{
+  "language": "en",
+  "durationSec": 59.605,
+  "segments": [
+    {
+      "start": 0.02,
+      "end": 4.46,
+      "text": "If you are wondering what that small device was on Depender Goel's forehead in the latest",
+      "words": [
+        {
+          "word": "If",
+          "start": 0.02,
+          "end": 0.52,
+          "score": 0.4749,
+          "rms": 0.157
+        },
+        {
+          "word": "you",
+          "start": 0.52,
+          "end": 0.62,
+          "score": 0.9772,
+          "rms": 0.378387
+        },
+        {
+          "word": "are",
+          "start": 0.62,
+          "end": 0.72,
+          "score": 0.894,
+          "rms": 0.357134
+        },
+        {
+          "word": "wondering",
+          "start": 0.72,
+          "end": 1.04,
+          "score": 0.9914,
+          "rms": 0.265562
+        },
+        {
+          "word": "what",
+          "start": 1.04,
+          "end": 1.32,
+          "score": 0.8599,
+          "rms": 0.216004
+        },
+        {
+          "word": "that",
+          "start": 1.32,
+          "end": 1.5,
+          "score": 0.4473,
+          "rms": 0.216539
+        },
+        {
+          "word": "small",
+          "start": 1.5,
+          "end": 1.72,
+          "score": 0.9746,
+          "rms": 0.113005
+        },
+        {
+          "word": "device",
+          "start": 1.72,
+          "end": 2.1,
+          "score": 0.9809,
+          "rms": 0.170656
+        },
+        {
+          "word": "was",
+          "start": 2.1,
+          "end": 2.34,
+          "score": 0.951,
+          "rms": 0.094846
+        },
+        {
+          "word": "on",
+          "start": 2.34,
+          "end": 2.64,
+          "score": 0.9218,
+          "rms": 0.044368
+        },
+        {
+          "word": "Depender",
+          "start": 2.64,
+          "end": 2.94,
+          "score": 0.6681,
+          "rms": 0.072736
+        },
+        {
+          "word": "Goel's",
+          "start": 2.94,
+          "end": 3.42,
+          "score": 0.5319,
+          "rms": 0.131391
+        },
+        {
+          "word": "forehead",
+          "start": 3.42,
+          "end": 3.64,
+          "score": 0.8151,
+          "rms": 0.168235
+        },
+        {
+          "word": "in",
+          "start": 3.64,
+          "end": 4.06,
+          "score": 0.9001,
+          "rms": 0.052707
+        },
+        {
+          "word": "the",
+          "start": 4.06,
+          "end": 4.16,
+          "score": 0.9849,
+          "rms": 0.144249
+        },
+        {
+          "word": "latest",
+          "start": 4.16,
+          "end": 4.46,
+          "score": 0.9975,
+          "rms": 0.209087
+        }
+      ]
+    },
+    {
+      "start": 4.46,
+      "end": 8.0,
+      "text": "interview with Raj Samani, let me explain it to people who do not know.",
+      "words": [
+        {
+          "word": "interview",
+          "start": 4.46,
+          "end": 4.86,
+          "score": 0.9973,
+          "rms": 0.136652
+        },
+        {
+          "word": "with",
+          "start": 4.86,
+          "end": 5.14,
+          "score": 0.9702,
+          "rms": 0.136397
+        },
+        {
+          "word": "Raj",
+          "start": 5.14,
+          "end": 5.26,
+          "score": 0.8367,
+          "rms": 0.163556
+        },
+        {
+          "word": "Samani,",
+          "start": 5.26,
+          "end": 5.7,
+          "score": 0.75,
+          "rms": 0.072044
+        },
+        {
+          "word": "let",
+          "start": 6.02,
+          "end": 6.22,
+          "score": 0.9507,
+          "rms": 0.098769
+        },
+        {
+          "word": "me",
+          "start": 6.22,
+          "end": 6.38,
+          "score": 0.996,
+          "rms": 0.173913
+        },
+        {
+          "word": "explain",
+          "start": 6.38,
+          "end": 6.66,
+          "score": 0.9871,
+          "rms": 0.142952
+        },
+        {
+          "word": "it",
+          "start": 6.66,
+          "end": 6.8,
+          "score": 0.614,
+          "rms": 0.153186
+        },
+        {
+          "word": "to",
+          "start": 6.8,
+          "end": 6.9,
+          "score": 0.9829,
+          "rms": 0.098964
+        },
+        {
+          "word": "people",
+          "start": 6.9,
+          "end": 7.18,
+          "score": 0.9832,
+          "rms": 0.100784
+        },
+        {
+          "word": "who",
+          "start": 7.18,
+          "end": 7.44,
+          "score": 0.9609,
+          "rms": 0.146055
+        },
+        {
+          "word": "do",
+          "start": 7.44,
+          "end": 7.6,
+          "score": 0.4154,
+          "rms": 0.169357
+        },
+        {
+          "word": "not",
+          "start": 7.6,
+          "end": 7.74,
+          "score": 0.8846,
+          "rms": 0.162815
+        },
+        {
+          "word": "know.",
+          "start": 7.74,
+          "end": 8.0,
+          "score": 0.9944,
+          "rms": 0.033608
+        }
+      ]
+    },
+    {
+      "start": 8.58,
+      "end": 11.96,
+      "text": "This device is called Temple and it is founded by Depender Goel himself.",
+      "words": [
+        {
+          "word": "This",
+          "start": 8.58,
+          "end": 9.04,
+          "score": 0.9103,
+          "rms": 0.124251
+        },
+        {
+          "word": "device",
+          "start": 9.04,
+          "end": 9.32,
+          "score": 0.9757,
+          "rms": 0.2952
+        },
+        {
+          "word": "is",
+          "start": 9.32,
+          "end": 9.54,
+          "score": 0.9877,
+          "rms": 0.203833
+        },
+        {
+          "word": "called",
+          "start": 9.54,
+          "end": 9.7,
+          "score": 0.9943,
+          "rms": 0.227266
+        },
+        {
+          "word": "Temple",
+          "start": 9.7,
+          "end": 10.02,
+          "score": 0.7371,
+          "rms": 0.140663
+        },
+        {
+          "word": "and",
+          "start": 10.02,
+          "end": 10.3,
+          "score": 0.8195,
+          "rms": 0.123959
+        },
+        {
+          "word": "it",
+          "start": 10.3,
+          "end": 10.48,
+          "score": 0.5524,
+          "rms": 0.131415
+        },
+        {
+          "word": "is",
+          "start": 10.48,
+          "end": 10.48,
+          "score": 0.8257,
+          "rms": 0.0
+        },
+        {
+          "word": "founded",
+          "start": 10.48,
+          "end": 10.74,
+          "score": 0.8848,
+          "rms": 0.268828
+        },
+        {
+          "word": "by",
+          "start": 10.74,
+          "end": 10.96,
+          "score": 0.9969,
+          "rms": 0.278194
+        },
+        {
+          "word": "Depender",
+          "start": 10.96,
+          "end": 11.28,
+          "score": 0.9658,
+          "rms": 0.175755
+        },
+        {
+          "word": "Goel",
+          "start": 11.28,
+          "end": 11.58,
+          "score": 0.9889,
+          "rms": 0.21282
+        },
+        {
+          "word": "himself.",
+          "start": 11.58,
+          "end": 11.96,
+          "score": 0.9802,
+          "rms": 0.108835
+        }
+      ]
+    },
+    {
+      "start": 12.76,
+      "end": 20.2,
+      "text": "Temple is an experimental smart variable that sits on, temple is a smart, temple is an",
+      "words": [
+        {
+          "word": "Temple",
+          "start": 12.76,
+          "end": 12.92,
+          "score": 0.9529,
+          "rms": 0.176417
+        },
+        {
+          "word": "is",
+          "start": 12.92,
+          "end": 13.16,
+          "score": 0.9914,
+          "rms": 0.268216
+        },
+        {
+          "word": "an",
+          "start": 13.16,
+          "end": 13.3,
+          "score": 0.9694,
+          "rms": 0.160998
+        },
+        {
+          "word": "experimental",
+          "start": 13.3,
+          "end": 13.78,
+          "score": 0.8546,
+          "rms": 0.194134
+        },
+        {
+          "word": "smart",
+          "start": 13.78,
+          "end": 14.44,
+          "score": 0.8727,
+          "rms": 0.183446
+        },
+        {
+          "word": "variable",
+          "start": 14.44,
+          "end": 15.06,
+          "score": 0.8257,
+          "rms": 0.148027
+        },
+        {
+          "word": "that",
+          "start": 15.06,
+          "end": 15.52,
+          "score": 0.7008,
+          "rms": 0.079138
+        },
+        {
+          "word": "sits",
+          "start": 15.52,
+          "end": 15.7,
+          "score": 0.9882,
+          "rms": 0.136548
+        },
+        {
+          "word": "on,",
+          "start": 15.7,
+          "end": 15.98,
+          "score": 0.8875,
+          "rms": 0.160699
+        },
+        {
+          "word": "temple",
+          "start": 16.34,
+          "end": 17.76,
+          "score": 0.2767,
+          "rms": 0.024798
+        },
+        {
+          "word": "is",
+          "start": 17.76,
+          "end": 17.96,
+          "score": 0.9868,
+          "rms": 0.170098
+        },
+        {
+          "word": "a",
+          "start": 17.96,
+          "end": 18.06,
+          "score": 0.8466,
+          "rms": 0.182643
+        },
+        {
+          "word": "smart,",
+          "start": 18.06,
+          "end": 18.38,
+          "score": 0.9831,
+          "rms": 0.205852
+        },
+        {
+          "word": "temple",
+          "start": 18.78,
+          "end": 19.66,
+          "score": 0.9275,
+          "rms": 0.026836
+        },
+        {
+          "word": "is",
+          "start": 19.66,
+          "end": 19.92,
+          "score": 0.9882,
+          "rms": 0.129074
+        },
+        {
+          "word": "an",
+          "start": 19.92,
+          "end": 20.2,
+          "score": 0.9807,
+          "rms": 0.109182
+        }
+      ]
+    },
+    {
+      "start": 20.2,
+      "end": 24.72,
+      "text": "experimental smart variable that sits near your forehead which is also known as Temple.",
+      "words": [
+        {
+          "word": "experimental",
+          "start": 20.2,
+          "end": 20.66,
+          "score": 0.988,
+          "rms": 0.140116
+        },
+        {
+          "word": "smart",
+          "start": 20.66,
+          "end": 21.34,
+          "score": 0.9898,
+          "rms": 0.17903
+        },
+        {
+          "word": "variable",
+          "start": 21.34,
+          "end": 21.84,
+          "score": 0.9967,
+          "rms": 0.213854
+        },
+        {
+          "word": "that",
+          "start": 21.84,
+          "end": 22.4,
+          "score": 0.9093,
+          "rms": 0.082264
+        },
+        {
+          "word": "sits",
+          "start": 22.4,
+          "end": 22.58,
+          "score": 0.9807,
+          "rms": 0.154001
+        },
+        {
+          "word": "near",
+          "start": 22.58,
+          "end": 22.84,
+          "score": 0.9985,
+          "rms": 0.150295
+        },
+        {
+          "word": "your",
+          "start": 22.84,
+          "end": 22.98,
+          "score": 0.9485,
+          "rms": 0.235946
+        },
+        {
+          "word": "forehead",
+          "start": 22.98,
+          "end": 23.3,
+          "score": 0.9976,
+          "rms": 0.223365
+        },
+        {
+          "word": "which",
+          "start": 23.3,
+          "end": 23.72,
+          "score": 0.6641,
+          "rms": 0.076144
+        },
+        {
+          "word": "is",
+          "start": 23.72,
+          "end": 23.82,
+          "score": 0.9881,
+          "rms": 0.113489
+        },
+        {
+          "word": "also",
+          "start": 23.82,
+          "end": 24.06,
+          "score": 0.9877,
+          "rms": 0.162861
+        },
+        {
+          "word": "known",
+          "start": 24.06,
+          "end": 24.2,
+          "score": 0.9964,
+          "rms": 0.202807
+        },
+        {
+          "word": "as",
+          "start": 24.2,
+          "end": 24.42,
+          "score": 0.9979,
+          "rms": 0.136634
+        },
+        {
+          "word": "Temple.",
+          "start": 24.42,
+          "end": 24.72,
+          "score": 0.741,
+          "rms": 0.086612
+        }
+      ]
+    },
+    {
+      "start": 24.9,
+      "end": 28.1,
+      "text": "That is the name and continuously tracks blood flow to the brain.",
+      "words": [
+        {
+          "word": "That",
+          "start": 24.9,
+          "end": 25.1,
+          "score": 0.6796,
+          "rms": 0.229097
+        },
+        {
+          "word": "is",
+          "start": 25.1,
+          "end": 25.2,
+          "score": 0.5482,
+          "rms": 0.175928
+        },
+        {
+          "word": "the",
+          "start": 25.2,
+          "end": 25.32,
+          "score": 0.9847,
+          "rms": 0.271003
+        },
+        {
+          "word": "name",
+          "start": 25.32,
+          "end": 25.46,
+          "score": 0.9953,
+          "rms": 0.179762
+        },
+        {
+          "word": "and",
+          "start": 25.46,
+          "end": 25.78,
+          "score": 0.7463,
+          "rms": 0.084868
+        },
+        {
+          "word": "continuously",
+          "start": 25.78,
+          "end": 26.5,
+          "score": 0.9612,
+          "rms": 0.124956
+        },
+        {
+          "word": "tracks",
+          "start": 26.5,
+          "end": 26.94,
+          "score": 0.9039,
+          "rms": 0.131452
+        },
+        {
+          "word": "blood",
+          "start": 26.94,
+          "end": 27.28,
+          "score": 0.7026,
+          "rms": 0.112073
+        },
+        {
+          "word": "flow",
+          "start": 27.28,
+          "end": 27.6,
+          "score": 0.949,
+          "rms": 0.149387
+        },
+        {
+          "word": "to",
+          "start": 27.6,
+          "end": 27.76,
+          "score": 0.9865,
+          "rms": 0.183431
+        },
+        {
+          "word": "the",
+          "start": 27.76,
+          "end": 27.88,
+          "score": 0.9622,
+          "rms": 0.183363
+        },
+        {
+          "word": "brain.",
+          "start": 27.88,
+          "end": 28.1,
+          "score": 0.9974,
+          "rms": 0.090399
+        }
+      ]
+    },
+    {
+      "start": 28.1,
+      "end": 32.0,
+      "text": "A few months ago, Depender Shail and interesting idea he is researching.",
+      "words": [
+        {
+          "word": "A",
+          "start": 28.1,
+          "end": 28.48,
+          "score": 0.588,
+          "rms": 0.038726
+        },
+        {
+          "word": "few",
+          "start": 28.48,
+          "end": 28.64,
+          "score": 0.9965,
+          "rms": 0.14281
+        },
+        {
+          "word": "months",
+          "start": 28.64,
+          "end": 28.86,
+          "score": 0.9637,
+          "rms": 0.275947
+        },
+        {
+          "word": "ago,",
+          "start": 28.86,
+          "end": 29.14,
+          "score": 0.9879,
+          "rms": 0.174827
+        },
+        {
+          "word": "Depender",
+          "start": 29.3,
+          "end": 29.62,
+          "score": 0.6111,
+          "rms": 0.178601
+        },
+        {
+          "word": "Shail",
+          "start": 29.62,
+          "end": 30.08,
+          "score": 0.571,
+          "rms": 0.219844
+        },
+        {
+          "word": "and",
+          "start": 30.08,
+          "end": 30.54,
+          "score": 0.367,
+          "rms": 0.0643
+        },
+        {
+          "word": "interesting",
+          "start": 30.54,
+          "end": 30.98,
+          "score": 0.752,
+          "rms": 0.141886
+        },
+        {
+          "word": "idea",
+          "start": 30.98,
+          "end": 31.32,
+          "score": 0.8727,
+          "rms": 0.133407
+        },
+        {
+          "word": "he",
+          "start": 31.32,
+          "end": 31.52,
+          "score": 0.9609,
+          "rms": 0.204615
+        },
+        {
+          "word": "is",
+          "start": 31.52,
+          "end": 31.64,
+          "score": 0.5586,
+          "rms": 0.118386
+        },
+        {
+          "word": "researching.",
+          "start": 31.64,
+          "end": 32.0,
+          "score": 0.9724,
+          "rms": 0.074916
+        }
+      ]
+    },
+    {
+      "start": 33.7,
+      "end": 40.7,
+      "text": "In very simple terms, he believes gravity might be, he believes gravity might be one",
+      "words": [
+        {
+          "word": "In",
+          "start": 33.7,
+          "end": 34.22,
+          "score": 0.9443,
+          "rms": 0.039544
+        },
+        {
+          "word": "very",
+          "start": 34.22,
+          "end": 34.42,
+          "score": 0.9882,
+          "rms": 0.197633
+        },
+        {
+          "word": "simple",
+          "start": 34.42,
+          "end": 34.76,
+          "score": 0.9934,
+          "rms": 0.208887
+        },
+        {
+          "word": "terms,",
+          "start": 34.76,
+          "end": 35.32,
+          "score": 0.9855,
+          "rms": 0.19761
+        },
+        {
+          "word": "he",
+          "start": 37.16,
+          "end": 37.32,
+          "score": 0.8363,
+          "rms": 0.092078
+        },
+        {
+          "word": "believes",
+          "start": 37.32,
+          "end": 37.64,
+          "score": 0.9705,
+          "rms": 0.284339
+        },
+        {
+          "word": "gravity",
+          "start": 37.64,
+          "end": 38.02,
+          "score": 0.9188,
+          "rms": 0.245898
+        },
+        {
+          "word": "might",
+          "start": 38.02,
+          "end": 38.38,
+          "score": 0.7763,
+          "rms": 0.196178
+        },
+        {
+          "word": "be,",
+          "start": 38.38,
+          "end": 38.6,
+          "score": 0.9539,
+          "rms": 0.182895
+        },
+        {
+          "word": "he",
+          "start": 38.72,
+          "end": 39.36,
+          "score": 0.8716,
+          "rms": 0.044553
+        },
+        {
+          "word": "believes",
+          "start": 39.36,
+          "end": 39.68,
+          "score": 0.992,
+          "rms": 0.247986
+        },
+        {
+          "word": "gravity",
+          "start": 39.68,
+          "end": 40.04,
+          "score": 0.9706,
+          "rms": 0.179032
+        },
+        {
+          "word": "might",
+          "start": 40.04,
+          "end": 40.34,
+          "score": 0.9695,
+          "rms": 0.156901
+        },
+        {
+          "word": "be",
+          "start": 40.34,
+          "end": 40.5,
+          "score": 0.9962,
+          "rms": 0.16735
+        },
+        {
+          "word": "one",
+          "start": 40.5,
+          "end": 40.7,
+          "score": 0.9822,
+          "rms": 0.159595
+        }
+      ]
+    },
+    {
+      "start": 40.7,
+      "end": 47.24,
+      "text": "of the reasons we age because as humans stand straight, he believes gravity might be",
+      "words": [
+        {
+          "word": "of",
+          "start": 40.7,
+          "end": 40.78,
+          "score": 0.9956,
+          "rms": 0.221909
+        },
+        {
+          "word": "the",
+          "start": 40.78,
+          "end": 40.92,
+          "score": 0.993,
+          "rms": 0.197319
+        },
+        {
+          "word": "reasons",
+          "start": 40.92,
+          "end": 41.2,
+          "score": 0.9893,
+          "rms": 0.165633
+        },
+        {
+          "word": "we",
+          "start": 41.2,
+          "end": 41.6,
+          "score": 0.8148,
+          "rms": 0.086423
+        },
+        {
+          "word": "age",
+          "start": 41.6,
+          "end": 41.94,
+          "score": 0.9662,
+          "rms": 0.067196
+        },
+        {
+          "word": "because",
+          "start": 41.94,
+          "end": 42.56,
+          "score": 0.5268,
+          "rms": 0.111364
+        },
+        {
+          "word": "as",
+          "start": 42.56,
+          "end": 42.82,
+          "score": 0.9094,
+          "rms": 0.158743
+        },
+        {
+          "word": "humans",
+          "start": 42.82,
+          "end": 43.12,
+          "score": 0.798,
+          "rms": 0.250141
+        },
+        {
+          "word": "stand",
+          "start": 43.12,
+          "end": 43.4,
+          "score": 0.1063,
+          "rms": 0.170829
+        },
+        {
+          "word": "straight,",
+          "start": 43.4,
+          "end": 43.84,
+          "score": 0.5046,
+          "rms": 0.163747
+        },
+        {
+          "word": "he",
+          "start": 44.7,
+          "end": 45.86,
+          "score": 0.963,
+          "rms": 0.026138
+        },
+        {
+          "word": "believes",
+          "start": 45.86,
+          "end": 46.24,
+          "score": 0.9914,
+          "rms": 0.20681
+        },
+        {
+          "word": "gravity",
+          "start": 46.24,
+          "end": 46.66,
+          "score": 0.992,
+          "rms": 0.191006
+        },
+        {
+          "word": "might",
+          "start": 46.66,
+          "end": 47.0,
+          "score": 0.9831,
+          "rms": 0.172528
+        },
+        {
+          "word": "be",
+          "start": 47.0,
+          "end": 47.24,
+          "score": 0.9976,
+          "rms": 0.155198
+        }
+      ]
+    },
+    {
+      "start": 47.24,
+      "end": 50.3,
+      "text": "one of the reasons we age because humans stand upright.",
+      "words": [
+        {
+          "word": "one",
+          "start": 47.24,
+          "end": 47.44,
+          "score": 0.9947,
+          "rms": 0.193934
+        },
+        {
+          "word": "of",
+          "start": 47.44,
+          "end": 47.54,
+          "score": 0.9965,
+          "rms": 0.173228
+        },
+        {
+          "word": "the",
+          "start": 47.54,
+          "end": 47.68,
+          "score": 0.9968,
+          "rms": 0.198536
+        },
+        {
+          "word": "reasons",
+          "start": 47.68,
+          "end": 47.92,
+          "score": 0.9896,
+          "rms": 0.18432
+        },
+        {
+          "word": "we",
+          "start": 47.92,
+          "end": 48.24,
+          "score": 0.9927,
+          "rms": 0.103488
+        },
+        {
+          "word": "age",
+          "start": 48.24,
+          "end": 48.52,
+          "score": 0.9989,
+          "rms": 0.047394
+        },
+        {
+          "word": "because",
+          "start": 48.52,
+          "end": 49.1,
+          "score": 0.8916,
+          "rms": 0.131319
+        },
+        {
+          "word": "humans",
+          "start": 49.1,
+          "end": 49.54,
+          "score": 0.9804,
+          "rms": 0.210952
+        },
+        {
+          "word": "stand",
+          "start": 49.54,
+          "end": 49.9,
+          "score": 0.9921,
+          "rms": 0.198653
+        },
+        {
+          "word": "upright.",
+          "start": 49.9,
+          "end": 50.3,
+          "score": 0.9937,
+          "rms": 0.110824
+        }
+      ]
+    },
+    {
+      "start": 50.76,
+      "end": 57.26,
+      "text": "Gravity slows, gravity slowly makes it harder for blood to flow optimally to the brain or",
+      "words": [
+        {
+          "word": "Gravity",
+          "start": 50.76,
+          "end": 50.94,
+          "score": 0.9701,
+          "rms": 0.238858
+        },
+        {
+          "word": "slows,",
+          "start": 50.94,
+          "end": 51.36,
+          "score": 0.1809,
+          "rms": 0.207433
+        },
+        {
+          "word": "gravity",
+          "start": 52.06,
+          "end": 53.48,
+          "score": 0.9904,
+          "rms": 0.094263
+        },
+        {
+          "word": "slowly",
+          "start": 53.48,
+          "end": 53.9,
+          "score": 0.9921,
+          "rms": 0.228313
+        },
+        {
+          "word": "makes",
+          "start": 53.9,
+          "end": 54.2,
+          "score": 0.9932,
+          "rms": 0.302366
+        },
+        {
+          "word": "it",
+          "start": 54.2,
+          "end": 54.42,
+          "score": 0.9933,
+          "rms": 0.135642
+        },
+        {
+          "word": "harder",
+          "start": 54.42,
+          "end": 54.74,
+          "score": 0.9844,
+          "rms": 0.22038
+        },
+        {
+          "word": "for",
+          "start": 54.74,
+          "end": 55.02,
+          "score": 0.9787,
+          "rms": 0.168401
+        },
+        {
+          "word": "blood",
+          "start": 55.02,
+          "end": 55.2,
+          "score": 0.9743,
+          "rms": 0.155159
+        },
+        {
+          "word": "to",
+          "start": 55.2,
+          "end": 55.42,
+          "score": 0.9936,
+          "rms": 0.180731
+        },
+        {
+          "word": "flow",
+          "start": 55.42,
+          "end": 55.62,
+          "score": 0.9951,
+          "rms": 0.125382
+        },
+        {
+          "word": "optimally",
+          "start": 55.62,
+          "end": 56.18,
+          "score": 0.9826,
+          "rms": 0.159906
+        },
+        {
+          "word": "to",
+          "start": 56.18,
+          "end": 56.38,
+          "score": 0.9758,
+          "rms": 0.127759
+        },
+        {
+          "word": "the",
+          "start": 56.38,
+          "end": 56.48,
+          "score": 0.9782,
+          "rms": 0.139434
+        },
+        {
+          "word": "brain",
+          "start": 56.48,
+          "end": 56.7,
+          "score": 0.9982,
+          "rms": 0.109766
+        },
+        {
+          "word": "or",
+          "start": 56.7,
+          "end": 57.26,
+          "score": 0.448,
+          "rms": 0.106413
+        }
+      ]
+    },
+    {
+      "start": 57.26,
+      "end": 59.28,
+      "text": "what the fuck you are doing.",
+      "words": [
+        {
+          "word": "what",
+          "start": 57.26,
+          "end": 57.82,
+          "score": 0.0423,
+          "rms": 0.064756
+        },
+        {
+          "word": "the",
+          "start": 57.82,
+          "end": 58.54,
+          "score": 0.3409,
+          "rms": 0.028891
+        },
+        {
+          "word": "fuck",
+          "start": 58.54,
+          "end": 58.78,
+          "score": 0.5648,
+          "rms": 0.006359
+        },
+        {
+          "word": "you",
+          "start": 58.78,
+          "end": 59.04,
+          "score": 0.4571,
+          "rms": 0.01885
+        },
+        {
+          "word": "are",
+          "start": 59.04,
+          "end": 59.16,
+          "score": 0.1854,
+          "rms": 0.002955
+        },
+        {
+          "word": "doing.",
+          "start": 59.16,
+          "end": 59.28,
+          "score": 0.4453,
+          "rms": 0.000122
+        }
+      ]
+    }
+  ]
+}

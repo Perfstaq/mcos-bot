@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Content Studio render engine — the Remotion bundle root. Compositions are typed React components taking a RenderPlan as props; nothing in here computes its own timing (03_RENDER_PIPELINE §4). Per ADR-5, this is the ONLY package allowed to import `remotion` — see the containment guard at apps/api/tests/render-containment.test.ts.",
+  "description": "Content Studio render engine \u2014 the Remotion bundle root. Compositions are typed React components taking a RenderPlan as props; nothing in here computes its own timing (03_RENDER_PIPELINE \u00a74). Per ADR-5, this is the ONLY package allowed to import `remotion` \u2014 see the containment guard at apps/api/tests/render-containment.test.ts.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -19,7 +19,9 @@
     "./templates/resolve": "./dist/templates/resolve.js",
     "./gates/types": "./dist/gates/types.js",
     "./gates/g1a": "./dist/gates/g1a.js",
-    "./compositions/Reel": "./dist/compositions/Reel.js"
+    "./compositions/Reel": "./dist/compositions/Reel.js",
+    "./gates/plan-gates": "./dist/gates/plan-gates.js",
+    "./baseline/plan": "./dist/baseline/plan.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

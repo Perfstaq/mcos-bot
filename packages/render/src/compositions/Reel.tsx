@@ -107,7 +107,7 @@ function fallbackStyle(width: number): TemplateStyle {
  * families we embedded. A `data:` URL cannot hang on a network, so unlike a
  * fetched font this can never stall the render past a decode.
  */
-const EmbeddedFonts: React.FC = () => {
+export const EmbeddedFonts: React.FC = () => {
   const [handle] = React.useState(() => delayRender("embedded fonts decoding"));
 
   React.useEffect(() => {
@@ -140,7 +140,7 @@ function anchorStyle(anchor: Anchor, width: number): React.CSSProperties {
     top: `${anchor.y * 100}%`,
     transform: "translateY(-50%)",
     width: right - left,
-    textAlign: anchor.align === "left" ? "left" : "center",
+    textAlign: anchor.align === "left" ? "left" : anchor.align === "right" ? "right" : "center",
     textShadow,
   };
 }
@@ -299,7 +299,8 @@ const CaptionChunkLayer: React.FC<{
         ...anchorStyle(anchor, width),
         display: "flex",
         gap,
-        justifyContent: anchor.align === "left" ? "flex-start" : "center",
+        justifyContent:
+          anchor.align === "left" ? "flex-start" : anchor.align === "right" ? "flex-end" : "center",
         flexWrap: "wrap",
       }}
     >

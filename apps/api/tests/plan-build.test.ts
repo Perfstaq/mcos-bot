@@ -409,6 +409,49 @@ describe("plan.build — ADR-8: G1a is evaluated before the plan is persisted", 
     expect((thrown as PlanInfeasibleError).measured).toHaveProperty("ratio");
   });
 
+  it("rejects a plan that fails ANY plan-decidable hard gate, not just G1a (§12.42)", () => {
+    // ── The defect this closes ──────────────────────────────────────────────
+    // ADR-8 says a plan failing its gate is rejected at plan.build "so it
+    // never costs a render". That was wired for G1a alone, so G2–G10 were
+    // reachable only after an MP4 existed. §12.41 is what it cost: an
+    // `editorial_sans` plan at 23.1 cuts/min against G2's 25 floor was
+    // materialised and would have burned a full render before anything
+    // noticed.
+    //
+    // Driven through a rhythm curve slow enough to break G2 while leaving G1a
+    // untouched — the exact combination the old code waved through.
+    let thrown: unknown;
+    try {
+      buildApprovedRenderPlan({
+        templateId: "editorial_sans",
+        words: WORDS.segments.flatMap((s: { words: unknown[] }) => s.words),
+        durationSec: WORDS.durationSec,
+        beats: BEATS,
+        seed: 42,
+        hookText: "THE POWER OF OBSESSION",
+        emphasisWord: "OBSESSION",
+        claimTexts: ["working harder"],
+        handleText: "@PERFSTAQ",
+        footage: { assetId: "a", r2Key: "k" },
+        rhythm: { establishSec: [4.5, 5.0], accelerateSec: [4.0, 4.5], holdSec: [4.5, 5.0], burstShots: [1, 1] },
+      });
+    } catch (e) {
+      thrown = e;
+    }
+
+    expect(thrown, "a plan under G2's floor must be refused before it renders").toBeInstanceOf(
+      PlanInfeasibleError,
+    );
+    const err = thrown as PlanInfeasibleError;
+    expect(err.code).toBe("plan_gate_below_threshold");
+    // 03 §7 again: the reason carries the failing gate AND its measurement,
+    // because "we refused it" is not something a user can act on.
+    expect(err.message).toMatch(/G2/);
+    expect(err.message).toMatch(/25-40 cuts\/minute/);
+    const failed = (err.measured as { failedGates: { id: string }[] }).failedGates;
+    expect(failed.map((g) => g.id)).toContain("G2");
+  });
+
   it("does not persist a G1a failure — a rejected plan costs no render and leaves no row", async () => {
     const { job, footage } = await seedApprovedChain();
 

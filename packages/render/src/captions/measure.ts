@@ -29,8 +29,11 @@ import { FONT_METRICS, type MetricToken } from "../fonts/metrics.generated.js";
  * gate. Erring is safe in exactly one direction and this errs in that one.
  *
  * The margin is checked, not assumed: `studio-templates.test.ts` pins the
- * measured width of a known string against the value the renderer actually
- * produced, so a font swap that moved the metrics could not pass silently.
+ * relative geometry these tables produce. NOTE: it does NOT pin an absolute
+ * width against renderer output — an earlier version of this comment claimed
+ * it did, and that overclaim is part of why the uppercase bug in `asRendered`
+ * survived. What is pinned is that karaoke measurement applies the renderer's
+ * own `textTransform`.
  */
 
 /** Advance width of one string at `fontSizePx`, in pixels, ignoring kerning. */
@@ -119,9 +122,37 @@ export function wrapLines(
 export type MeasuredWord = { text: string; fontSizePx: number };
 
 /**
+ * The karaoke layer renders `textTransform: uppercase` (`Reel.tsx`), and
+ * measuring the plan's stored casing measures the wrong glyphs.
+ *
+ * ── The bug this closes ─────────────────────────────────────────────────────
+ * `textWidthPx` sums per-codepoint advances, so "wondering" was measured with
+ * lowercase widths for text the browser draws as "WONDERING". Capitals are
+ * 20-35% wider in these faces, so every karaoke width came out short — G9's
+ * horizontal bound, the wrapped line COUNT, and therefore the block height
+ * that G9's vertical bound, the face floor and §12.43's containment check all
+ * read.
+ *
+ * It was invisible for the usual reason (§12.34): the banner is measured from
+ * hook text that is already uppercase in the brief, so the one layer anybody
+ * had checked against a rendered frame agreed. It surfaced only by measuring
+ * accent pixels in an actual frame — a chunk the predicate called single-line
+ * wrapped to two on screen, which pushed its first line 23px up into the
+ * footage and put the second line's (invisible, still-pending) box below.
+ *
+ * Applied inside the wrapper rather than at each call site so a new caller
+ * cannot forget it, which is the arrangement §12.32 prefers.
+ */
+export function asRendered(text: string): string {
+  return text.toUpperCase();
+}
+
+/**
  * Wrap mixed-size words into lines, the way the composition's flex row does:
  * words separated by a fixed `wordGapPx` (a `gap`, not a space glyph), broken
  * when the next word would overflow the box.
+ *
+ * Words are measured AS RENDERED (uppercase) — see `asRendered`.
  */
 export function wrapWords(
   words: MeasuredWord[],
@@ -135,7 +166,7 @@ export function wrapWords(
   let currentWidth = 0;
 
   for (const word of words) {
-    const w = textWidthPx(word.text, word.fontSizePx, token, trackingEm);
+    const w = textWidthPx(asRendered(word.text), word.fontSizePx, token, trackingEm);
     if (!current.length) {
       current = [word];
       currentWidth = w;
@@ -171,4 +202,53 @@ export function lineCount(
   opts: WrapOptions = {},
 ): number {
   return Math.max(1, wrapLines(text, fontSizePx, token, maxWidthPx, opts).length);
+}
+
+/**
+ * §12.43 — a predicate for `buildCaptionTrack`'s `fits`: can this chunk be
+ * drawn on ONE line in the box it is headed for?
+ *
+ * Single-line is the requirement because the bottom letterbox bar is 129.6px
+ * at the default content region and a second line does not fit. A chunk that
+ * wraps there has nowhere legal to go, and the containment check would reject
+ * it at a point where nothing can be done about it — so it is prevented at
+ * chunking time instead, where splitting is free and harmless (each half
+ * carries its own word timings).
+ *
+ * **Measured at the widest case, deliberately.** Which word gets emphasis is
+ * decided by `pickEmphasis` AFTER chunking, so at this point any word might
+ * draw at `emphasisPx`. Assuming the longest one does is the only bound that
+ * cannot be wrong later; assuming none does would let a chunk pass here and
+ * wrap on screen, which is the failure this exists to prevent.
+ */
+export function makeSingleLineFitPredicate(opts: {
+  karaokePx: number;
+  emphasisPx: number;
+  token: MetricToken;
+  trackingEm: number;
+  wordGapPx: number;
+  boxWidthPx: number;
+}): (words: { word: string }[]) => boolean {
+  return (words) => {
+    if (words.length <= 1) return true;
+    // Widest assignment: the longest word (by rendered width at emphasis size)
+    // is the emphasis one.
+    let widestIndex = 0;
+    let widest = -1;
+    for (let i = 0; i < words.length; i++) {
+      const w = textWidthPx(asRendered(words[i]!.word), opts.emphasisPx, opts.token, opts.trackingEm);
+      if (w > widest) {
+        widest = w;
+        widestIndex = i;
+      }
+    }
+    const measured: MeasuredWord[] = words.map((w, i) => ({
+      text: w.word,
+      fontSizePx: i === widestIndex ? opts.emphasisPx : opts.karaokePx,
+    }));
+    return wrapWords(measured, opts.token, opts.boxWidthPx, {
+      wordGapPx: opts.wordGapPx,
+      trackingEm: opts.trackingEm,
+    }).length <= 1;
+  };
 }

@@ -1,8 +1,8 @@
 {
   "description": "Render evidence for the three shipped templates (ARCHITECTURE §12.10). The MP4s are NOT committed; their sha256 is recorded here alongside the commit they were rendered from, so a reviewer can tell whether the committed plan/qc/frames describe the code in front of them. Regenerate with `npx tsx scripts/studio/render-evidence.ts --footage <clean.mp4>`; check with `--check`.",
-  "generatedAt": "2026-08-27T20:04:26.698Z",
-  "renderedFromCommit": "3a035188e8d2c8a18417d49642ca56e253aaa4ef",
-  "renderedFromCommitSubject": "fix(studio): anchor the zoom on the chin, so the caption floor is true at every scale",
+  "generatedAt": "2026-08-28T13:06:14.782Z",
+  "renderedFromCommit": "7070d6e9a0713f22676b626811d92e0dea4135c3",
+  "renderedFromCommitSubject": "docs(studio): W4.3 evidence — all three templates PASS, all three baselines FAIL",
   "treeDirty": false,
   "renderAffectingPaths": [
     "packages/render/src",
@@ -20,98 +20,99 @@
     "renderer": "4.0.518"
   },
   "footage": {
-    "path": "/Users/sathvik/aix/studio-renders/reference-16x9-proxy.mp4",
-    "sha256": "f204b1628fdcfb1a753de9069463a6364160674b5079c46d1faf95da9db41013",
-    "bytes": 6995896
+    "path": "/Users/sathvik/aix/studio-assets/talking-head-v1-1080.mp4",
+    "sha256": "dd17a3609eca17ea613babf9c32f4892cc213e0edc20bf26fb38c719185af7b6",
+    "bytes": 85125521
   },
   "inputs": {
     "words": {
-      "file": "inputs/reference-words.json",
-      "sha256": "34bbe681ac2049028dda575b169dc065a86fd0dcf8042128e86be4fce5e0c9ab"
+      "file": "docs/studio/evidence/inputs/talking-head-v1-words.json",
+      "sha256": "92551852cdaf11071fc3e3e45bd6c02a47d03b27b3d106035f1434bdcb6ee0ee"
     },
     "beats": {
-      "file": "inputs/reference-beats.json",
-      "sha256": "ad80060252dc4d0c499a83ad19f3bdf651461bed10810a5fd3a9b94f5f1d2f7b"
-    }
+      "file": "docs/studio/evidence/inputs/talking-head-v1-beats.json",
+      "sha256": "36b2afb9e58a694d4fbc379f4b5d7af8305b4bcdc5014575d9abf6409021e7cd"
+    },
+    "durationSec": 59.605,
+    "hook": "GRAVITY IS AGEING YOU",
+    "emphasisWord": "AGEING",
+    "contentBriefId": "cca7adf4-2404-455c-90ae-e907587f6284"
   },
   "templates": {
     "statement_serif": {
       "templateVersion": 1,
       "mp4": {
-        "sha256": "6c9085e8ce70d47349e3049bc12b859416974674115add0ff23dab35e3921c27",
-        "bytes": 32463753,
+        "sha256": "feb7f65b6464b6a6147a1990d568f00a0e086f192af0c69d7d5b7fc2771b169a",
+        "bytes": 68783255,
         "retained": false,
         "file": null
       },
       "plan": {
         "file": "plan.json",
-        "sha256": "58a7aea84550eccd22774f968fdb414131b3eb1f90a5b9779cb333ebbfc93537"
+        "sha256": "38cf875f7b49ab57c99473bb24fe1bfabd372b4f9a6d297430f2363227af04c8"
       },
       "qc": {
         "file": "qc.json",
-        "sha256": "0340227b05fb7db571d8b111420725ece5d3db26ee5c7de77e93d6b32d52925f"
+        "sha256": "a8c8bfdb142f88534332e10f03e70cc6c3a2ea094234f5c14c9ddab4b953b325"
       },
       "frames": [
         {
           "file": "frame1.png",
-          "sha256": "b3c29e4e5764c0eb998ab6e9e90cb6b4417bbc9133d878dc53aeb028b3857473",
-          "bytes": 729423,
-          "frame": 23,
-          "timeMs": 780,
+          "sha256": "a3dc5bf5fe6f5c1074caa7fda77937aa590331d6758b8c0d7860a245adf72b95",
+          "bytes": 1078008,
+          "frame": 26,
+          "timeMs": 880,
           "why": "banner settled + first karaoke chunk — the scroll-stopper as a viewer first sees it"
         },
         {
           "file": "frame2.png",
-          "sha256": "d72c10ea52bb44bebea7a89b6da467a3121f4a6cb3623bb8b90f5242624f4578",
-          "bytes": 326267,
-          "frame": 244,
-          "timeMs": 8147,
-          "why": "emphasis word \"not\" at its punch peak — accent means emphasis only (§12.9)"
+          "sha256": "3a77fdb152b5d47f88f2a4290d22f20ef6bc9593ccf2d8085aac8254dd335bd7",
+          "bytes": 1034794,
+          "frame": 133,
+          "timeMs": 4427,
+          "why": "emphasis word \"latest\" at its punch peak — accent means emphasis only (§12.9)"
         },
         {
           "file": "frame3.png",
-          "sha256": "9f294afefb2486adcacd9afe3a587ac8ad890bea89b87897cee13211d4bf0b77",
-          "bytes": 756649,
-          "frame": 1454,
-          "timeMs": 48460,
-          "why": "late chunk \"being one of\" at position \"center\" — caption rotation and the alternating handle corner"
+          "sha256": "a60bbdb65d8afedf1c2716c9946be8786b11217f2a673a9fbf8498a71c095bde",
+          "bytes": 1108736,
+          "frame": 1715,
+          "timeMs": 57150,
+          "why": "late chunk \"brain or what\" at position \"lower_right\" — caption rotation and the alternating handle corner"
         }
       ],
-      "overallPass": false,
+      "overallPass": true,
       "gates": {
         "G1a": {
           "pass": true,
           "measured": {
             "ratio": 1,
-            "withinCount": 29,
-            "totalCuts": 29,
-            "gridQuality": 2.2934,
+            "withinCount": 26,
+            "totalCuts": 26,
+            "gridQuality": 2.4342,
             "gridQualityOk": true
           }
         },
         "G1b": {
-          "pass": false,
+          "pass": null,
           "measured": {
-            "matchedRatio": 0.103,
-            "matched": 3,
-            "totalPlanCuts": 29,
-            "detectedCuts": 29,
-            "windowMs": 66,
-            "informationalPixelBeatLockRatio": 0.759,
-            "referenceBaseline": 0.821
+            "removesFootage": false,
+            "planCuts": 26,
+            "detectedCuts": 0,
+            "windowMs": 66
           }
         },
         "G2": {
           "pass": true,
-          "measured": 31.7
+          "measured": 26.1
         },
         "G3": {
           "pass": true,
-          "measured": 1.15
+          "measured": 1.68
         },
         "G4": {
           "pass": true,
-          "measured": 0.64
+          "measured": 0.65
         },
         "G5": {
           "pass": true,
@@ -124,7 +125,7 @@
         "G8": {
           "pass": true,
           "measured": {
-            "chunks": 62,
+            "chunks": 89,
             "outOfRangeEmphasis": 0
           }
         },
@@ -132,12 +133,12 @@
           "pass": true,
           "measured": {
             "violations": 0,
-            "cutsChecked": 30
+            "cutsChecked": 27
           }
         },
         "G11": {
           "pass": true,
-          "measured": -14
+          "measured": -13.9
         },
         "G12": {
           "pass": true,
@@ -152,22 +153,22 @@
         "G13": {
           "pass": null,
           "measured": {
-            "checksum": "sha256:6c9085e8ce70d47349e3049bc12b859416974674115add0ff23dab35e3921c27"
+            "checksum": "sha256:feb7f65b6464b6a6147a1990d568f00a0e086f192af0c69d7d5b7fc2771b169a"
           }
         },
         "G14": {
-          "pass": null,
+          "pass": true,
           "measured": {
-            "contentBriefId": null
+            "contentBriefId": "cca7adf4-2404-455c-90ae-e907587f6284"
           }
         },
         "G7": {
           "pass": true,
           "measured": {
-            "shots": 30,
+            "shots": 27,
             "staticShots": 0,
-            "minDelta": 0.0509,
-            "maxDelta": 0.0793,
+            "minDelta": 0.0504,
+            "maxDelta": 0.078,
             "threshold": 0.01
           }
         },
@@ -186,80 +187,77 @@
     "staccato_condensed": {
       "templateVersion": 1,
       "mp4": {
-        "sha256": "ebb927599e6712b1c4275176d45529e78e0d2daa414cf38dd1401566cb2e1aeb",
-        "bytes": 31327137,
+        "sha256": "75a24509fb2454265928dbe60227c1652e3210022c1df1d47f2edc49d0a758bc",
+        "bytes": 68275149,
         "retained": false,
         "file": null
       },
       "plan": {
         "file": "plan.json",
-        "sha256": "5c160b06e12269923a0cf452094958cfd574df469233a0377e4478e7fff0bffb"
+        "sha256": "ec2b4ebd181fcf12c901cd97a3e205a2e99c82eb688430a8e875fe8f490760e4"
       },
       "qc": {
         "file": "qc.json",
-        "sha256": "ee893b7bbbd3210aeb140da8ed4e7ad98ccb770867cea59feacb159e55393e10"
+        "sha256": "e0d988599008c2d7e189e82b5ceac30a8ae597e8ce15025d00c41677575e142c"
       },
       "frames": [
         {
           "file": "frame1.png",
-          "sha256": "8a53bd2a2e40538acda5e8f110c696e056c0bbd0a01847dbd0ca5323e9f865f8",
-          "bytes": 679913,
-          "frame": 23,
-          "timeMs": 780,
+          "sha256": "3327cc17cde014ab317e92908c8cdafd42931e65500559f89528cc3a062e9057",
+          "bytes": 1027132,
+          "frame": 31,
+          "timeMs": 1020,
           "why": "banner settled + first karaoke chunk — the scroll-stopper as a viewer first sees it"
         },
         {
           "file": "frame2.png",
-          "sha256": "7d74eddb24d2bc445946239b304ba76a94202b55888820a98fbba816a7a2ac78",
-          "bytes": 279480,
-          "frame": 244,
-          "timeMs": 8147,
-          "why": "emphasis word \"not\" at its punch peak — accent means emphasis only (§12.9)"
+          "sha256": "e341604e9be577076a9e75ec1e66df5d7bf337ef45f124e13672460b68324e4e",
+          "bytes": 1026748,
+          "frame": 133,
+          "timeMs": 4427,
+          "why": "emphasis word \"latest\" at its punch peak — accent means emphasis only (§12.9)"
         },
         {
           "file": "frame3.png",
-          "sha256": "0a6fcb66c8b6b54d21203254778320493f6a777da9913f5a060fcb29bb00db0c",
-          "bytes": 768424,
-          "frame": 1373,
-          "timeMs": 45780,
-          "why": "late chunk \"to settle,\" at position \"center\" — caption rotation and the alternating handle corner"
+          "sha256": "3ea9e3ddc1a989de1c27f7fbe6a1636e26bf3829a28589a495f228aa1bd0a5a8",
+          "bytes": 1094168,
+          "frame": 1715,
+          "timeMs": 57150,
+          "why": "late chunk \"brain or what\" at position \"lower_right\" — caption rotation and the alternating handle corner"
         }
       ],
-      "overallPass": false,
+      "overallPass": true,
       "gates": {
         "G1a": {
           "pass": true,
           "measured": {
             "ratio": 1,
-            "withinCount": 33,
-            "totalCuts": 33,
-            "gridQuality": 2.2934,
+            "withinCount": 28,
+            "totalCuts": 28,
+            "gridQuality": 2.4342,
             "gridQualityOk": true
           }
         },
         "G1b": {
-          "pass": false,
+          "pass": null,
           "measured": {
-            "matchedRatio": 0.121,
-            "matched": 4,
-            "totalPlanCuts": 33,
-            "detectedCuts": 29,
-            "windowMs": 66,
-            "informationalPixelBeatLockRatio": 0.724,
-            "referenceBaseline": 0.821
+            "removesFootage": false,
+            "planCuts": 28,
+            "detectedCuts": 0,
+            "windowMs": 66
           }
         },
         "G2": {
           "pass": true,
-          "measured": 36.1
+          "measured": 28.2
         },
         "G3": {
           "pass": true,
-          "measured": 1.16
+          "measured": 1.62
         },
         "G4": {
           "pass": true,
-          "measured": 0.84
+          "measured": 0.8
         },
         "G5": {
           "pass": true,
@@ -280,12 +278,12 @@
           "pass": true,
           "measured": {
             "violations": 0,
-            "cutsChecked": 34
+            "cutsChecked": 29
           }
         },
         "G11": {
           "pass": true,
-          "measured": -14
+          "measured": -13.9
         },
         "G12": {
           "pass": true,
@@ -300,22 +298,22 @@
         "G13": {
           "pass": null,
           "measured": {
-            "checksum": "sha256:ebb927599e6712b1c4275176d45529e78e0d2daa414cf38dd1401566cb2e1aeb"
+            "checksum": "sha256:75a24509fb2454265928dbe60227c1652e3210022c1df1d47f2edc49d0a758bc"
           }
         },
         "G14": {
-          "pass": null,
+          "pass": true,
           "measured": {
-            "contentBriefId": null
+            "contentBriefId": "cca7adf4-2404-455c-90ae-e907587f6284"
           }
         },
         "G7": {
           "pass": true,
           "measured": {
-            "shots": 34,
+            "shots": 29,
             "staticShots": 0,
-            "minDelta": 0.0509,
-            "maxDelta": 0.0793,
+            "minDelta": 0.051,
+            "maxDelta": 0.0788,
             "threshold": 0.01
           }
         },
@@ -334,80 +332,77 @@
     "editorial_sans": {
       "templateVersion": 1,
       "mp4": {
-        "sha256": "e46dc4ee6fc16aa7f07322ec8de501592d7a72a5504bc33ac7eac8654645342e",
-        "bytes": 31491665,
+        "sha256": "4b7aa6411ebb8e2b2f248fba15464be42052d1e0c810770c137fabc82721b8d3",
+        "bytes": 67967940,
         "retained": false,
         "file": null
       },
       "plan": {
         "file": "plan.json",
-        "sha256": "a75a817840ab4bd0b3f0fa38a990634c37bd2d6941f424c08861804a5fa75ed9"
+        "sha256": "0a39573c95a44be97a00d9c70db019a28f6eb248bb209f1f47bc8a96fe98504b"
       },
       "qc": {
         "file": "qc.json",
-        "sha256": "0148ad61339df72d33f750ef756502d95f4365016a51ff6cab3699414a687cd1"
+        "sha256": "a0d058016dac6dd928074c524023ae582b004d76d56128560d0b36a48509bdca"
       },
       "frames": [
         {
           "file": "frame1.png",
-          "sha256": "29379472cc5f01d4dd594a589d01909075debf53fcfeb8048df6d313d97b6536",
-          "bytes": 707548,
-          "frame": 23,
-          "timeMs": 780,
+          "sha256": "dd7bad23bac929398107ac825864153afb924e9d17637152188f4f4fd11a1986",
+          "bytes": 1060768,
+          "frame": 26,
+          "timeMs": 880,
           "why": "banner settled + first karaoke chunk — the scroll-stopper as a viewer first sees it"
         },
         {
           "file": "frame2.png",
-          "sha256": "1e92d752dc0feee3b8cdf484e6a214e666ee5e3db921e17e9ed5335cdd151d0c",
-          "bytes": 330639,
-          "frame": 244,
-          "timeMs": 8147,
-          "why": "emphasis word \"not\" at its punch peak — accent means emphasis only (§12.9)"
+          "sha256": "e108e94d1a61f0ff807b58ab1cdadbf926d84ee27be14f64f8d76db705f8f2fc",
+          "bytes": 1046867,
+          "frame": 133,
+          "timeMs": 4427,
+          "why": "emphasis word \"latest\" at its punch peak — accent means emphasis only (§12.9)"
         },
         {
           "file": "frame3.png",
-          "sha256": "ed227955ca0b25fa77693a2da44b1a5c3b3c456130a43d4e4709580207d0a735",
-          "bytes": 750305,
-          "frame": 1373,
-          "timeMs": 45780,
-          "why": "late chunk \"to settle,\" at position \"center_low\" — caption rotation and the alternating handle corner"
+          "sha256": "4ec92720a0928ed51f3dae6bc89894019d0b211fa39e2184fe8bdb5ddafc4342",
+          "bytes": 1162881,
+          "frame": 1660,
+          "timeMs": 55320,
+          "why": "late chunk \"blood to flow\" at position \"lower_left\" — caption rotation and the alternating handle corner"
         }
       ],
-      "overallPass": false,
+      "overallPass": true,
       "gates": {
         "G1a": {
           "pass": true,
           "measured": {
             "ratio": 1,
-            "withinCount": 27,
-            "totalCuts": 27,
-            "gridQuality": 2.2934,
+            "withinCount": 30,
+            "totalCuts": 30,
+            "gridQuality": 2.4342,
             "gridQualityOk": true
           }
         },
         "G1b": {
-          "pass": false,
+          "pass": null,
           "measured": {
-            "matchedRatio": 0.074,
-            "matched": 2,
-            "totalPlanCuts": 27,
-            "detectedCuts": 29,
-            "windowMs": 66,
-            "informationalPixelBeatLockRatio": 0.759,
-            "referenceBaseline": 0.821
+            "removesFootage": false,
+            "planCuts": 30,
+            "detectedCuts": 0,
+            "windowMs": 66
           }
         },
         "G2": {
           "pass": true,
-          "measured": 29.5
+          "measured": 30.2
         },
         "G3": {
           "pass": true,
-          "measured": 1.51
+          "measured": 1.38
         },
         "G4": {
           "pass": true,
-          "measured": 1
+          "measured": 0.81
         },
         "G5": {
           "pass": true,
@@ -420,7 +415,7 @@
         "G8": {
           "pass": true,
           "measured": {
-            "chunks": 62,
+            "chunks": 89,
             "outOfRangeEmphasis": 0
           }
         },
@@ -428,7 +423,7 @@
           "pass": true,
           "measured": {
             "violations": 0,
-            "cutsChecked": 28
+            "cutsChecked": 31
           }
         },
         "G11": {
@@ -448,22 +443,22 @@
         "G13": {
           "pass": null,
           "measured": {
-            "checksum": "sha256:e46dc4ee6fc16aa7f07322ec8de501592d7a72a5504bc33ac7eac8654645342e"
+            "checksum": "sha256:4b7aa6411ebb8e2b2f248fba15464be42052d1e0c810770c137fabc82721b8d3"
           }
         },
         "G14": {
-          "pass": null,
+          "pass": true,
           "measured": {
-            "contentBriefId": null
+            "contentBriefId": "cca7adf4-2404-455c-90ae-e907587f6284"
           }
         },
         "G7": {
           "pass": true,
           "measured": {
-            "shots": 28,
+            "shots": 31,
             "staticShots": 0,
-            "minDelta": 0.0509,
-            "maxDelta": 0.0793,
+            "minDelta": 0.0507,
+            "maxDelta": 0.0784,
             "threshold": 0.01
           }
         },

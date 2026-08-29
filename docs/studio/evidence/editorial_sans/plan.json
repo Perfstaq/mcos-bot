@@ -1,410 +1,346 @@
 {
   "planVersion": "1",
-  "seed": 42,
+  "seed": 2144871328,
   "fps": 30,
   "width": 1080,
   "height": 1920,
-  "durationInFrames": 1646,
+  "durationInFrames": 1790,
   "framing": "letterbox",
   "footage": {
-    "assetId": "reference-proxy",
-    "r2Key": "demo/reference-16x9-proxy.mp4"
+    "assetId": "a6d59599-e2a6-4f28-be6d-f77601024a24",
+    "r2Key": "b9a922b5-cc2c-470c-a26e-20d73749dc9d/studio/footage/talking-head-v1-1080.mp4"
   },
   "cuts": [
     {
       "id": "c0",
       "sourceInMs": 0,
-      "sourceOutMs": 4180,
+      "sourceOutMs": 2100,
       "outputStartMs": 0,
-      "outputEndMs": 4180,
+      "outputEndMs": 2100,
       "motion": {
         "motion": "push",
         "fromScale": 1,
-        "toScale": 1.0680331125576048,
+        "toScale": 1.061467696933541,
         "spring": "drift",
-        "durationInFrames": 125,
+        "durationInFrames": 63,
         "originX": 0.5,
         "originY": 0.8472
       }
     },
     {
       "id": "c1",
-      "sourceInMs": 4180,
-      "sourceOutMs": 6160,
-      "outputStartMs": 4180,
-      "outputEndMs": 6160,
+      "sourceInMs": 2100,
+      "sourceOutMs": 3640,
+      "outputStartMs": 2100,
+      "outputEndMs": 3640,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.1619557216088288,
+        "fromScale": 1.169863585087005,
         "toScale": 1.1,
         "spring": "drift",
-        "durationInFrames": 59,
-        "originX": 0.5361109881848097,
+        "durationInFrames": 46,
+        "originX": 0.5275599407032132,
         "originY": 0.8472
       }
     },
     {
       "id": "c2",
-      "sourceInMs": 6160,
-      "sourceOutMs": 7686,
-      "outputStartMs": 6160,
-      "outputEndMs": 7686,
+      "sourceInMs": 3640,
+      "sourceOutMs": 4860,
+      "outputStartMs": 3640,
+      "outputEndMs": 4860,
       "motion": {
         "motion": "push",
         "fromScale": 1,
-        "toScale": 1.0529248056560754,
+        "toScale": 1.078016224501189,
         "spring": "drift",
-        "durationInFrames": 46,
+        "durationInFrames": 37,
         "originX": 0.5,
         "originY": 0.8472
       }
     },
     {
       "id": "c3",
-      "sourceInMs": 7686,
-      "sourceOutMs": 9172,
-      "outputStartMs": 7686,
-      "outputEndMs": 9172,
+      "sourceInMs": 4860,
+      "sourceOutMs": 5991,
+      "outputStartMs": 4860,
+      "outputEndMs": 5991,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.158679825793952,
+        "fromScale": 1.165666153940838,
         "toScale": 1.1,
         "spring": "drift",
-        "durationInFrames": 45,
-        "originX": 0.5191101785376668,
+        "durationInFrames": 34,
+        "originX": 0.5268565007857978,
         "originY": 0.8472
       }
     },
     {
       "id": "c4",
-      "sourceInMs": 9172,
-      "sourceOutMs": 13955,
-      "outputStartMs": 9172,
-      "outputEndMs": 13955,
+      "sourceInMs": 5991,
+      "sourceOutMs": 7180,
+      "outputStartMs": 5991,
+      "outputEndMs": 7180,
       "motion": {
         "motion": "push",
         "fromScale": 1,
-        "toScale": 1.0569106116355398,
+        "toScale": 1.068946860653814,
         "spring": "drift",
-        "durationInFrames": 143,
+        "durationInFrames": 36,
         "originX": 0.5,
         "originY": 0.8472
       }
     },
     {
       "id": "c5",
-      "sourceInMs": 13955,
-      "sourceOutMs": 16000,
-      "outputStartMs": 13955,
-      "outputEndMs": 16000,
+      "sourceInMs": 7180,
+      "sourceOutMs": 8522,
+      "outputStartMs": 7180,
+      "outputEndMs": 8522,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.155798921941314,
+        "fromScale": 1.178444213788025,
         "toScale": 1.1,
         "spring": "drift",
-        "durationInFrames": 61,
-        "originX": 0.5275986077077687,
+        "durationInFrames": 40,
+        "originX": 0.5208051789738238,
         "originY": 0.8472
       }
     },
     {
       "id": "c6",
-      "sourceInMs": 16000,
-      "sourceOutMs": 17160,
-      "outputStartMs": 16000,
-      "outputEndMs": 17160,
+      "sourceInMs": 8522,
+      "sourceOutMs": 12376,
+      "outputStartMs": 8522,
+      "outputEndMs": 12376,
       "motion": {
         "motion": "push",
         "fromScale": 1,
-        "toScale": 1.059600761232432,
+        "toScale": 1.069266890140716,
         "spring": "drift",
-        "durationInFrames": 35,
+        "durationInFrames": 116,
         "originX": 0.5,
         "originY": 0.8472
       }
     },
     {
       "id": "c7",
-      "sourceInMs": 17160,
-      "sourceOutMs": 18300,
-      "outputStartMs": 17160,
-      "outputEndMs": 18300,
+      "sourceInMs": 12376,
+      "sourceOutMs": 16324,
+      "outputStartMs": 12376,
+      "outputEndMs": 16324,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.1614867337653414,
+        "fromScale": 1.174703586886171,
         "toScale": 1.1,
         "spring": "drift",
-        "durationInFrames": 34,
-        "originX": 0.5149871314689517,
+        "durationInFrames": 118,
+        "originX": 0.4749012939073146,
         "originY": 0.8472
       }
     },
     {
       "id": "c8",
-      "sourceInMs": 18300,
-      "sourceOutMs": 19319,
-      "outputStartMs": 18300,
-      "outputEndMs": 19319,
+      "sourceInMs": 16324,
+      "sourceOutMs": 18437,
+      "outputStartMs": 16324,
+      "outputEndMs": 18437,
       "motion": {
         "motion": "push",
         "fromScale": 1,
-        "toScale": 1.0525709387124516,
+        "toScale": 1.06916170447832,
         "spring": "drift",
-        "durationInFrames": 31,
+        "durationInFrames": 63,
         "originX": 0.5,
         "originY": 0.8472
       }
     },
     {
       "id": "c9",
-      "sourceInMs": 19319,
-      "sourceOutMs": 20320,
-      "outputStartMs": 19319,
-      "outputEndMs": 20320,
+      "sourceInMs": 18437,
+      "sourceOutMs": 19660,
+      "outputStartMs": 18437,
+      "outputEndMs": 19660,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.1636801819643006,
+        "fromScale": 1.170231438353658,
         "toScale": 1.1,
         "spring": "drift",
-        "durationInFrames": 30,
-        "originX": 0.46974875262007115,
+        "durationInFrames": 37,
+        "originX": 0.516553062312305,
         "originY": 0.8472
       }
     },
     {
       "id": "c10",
-      "sourceInMs": 20320,
-      "sourceOutMs": 23011,
-      "outputStartMs": 20320,
-      "outputEndMs": 23011,
+      "sourceInMs": 19660,
+      "sourceOutMs": 21340,
+      "outputStartMs": 19660,
+      "outputEndMs": 21340,
       "motion": {
         "motion": "push",
         "fromScale": 1,
-        "toScale": 1.065622755002696,
+        "toScale": 1.060357639670838,
         "spring": "drift",
-        "durationInFrames": 81,
+        "durationInFrames": 50,
         "originX": 0.5,
         "originY": 0.8472
       }
     },
     {
       "id": "c11",
-      "sourceInMs": 23011,
-      "sourceOutMs": 25600,
-      "outputStartMs": 23011,
-      "outputEndMs": 25600,
+      "sourceInMs": 21340,
+      "sourceOutMs": 22400,
+      "outputStartMs": 21340,
+      "outputEndMs": 22400,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.1554875313048252,
+        "fromScale": 1.175975979100913,
         "toScale": 1.1,
         "spring": "drift",
-        "durationInFrames": 78,
-        "originX": 0.5166597042232752,
+        "durationInFrames": 32,
+        "originX": 0.4636094897426665,
         "originY": 0.8472
       }
     },
     {
       "id": "c12",
-      "sourceInMs": 25600,
-      "sourceOutMs": 26720,
-      "outputStartMs": 25600,
-      "outputEndMs": 26720,
+      "sourceInMs": 22400,
+      "sourceOutMs": 23720,
+      "outputStartMs": 22400,
+      "outputEndMs": 23720,
       "motion": {
         "motion": "push",
         "fromScale": 1,
-        "toScale": 1.06284081235528,
+        "toScale": 1.062493043043651,
         "spring": "drift",
-        "durationInFrames": 34,
+        "durationInFrames": 40,
         "originX": 0.5,
         "originY": 0.8472
       }
     },
     {
       "id": "c13",
-      "sourceInMs": 26720,
-      "sourceOutMs": 27818,
-      "outputStartMs": 26720,
-      "outputEndMs": 27818,
+      "sourceInMs": 23720,
+      "sourceOutMs": 24900,
+      "outputStartMs": 23720,
+      "outputEndMs": 24900,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.1636972184968182,
+        "fromScale": 1.16689708691556,
         "toScale": 1.1,
         "spring": "drift",
-        "durationInFrames": 33,
-        "originX": 0.4733609550818801,
+        "durationInFrames": 35,
+        "originX": 0.5228732302412391,
         "originY": 0.8472
       }
     },
     {
       "id": "c14",
-      "sourceInMs": 27818,
-      "sourceOutMs": 29380,
-      "outputStartMs": 27818,
-      "outputEndMs": 29380,
+      "sourceInMs": 24900,
+      "sourceOutMs": 28640,
+      "outputStartMs": 24900,
+      "outputEndMs": 28640,
       "motion": {
         "motion": "push",
         "fromScale": 1,
-        "toScale": 1.0509122417215258,
+        "toScale": 1.054332511690445,
         "spring": "drift",
-        "durationInFrames": 47,
+        "durationInFrames": 112,
         "originX": 0.5,
         "originY": 0.8472
       }
     },
     {
       "id": "c15",
-      "sourceInMs": 29380,
-      "sourceOutMs": 32903,
-      "outputStartMs": 29380,
-      "outputEndMs": 32903,
+      "sourceInMs": 28640,
+      "sourceOutMs": 32229,
+      "outputStartMs": 28640,
+      "outputEndMs": 32229,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.157830113817472,
+        "fromScale": 1.160395224585664,
         "toScale": 1.1,
         "spring": "drift",
-        "durationInFrames": 106,
-        "originX": 0.4615679969638586,
+        "durationInFrames": 108,
+        "originX": 0.4615786699578166,
         "originY": 0.8472
       }
     },
     {
       "id": "c16",
-      "sourceInMs": 32903,
-      "sourceOutMs": 36140,
-      "outputStartMs": 32903,
-      "outputEndMs": 36140,
+      "sourceInMs": 32229,
+      "sourceOutMs": 33414,
+      "outputStartMs": 32229,
+      "outputEndMs": 33414,
       "motion": {
         "motion": "push",
         "fromScale": 1,
-        "toScale": 1.0731743346573785,
+        "toScale": 1.067516246221494,
         "spring": "drift",
-        "durationInFrames": 97,
+        "durationInFrames": 36,
         "originX": 0.5,
         "originY": 0.8472
       }
     },
     {
       "id": "c17",
-      "sourceInMs": 36140,
-      "sourceOutMs": 37280,
-      "outputStartMs": 36140,
-      "outputEndMs": 37280,
+      "sourceInMs": 33414,
+      "sourceOutMs": 34220,
+      "outputStartMs": 33414,
+      "outputEndMs": 34220,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.1793365717073903,
+        "fromScale": 1.163079962267075,
         "toScale": 1.1,
         "spring": "drift",
-        "durationInFrames": 34,
-        "originX": 0.4851048584654927,
+        "durationInFrames": 24,
+        "originX": 0.4949544177576899,
         "originY": 0.8472
       }
     },
     {
       "id": "c18",
-      "sourceInMs": 37280,
-      "sourceOutMs": 38340,
-      "outputStartMs": 37280,
-      "outputEndMs": 38340,
+      "sourceInMs": 34220,
+      "sourceOutMs": 35828,
+      "outputStartMs": 34220,
+      "outputEndMs": 35828,
       "motion": {
         "motion": "push",
         "fromScale": 1,
-        "toScale": 1.0554817299172283,
+        "toScale": 1.067044663096312,
         "spring": "drift",
-        "durationInFrames": 32,
+        "durationInFrames": 48,
         "originX": 0.5,
         "originY": 0.8472
       }
     },
     {
       "id": "c19",
-      "sourceInMs": 38340,
-      "sourceOutMs": 39500,
-      "outputStartMs": 38340,
-      "outputEndMs": 39500,
+      "sourceInMs": 35828,
+      "sourceOutMs": 37082,
+      "outputStartMs": 35828,
+      "outputEndMs": 37082,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.1726965710450896,
+        "fromScale": 1.178400625537615,
         "toScale": 1.1,
         "spring": "drift",
-        "durationInFrames": 35,
-        "originX": 0.4701640539057553,
+        "durationInFrames": 38,
+        "originX": 0.5019071873649955,
         "originY": 0.8472
       }
     },
     {
       "id": "c20",
-      "sourceInMs": 39500,
-      "sourceOutMs": 40519,
-      "outputStartMs": 39500,
-      "outputEndMs": 40519,
+      "sourceInMs": 37082,
+      "sourceOutMs": 38720,
+      "outputStartMs": 37082,
+      "outputEndMs": 38720,
       "motion": {
         "motion": "push",
         "fromScale": 1,
-        "toScale": 1.0558135696034878,
-        "spring": "drift",
-        "durationInFrames": 31,
-        "originX": 0.5,
-        "originY": 0.8472
-      }
-    },
-    {
-      "id": "c21",
-      "sourceInMs": 40519,
-      "sourceOutMs": 42800,
-      "outputStartMs": 40519,
-      "outputEndMs": 42800,
-      "motion": {
-        "motion": "pull",
-        "fromScale": 1.1524702985771,
-        "toScale": 1.1,
-        "spring": "drift",
-        "durationInFrames": 68,
-        "originX": 0.5231160307303071,
-        "originY": 0.8472
-      }
-    },
-    {
-      "id": "c22",
-      "sourceInMs": 42800,
-      "sourceOutMs": 46417,
-      "outputStartMs": 42800,
-      "outputEndMs": 46417,
-      "motion": {
-        "motion": "push",
-        "fromScale": 1,
-        "toScale": 1.0712989451922477,
-        "spring": "drift",
-        "durationInFrames": 109,
-        "originX": 0.5,
-        "originY": 0.8472
-      }
-    },
-    {
-      "id": "c23",
-      "sourceInMs": 46417,
-      "sourceOutMs": 47500,
-      "outputStartMs": 46417,
-      "outputEndMs": 47500,
-      "motion": {
-        "motion": "pull",
-        "fromScale": 1.1568239342072049,
-        "toScale": 1.1,
-        "spring": "drift",
-        "durationInFrames": 32,
-        "originX": 0.47489696092903616,
-        "originY": 0.8472
-      }
-    },
-    {
-      "id": "c24",
-      "sourceInMs": 47500,
-      "sourceOutMs": 49133,
-      "outputStartMs": 47500,
-      "outputEndMs": 49133,
-      "motion": {
-        "motion": "push",
-        "fromScale": 1,
-        "toScale": 1.0748152703535743,
+        "toScale": 1.051996118535753,
         "spring": "drift",
         "durationInFrames": 49,
         "originX": 0.5,
@@ -412,50 +348,162 @@
       }
     },
     {
-      "id": "c25",
-      "sourceInMs": 49133,
-      "sourceOutMs": 50202,
-      "outputStartMs": 49133,
-      "outputEndMs": 50202,
+      "id": "c21",
+      "sourceInMs": 38720,
+      "sourceOutMs": 40340,
+      "outputStartMs": 38720,
+      "outputEndMs": 40340,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.1685071228235029,
+        "fromScale": 1.167208730510902,
         "toScale": 1.1,
         "spring": "drift",
-        "durationInFrames": 32,
-        "originX": 0.5029260354861617,
+        "durationInFrames": 49,
+        "originX": 0.5226265740022064,
+        "originY": 0.8472
+      }
+    },
+    {
+      "id": "c22",
+      "sourceInMs": 40340,
+      "sourceOutMs": 44489,
+      "outputStartMs": 40340,
+      "outputEndMs": 44489,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1.050696224290878,
+        "spring": "drift",
+        "durationInFrames": 124,
+        "originX": 0.5,
+        "originY": 0.8472
+      }
+    },
+    {
+      "id": "c23",
+      "sourceInMs": 44489,
+      "sourceOutMs": 47240,
+      "outputStartMs": 44489,
+      "outputEndMs": 47240,
+      "motion": {
+        "motion": "pull",
+        "fromScale": 1.154645853773691,
+        "toScale": 1.1,
+        "spring": "drift",
+        "durationInFrames": 83,
+        "originX": 0.4615457087010145,
+        "originY": 0.8472
+      }
+    },
+    {
+      "id": "c24",
+      "sourceInMs": 47240,
+      "sourceOutMs": 48520,
+      "outputStartMs": 47240,
+      "outputEndMs": 48520,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1.060216208186466,
+        "spring": "drift",
+        "durationInFrames": 38,
+        "originX": 0.5,
+        "originY": 0.8472
+      }
+    },
+    {
+      "id": "c25",
+      "sourceInMs": 48520,
+      "sourceOutMs": 49900,
+      "outputStartMs": 48520,
+      "outputEndMs": 49900,
+      "motion": {
+        "motion": "pull",
+        "fromScale": 1.168497341987677,
+        "toScale": 1.1,
+        "spring": "drift",
+        "durationInFrames": 41,
+        "originX": 0.4894870484992861,
         "originY": 0.8472
       }
     },
     {
       "id": "c26",
-      "sourceInMs": 50202,
-      "sourceOutMs": 51246,
-      "outputStartMs": 50202,
-      "outputEndMs": 51246,
+      "sourceInMs": 49900,
+      "sourceOutMs": 50759,
+      "outputStartMs": 49900,
+      "outputEndMs": 50759,
       "motion": {
         "motion": "push",
         "fromScale": 1,
-        "toScale": 1.0604151531192474,
+        "toScale": 1.057748585999943,
         "spring": "drift",
-        "durationInFrames": 31,
+        "durationInFrames": 26,
         "originX": 0.5,
         "originY": 0.8472
       }
     },
     {
       "id": "c27",
-      "sourceInMs": 51246,
-      "sourceOutMs": 54870,
-      "outputStartMs": 51246,
-      "outputEndMs": 54870,
+      "sourceInMs": 50759,
+      "sourceOutMs": 52060,
+      "outputStartMs": 50759,
+      "outputEndMs": 52060,
       "motion": {
         "motion": "pull",
-        "fromScale": 1.1690336999087596,
+        "fromScale": 1.164787481280509,
         "toScale": 1.1,
         "spring": "drift",
-        "durationInFrames": 109,
-        "originX": 0.4723135536909103,
+        "durationInFrames": 39,
+        "originX": 0.4962324260175228,
+        "originY": 0.8472
+      }
+    },
+    {
+      "id": "c28",
+      "sourceInMs": 52060,
+      "sourceOutMs": 54200,
+      "outputStartMs": 52060,
+      "outputEndMs": 54200,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1.05723707131343,
+        "spring": "drift",
+        "durationInFrames": 64,
+        "originX": 0.5,
+        "originY": 0.8472
+      }
+    },
+    {
+      "id": "c29",
+      "sourceInMs": 54200,
+      "sourceOutMs": 55420,
+      "outputStartMs": 54200,
+      "outputEndMs": 55420,
+      "motion": {
+        "motion": "pull",
+        "fromScale": 1.164887255229987,
+        "toScale": 1.1,
+        "spring": "drift",
+        "durationInFrames": 37,
+        "originX": 0.4923774980008602,
+        "originY": 0.8472
+      }
+    },
+    {
+      "id": "c30",
+      "sourceInMs": 55420,
+      "sourceOutMs": 59656,
+      "outputStartMs": 55420,
+      "outputEndMs": 59656,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1.074654601241928,
+        "spring": "drift",
+        "durationInFrames": 127,
+        "originX": 0.5,
         "originY": 0.8472
       }
     }
@@ -464,1405 +512,1090 @@
     {
       "words": [
         {
-          "word": "The",
-          "startMs": 0,
-          "endMs": 100,
-          "isEmphasis": true
-        },
-        {
-          "word": "moment",
-          "startMs": 100,
-          "endMs": 280,
+          "word": "If",
+          "startMs": 20,
+          "endMs": 520,
           "isEmphasis": false
         },
         {
           "word": "you",
-          "startMs": 280,
-          "endMs": 480,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center",
-      "emphasisWordIndex": 0,
-      "startMs": 0,
-      "endMs": 480,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.785,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "start",
-          "startMs": 480,
-          "endMs": 680,
-          "isEmphasis": false
-        },
-        {
-          "word": "working",
-          "startMs": 680,
-          "endMs": 1000,
-          "isEmphasis": false
-        },
-        {
-          "word": "harder",
-          "startMs": 1000,
-          "endMs": 1520,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center",
-      "emphasisWordIndex": null,
-      "startMs": 480,
-      "endMs": 1520,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.785,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "than",
-          "startMs": 1520,
-          "endMs": 1680,
-          "isEmphasis": false
-        },
-        {
-          "word": "the",
-          "startMs": 1680,
-          "endMs": 1800,
-          "isEmphasis": false
-        },
-        {
-          "word": "people",
-          "startMs": 1800,
-          "endMs": 2060,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center",
-      "emphasisWordIndex": null,
-      "startMs": 1520,
-      "endMs": 2060,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.785,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "around",
-          "startMs": 2060,
-          "endMs": 2320,
-          "isEmphasis": false
-        },
-        {
-          "word": "you,",
-          "startMs": 2320,
-          "endMs": 2560,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center",
-      "emphasisWordIndex": null,
-      "startMs": 2060,
-      "endMs": 2560,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.785,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "they",
-          "startMs": 2680,
-          "endMs": 2760,
-          "isEmphasis": false
-        },
-        {
-          "word": "stop",
-          "startMs": 2760,
-          "endMs": 3020,
-          "isEmphasis": false
-        },
-        {
-          "word": "calling",
-          "startMs": 3020,
-          "endMs": 3340,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center",
-      "emphasisWordIndex": null,
-      "startMs": 2680,
-      "endMs": 3340,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.785,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "it",
-          "startMs": 3340,
-          "endMs": 3500,
-          "isEmphasis": false
-        },
-        {
-          "word": "dedication,",
-          "startMs": 3500,
-          "endMs": 3940,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center",
-      "emphasisWordIndex": null,
-      "startMs": 3340,
-      "endMs": 3940,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.785,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "they",
-          "startMs": 4540,
-          "endMs": 4600,
-          "isEmphasis": false
-        },
-        {
-          "word": "start",
-          "startMs": 4600,
-          "endMs": 4820,
-          "isEmphasis": false
-        },
-        {
-          "word": "calling",
-          "startMs": 4820,
-          "endMs": 5120,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center_low",
-      "emphasisWordIndex": null,
-      "startMs": 4540,
-      "endMs": 5120,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "it",
-          "startMs": 5120,
-          "endMs": 5320,
-          "isEmphasis": false
-        },
-        {
-          "word": "a",
-          "startMs": 5320,
-          "endMs": 5380,
-          "isEmphasis": false
-        },
-        {
-          "word": "session.",
-          "startMs": 5380,
-          "endMs": 5900,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center_low",
-      "emphasisWordIndex": null,
-      "startMs": 5120,
-      "endMs": 5900,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "They",
-          "startMs": 6160,
-          "endMs": 6240,
-          "isEmphasis": false
-        },
-        {
-          "word": "tell",
-          "startMs": 6240,
-          "endMs": 6400,
-          "isEmphasis": false
-        },
-        {
-          "word": "you",
-          "startMs": 6400,
-          "endMs": 6520,
-          "isEmphasis": false
-        }
-      ],
-      "position": "lower_left",
-      "emphasisWordIndex": null,
-      "startMs": 6160,
-      "endMs": 6520,
-      "anchor": {
-        "x": 0.12,
-        "y": 0.8,
-        "align": "left"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "to",
-          "startMs": 6520,
-          "endMs": 6620,
-          "isEmphasis": false
-        },
-        {
-          "word": "slow",
-          "startMs": 6620,
-          "endMs": 6820,
-          "isEmphasis": false
-        },
-        {
-          "word": "down,",
-          "startMs": 6820,
-          "endMs": 6980,
-          "isEmphasis": false
-        }
-      ],
-      "position": "lower_left",
-      "emphasisWordIndex": null,
-      "startMs": 6520,
-      "endMs": 6980,
-      "anchor": {
-        "x": 0.12,
-        "y": 0.8,
-        "align": "left"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "to",
-          "startMs": 7120,
-          "endMs": 7200,
-          "isEmphasis": false
-        },
-        {
-          "word": "balance,",
-          "startMs": 7200,
-          "endMs": 7540,
-          "isEmphasis": false
-        }
-      ],
-      "position": "lower_left",
-      "emphasisWordIndex": null,
-      "startMs": 7120,
-      "endMs": 7540,
-      "anchor": {
-        "x": 0.12,
-        "y": 0.8,
-        "align": "left"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "to",
-          "startMs": 7820,
-          "endMs": 7880,
-          "isEmphasis": false
-        },
-        {
-          "word": "not",
-          "startMs": 7880,
-          "endMs": 8200,
-          "isEmphasis": true
-        },
-        {
-          "word": "lose",
-          "startMs": 8200,
-          "endMs": 8560,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center",
-      "emphasisWordIndex": 1,
-      "startMs": 7820,
-      "endMs": 8560,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.785,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "yourself.",
-          "startMs": 8560,
-          "endMs": 9000,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center",
-      "emphasisWordIndex": null,
-      "startMs": 8560,
-      "endMs": 9000,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.785,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "To",
-          "startMs": 9340,
-          "endMs": 9400,
-          "isEmphasis": false
-        },
-        {
-          "word": "remember",
-          "startMs": 9400,
-          "endMs": 9880,
-          "isEmphasis": true
-        },
-        {
-          "word": "that",
-          "startMs": 9880,
-          "endMs": 10240,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center_low",
-      "emphasisWordIndex": 1,
-      "startMs": 9340,
-      "endMs": 10240,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "life",
-          "startMs": 10240,
-          "endMs": 10640,
-          "isEmphasis": false
-        },
-        {
-          "word": "is",
-          "startMs": 10640,
-          "endMs": 10820,
-          "isEmphasis": false
-        },
-        {
-          "word": "more",
-          "startMs": 10820,
-          "endMs": 10980,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center_low",
-      "emphasisWordIndex": null,
-      "startMs": 10240,
-      "endMs": 10980,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "than",
-          "startMs": 10980,
-          "endMs": 11120,
-          "isEmphasis": false
-        },
-        {
-          "word": "work",
-          "startMs": 11120,
-          "endMs": 11400,
-          "isEmphasis": false
-        },
-        {
-          "word": "and",
-          "startMs": 11400,
-          "endMs": 11700,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center_low",
-      "emphasisWordIndex": null,
-      "startMs": 10980,
-      "endMs": 11700,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "you",
-          "startMs": 11700,
-          "endMs": 11800,
-          "isEmphasis": false
-        },
-        {
-          "word": "start",
-          "startMs": 11800,
-          "endMs": 12000,
-          "isEmphasis": false
-        },
-        {
-          "word": "to",
-          "startMs": 12000,
-          "endMs": 12180,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center_low",
-      "emphasisWordIndex": null,
-      "startMs": 11700,
-      "endMs": 12180,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "believe",
-          "startMs": 12180,
-          "endMs": 12420,
-          "isEmphasis": false
-        },
-        {
-          "word": "them",
-          "startMs": 12420,
-          "endMs": 12640,
-          "isEmphasis": false
-        },
-        {
-          "word": "because",
-          "startMs": 12640,
-          "endMs": 12920,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center_low",
-      "emphasisWordIndex": null,
-      "startMs": 12180,
-      "endMs": 12920,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "it",
-          "startMs": 12920,
-          "endMs": 13040,
-          "isEmphasis": false
-        },
-        {
-          "word": "sounds",
-          "startMs": 13040,
-          "endMs": 13300,
-          "isEmphasis": false
-        },
-        {
-          "word": "logical,",
-          "startMs": 13300,
-          "endMs": 13740,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center_low",
-      "emphasisWordIndex": null,
-      "startMs": 12920,
-      "endMs": 13740,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "but",
-          "startMs": 14020,
-          "endMs": 14320,
-          "isEmphasis": true
-        },
-        {
-          "word": "you",
-          "startMs": 14320,
-          "endMs": 15040,
-          "isEmphasis": false
-        },
-        {
-          "word": "forget",
-          "startMs": 15040,
-          "endMs": 15580,
-          "isEmphasis": false
-        }
-      ],
-      "position": "lower_left",
-      "emphasisWordIndex": 0,
-      "startMs": 14020,
-      "endMs": 15580,
-      "anchor": {
-        "x": 0.12,
-        "y": 0.8,
-        "align": "left"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "that",
-          "startMs": 15580,
-          "endMs": 16000,
-          "isEmphasis": false
-        },
-        {
-          "word": "this",
-          "startMs": 16000,
-          "endMs": 16320,
-          "isEmphasis": false
-        },
-        {
-          "word": "isn't",
-          "startMs": 16320,
-          "endMs": 16680,
-          "isEmphasis": false
-        }
-      ],
-      "position": "lower_left",
-      "emphasisWordIndex": null,
-      "startMs": 15580,
-      "endMs": 16680,
-      "anchor": {
-        "x": 0.12,
-        "y": 0.8,
-        "align": "left"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "about",
-          "startMs": 16680,
-          "endMs": 16880,
-          "isEmphasis": false
-        },
-        {
-          "word": "them.",
-          "startMs": 16880,
-          "endMs": 17160,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center",
-      "emphasisWordIndex": null,
-      "startMs": 16680,
-      "endMs": 17160,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.785,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "The",
-          "startMs": 17440,
-          "endMs": 17480,
-          "isEmphasis": true
-        },
-        {
-          "word": "dreams",
-          "startMs": 17480,
-          "endMs": 17880,
+          "startMs": 520,
+          "endMs": 620,
           "isEmphasis": false
         },
         {
           "word": "are",
-          "startMs": 17880,
-          "endMs": 18100,
+          "startMs": 620,
+          "endMs": 720,
           "isEmphasis": false
         }
       ],
-      "position": "center_low",
-      "emphasisWordIndex": 0,
-      "startMs": 17440,
-      "endMs": 18100,
+      "position": "lower_right",
+      "emphasisWordIndex": null,
+      "startMs": 20,
+      "endMs": 720,
       "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
       }
     },
     {
       "words": [
         {
-          "word": "not",
-          "startMs": 18100,
-          "endMs": 18300,
+          "word": "wondering",
+          "startMs": 720,
+          "endMs": 1040,
+          "isEmphasis": true
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": 0,
+      "startMs": 720,
+      "endMs": 1040,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "what",
+          "startMs": 1040,
+          "endMs": 1320,
           "isEmphasis": true
         },
         {
-          "word": "at",
-          "startMs": 18300,
-          "endMs": 18540,
+          "word": "that",
+          "startMs": 1320,
+          "endMs": 1500,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": 0,
+      "startMs": 1040,
+      "endMs": 1500,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "small",
+          "startMs": 1500,
+          "endMs": 1720,
           "isEmphasis": false
         },
         {
-          "word": "stake",
-          "startMs": 18540,
-          "endMs": 18800,
+          "word": "device",
+          "startMs": 1720,
+          "endMs": 2100,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": null,
+      "startMs": 1500,
+      "endMs": 2100,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "was",
+          "startMs": 2100,
+          "endMs": 2340,
           "isEmphasis": false
         }
       ],
       "position": "center_low",
-      "emphasisWordIndex": 0,
-      "startMs": 18100,
-      "endMs": 18800,
+      "emphasisWordIndex": null,
+      "startMs": 2100,
+      "endMs": 2340,
       "anchor": {
         "x": 0.5,
-        "y": 0.818,
+        "y": 0.846,
         "align": "center"
       }
     },
     {
       "words": [
         {
-          "word": "here,",
-          "startMs": 18800,
-          "endMs": 19140,
+          "word": "on",
+          "startMs": 2340,
+          "endMs": 2640,
+          "isEmphasis": false
+        },
+        {
+          "word": "Depender",
+          "startMs": 2640,
+          "endMs": 2940,
+          "isEmphasis": false
+        }
+      ],
+      "position": "center_low",
+      "emphasisWordIndex": null,
+      "startMs": 2340,
+      "endMs": 2940,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.846,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "Goel's",
+          "startMs": 2940,
+          "endMs": 3420,
+          "isEmphasis": false
+        }
+      ],
+      "position": "center_low",
+      "emphasisWordIndex": null,
+      "startMs": 2940,
+      "endMs": 3420,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.846,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "forehead",
+          "startMs": 3420,
+          "endMs": 3640,
+          "isEmphasis": false
+        },
+        {
+          "word": "in",
+          "startMs": 3640,
+          "endMs": 4060,
+          "isEmphasis": false
+        }
+      ],
+      "position": "center_low",
+      "emphasisWordIndex": null,
+      "startMs": 3420,
+      "endMs": 4060,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.846,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "the",
+          "startMs": 4060,
+          "endMs": 4160,
           "isEmphasis": false
         }
       ],
       "position": "lower_left",
       "emphasisWordIndex": null,
-      "startMs": 18800,
-      "endMs": 19140,
+      "startMs": 4060,
+      "endMs": 4160,
       "anchor": {
         "x": 0.12,
-        "y": 0.8,
+        "y": 0.846,
         "align": "left"
       }
     },
     {
       "words": [
         {
-          "word": "yours",
-          "startMs": 19620,
-          "endMs": 19800,
+          "word": "latest",
+          "startMs": 4160,
+          "endMs": 4460,
           "isEmphasis": true
-        },
-        {
-          "word": "out.",
-          "startMs": 19800,
-          "endMs": 20100,
-          "isEmphasis": false
         }
       ],
-      "position": "center",
+      "position": "lower_left",
       "emphasisWordIndex": 0,
-      "startMs": 19620,
-      "endMs": 20100,
+      "startMs": 4160,
+      "endMs": 4460,
       "anchor": {
-        "x": 0.5,
-        "y": 0.785,
-        "align": "center"
+        "x": 0.12,
+        "y": 0.846,
+        "align": "left"
       }
     },
     {
       "words": [
         {
-          "word": "If",
-          "startMs": 20320,
-          "endMs": 20440,
+          "word": "interview",
+          "startMs": 4460,
+          "endMs": 4860,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_left",
+      "emphasisWordIndex": null,
+      "startMs": 4460,
+      "endMs": 4860,
+      "anchor": {
+        "x": 0.12,
+        "y": 0.846,
+        "align": "left"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "with",
+          "startMs": 4860,
+          "endMs": 5140,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": null,
+      "startMs": 4860,
+      "endMs": 5140,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "Raj",
+          "startMs": 5140,
+          "endMs": 5260,
+          "isEmphasis": true
+        },
+        {
+          "word": "Samani,",
+          "startMs": 5260,
+          "endMs": 5700,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": 0,
+      "startMs": 5140,
+      "endMs": 5700,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "let",
+          "startMs": 6020,
+          "endMs": 6220,
           "isEmphasis": false
         },
         {
-          "word": "you",
-          "startMs": 20440,
-          "endMs": 20560,
+          "word": "me",
+          "startMs": 6220,
+          "endMs": 6380,
           "isEmphasis": false
         },
         {
-          "word": "want",
-          "startMs": 20560,
-          "endMs": 20740,
+          "word": "explain",
+          "startMs": 6380,
+          "endMs": 6660,
           "isEmphasis": false
         }
       ],
       "position": "center_low",
       "emphasisWordIndex": null,
-      "startMs": 20320,
-      "endMs": 20740,
+      "startMs": 6020,
+      "endMs": 6660,
       "anchor": {
         "x": 0.5,
-        "y": 0.818,
+        "y": 0.846,
         "align": "center"
       }
     },
     {
       "words": [
         {
+          "word": "it",
+          "startMs": 6660,
+          "endMs": 6800,
+          "isEmphasis": false
+        },
+        {
+          "word": "to",
+          "startMs": 6800,
+          "endMs": 6900,
+          "isEmphasis": false
+        },
+        {
+          "word": "people",
+          "startMs": 6900,
+          "endMs": 7180,
+          "isEmphasis": false
+        }
+      ],
+      "position": "center_low",
+      "emphasisWordIndex": null,
+      "startMs": 6660,
+      "endMs": 7180,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.846,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "who",
+          "startMs": 7180,
+          "endMs": 7440,
+          "isEmphasis": false
+        },
+        {
+          "word": "do",
+          "startMs": 7440,
+          "endMs": 7600,
+          "isEmphasis": false
+        },
+        {
+          "word": "not",
+          "startMs": 7600,
+          "endMs": 7740,
+          "isEmphasis": true
+        }
+      ],
+      "position": "lower_left",
+      "emphasisWordIndex": 2,
+      "startMs": 7180,
+      "endMs": 7740,
+      "anchor": {
+        "x": 0.12,
+        "y": 0.846,
+        "align": "left"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "know.",
+          "startMs": 7740,
+          "endMs": 8000,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_left",
+      "emphasisWordIndex": null,
+      "startMs": 7740,
+      "endMs": 8000,
+      "anchor": {
+        "x": 0.12,
+        "y": 0.846,
+        "align": "left"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "This",
+          "startMs": 8580,
+          "endMs": 9040,
+          "isEmphasis": false
+        },
+        {
+          "word": "device",
+          "startMs": 9040,
+          "endMs": 9320,
+          "isEmphasis": true
+        },
+        {
+          "word": "is",
+          "startMs": 9320,
+          "endMs": 9540,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": 1,
+      "startMs": 8580,
+      "endMs": 9540,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "called",
+          "startMs": 9540,
+          "endMs": 9700,
+          "isEmphasis": true
+        },
+        {
+          "word": "Temple",
+          "startMs": 9700,
+          "endMs": 10020,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": 0,
+      "startMs": 9540,
+      "endMs": 10020,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "and",
+          "startMs": 10020,
+          "endMs": 10300,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": null,
+      "startMs": 10020,
+      "endMs": 10300,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "it",
+          "startMs": 10300,
+          "endMs": 10480,
+          "isEmphasis": false
+        },
+        {
+          "word": "is",
+          "startMs": 10480,
+          "endMs": 10480,
+          "isEmphasis": false
+        },
+        {
+          "word": "founded",
+          "startMs": 10480,
+          "endMs": 10740,
+          "isEmphasis": true
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": 2,
+      "startMs": 10300,
+      "endMs": 10740,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "by",
+          "startMs": 10740,
+          "endMs": 10960,
+          "isEmphasis": false
+        },
+        {
+          "word": "Depender",
+          "startMs": 10960,
+          "endMs": 11280,
+          "isEmphasis": true
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": 1,
+      "startMs": 10740,
+      "endMs": 11280,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "Goel",
+          "startMs": 11280,
+          "endMs": 11580,
+          "isEmphasis": true
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": 0,
+      "startMs": 11280,
+      "endMs": 11580,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "himself.",
+          "startMs": 11580,
+          "endMs": 11960,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": null,
+      "startMs": 11580,
+      "endMs": 11960,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "Temple",
+          "startMs": 12760,
+          "endMs": 12920,
+          "isEmphasis": false
+        },
+        {
+          "word": "is",
+          "startMs": 12920,
+          "endMs": 13160,
+          "isEmphasis": false
+        },
+        {
+          "word": "an",
+          "startMs": 13160,
+          "endMs": 13300,
+          "isEmphasis": false
+        }
+      ],
+      "position": "center_low",
+      "emphasisWordIndex": null,
+      "startMs": 12760,
+      "endMs": 13300,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.846,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "experimental",
+          "startMs": 13300,
+          "endMs": 13780,
+          "isEmphasis": false
+        }
+      ],
+      "position": "center_low",
+      "emphasisWordIndex": null,
+      "startMs": 13300,
+      "endMs": 13780,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.846,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "smart",
+          "startMs": 13780,
+          "endMs": 14440,
+          "isEmphasis": false
+        }
+      ],
+      "position": "center_low",
+      "emphasisWordIndex": null,
+      "startMs": 13780,
+      "endMs": 14440,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.846,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "variable",
+          "startMs": 14440,
+          "endMs": 15060,
+          "isEmphasis": false
+        }
+      ],
+      "position": "center_low",
+      "emphasisWordIndex": null,
+      "startMs": 14440,
+      "endMs": 15060,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.846,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "that",
+          "startMs": 15060,
+          "endMs": 15520,
+          "isEmphasis": false
+        },
+        {
+          "word": "sits",
+          "startMs": 15520,
+          "endMs": 15700,
+          "isEmphasis": false
+        },
+        {
+          "word": "on,",
+          "startMs": 15700,
+          "endMs": 15980,
+          "isEmphasis": false
+        }
+      ],
+      "position": "center_low",
+      "emphasisWordIndex": null,
+      "startMs": 15060,
+      "endMs": 15980,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.846,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "temple",
+          "startMs": 16340,
+          "endMs": 17760,
+          "isEmphasis": false
+        },
+        {
+          "word": "is",
+          "startMs": 17760,
+          "endMs": 17960,
+          "isEmphasis": false
+        },
+        {
           "word": "a",
-          "startMs": 20740,
-          "endMs": 20900,
+          "startMs": 17960,
+          "endMs": 18060,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_left",
+      "emphasisWordIndex": null,
+      "startMs": 16340,
+      "endMs": 18060,
+      "anchor": {
+        "x": 0.12,
+        "y": 0.846,
+        "align": "left"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "smart,",
+          "startMs": 18060,
+          "endMs": 18380,
+          "isEmphasis": true
+        }
+      ],
+      "position": "lower_left",
+      "emphasisWordIndex": 0,
+      "startMs": 18060,
+      "endMs": 18380,
+      "anchor": {
+        "x": 0.12,
+        "y": 0.846,
+        "align": "left"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "temple",
+          "startMs": 18780,
+          "endMs": 19660,
           "isEmphasis": false
         },
         {
-          "word": "life",
-          "startMs": 20900,
-          "endMs": 21140,
+          "word": "is",
+          "startMs": 19660,
+          "endMs": 19920,
           "isEmphasis": false
         },
         {
-          "word": "of",
-          "startMs": 21140,
+          "word": "an",
+          "startMs": 19920,
+          "endMs": 20200,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": null,
+      "startMs": 18780,
+      "endMs": 20200,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "experimental",
+          "startMs": 20200,
+          "endMs": 20660,
+          "isEmphasis": false
+        }
+      ],
+      "position": "center_low",
+      "emphasisWordIndex": null,
+      "startMs": 20200,
+      "endMs": 20660,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.846,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "smart",
+          "startMs": 20660,
           "endMs": 21340,
           "isEmphasis": false
         }
       ],
       "position": "center_low",
       "emphasisWordIndex": null,
-      "startMs": 20740,
+      "startMs": 20660,
       "endMs": 21340,
       "anchor": {
         "x": 0.5,
-        "y": 0.818,
+        "y": 0.846,
         "align": "center"
       }
     },
     {
       "words": [
         {
-          "word": "your",
+          "word": "variable",
           "startMs": 21340,
-          "endMs": 21480,
-          "isEmphasis": false
-        },
-        {
-          "word": "choice,",
-          "startMs": 21480,
-          "endMs": 21780,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center_low",
-      "emphasisWordIndex": null,
-      "startMs": 21340,
-      "endMs": 21780,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "you",
-          "startMs": 22220,
-          "endMs": 22300,
-          "isEmphasis": false
-        },
-        {
-          "word": "can't",
-          "startMs": 22300,
-          "endMs": 22560,
-          "isEmphasis": false
-        },
-        {
-          "word": "live",
-          "startMs": 22560,
-          "endMs": 22660,
+          "endMs": 21840,
           "isEmphasis": true
         }
       ],
-      "position": "center_low",
-      "emphasisWordIndex": 2,
-      "startMs": 22220,
-      "endMs": 22660,
+      "position": "lower_left",
+      "emphasisWordIndex": 0,
+      "startMs": 21340,
+      "endMs": 21840,
       "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
+        "x": 0.12,
+        "y": 0.846,
+        "align": "left"
       }
     },
     {
       "words": [
         {
-          "word": "like.",
-          "startMs": 22660,
+          "word": "that",
+          "startMs": 21840,
+          "endMs": 22400,
+          "isEmphasis": false
+        },
+        {
+          "word": "sits",
+          "startMs": 22400,
+          "endMs": 22580,
+          "isEmphasis": false
+        },
+        {
+          "word": "near",
+          "startMs": 22580,
           "endMs": 22840,
           "isEmphasis": false
         }
       ],
-      "position": "center_low",
+      "position": "lower_left",
       "emphasisWordIndex": null,
-      "startMs": 22660,
+      "startMs": 21840,
       "endMs": 22840,
       "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
+        "x": 0.12,
+        "y": 0.846,
+        "align": "left"
       }
     },
     {
       "words": [
-        {
-          "word": "And",
-          "startMs": 23160,
-          "endMs": 23240,
-          "isEmphasis": false
-        },
-        {
-          "word": "if",
-          "startMs": 23240,
-          "endMs": 23360,
-          "isEmphasis": false
-        },
         {
           "word": "your",
-          "startMs": 23360,
-          "endMs": 23460,
+          "startMs": 22840,
+          "endMs": 22980,
           "isEmphasis": false
         }
       ],
-      "position": "lower_left",
+      "position": "lower_right",
       "emphasisWordIndex": null,
-      "startMs": 23160,
-      "endMs": 23460,
+      "startMs": 22840,
+      "endMs": 22980,
       "anchor": {
-        "x": 0.12,
-        "y": 0.8,
-        "align": "left"
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
       }
     },
     {
       "words": [
         {
-          "word": "goals",
-          "startMs": 23460,
+          "word": "forehead",
+          "startMs": 22980,
+          "endMs": 23300,
+          "isEmphasis": true
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": 0,
+      "startMs": 22980,
+      "endMs": 23300,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "which",
+          "startMs": 23300,
           "endMs": 23720,
           "isEmphasis": false
-        },
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": null,
+      "startMs": 23300,
+      "endMs": 23720,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
         {
-          "word": "don't",
+          "word": "is",
           "startMs": 23720,
-          "endMs": 23960,
+          "endMs": 23820,
           "isEmphasis": false
         },
         {
-          "word": "make",
-          "startMs": 23960,
-          "endMs": 24140,
+          "word": "also",
+          "startMs": 23820,
+          "endMs": 24060,
+          "isEmphasis": false
+        },
+        {
+          "word": "known",
+          "startMs": 24060,
+          "endMs": 24200,
           "isEmphasis": true
         }
       ],
-      "position": "lower_left",
+      "position": "center_low",
       "emphasisWordIndex": 2,
-      "startMs": 23460,
-      "endMs": 24140,
-      "anchor": {
-        "x": 0.12,
-        "y": 0.8,
-        "align": "left"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "you",
-          "startMs": 24140,
-          "endMs": 24360,
-          "isEmphasis": false
-        },
-        {
-          "word": "a",
-          "startMs": 24360,
-          "endMs": 24480,
-          "isEmphasis": false
-        },
-        {
-          "word": "little",
-          "startMs": 24480,
-          "endMs": 24660,
-          "isEmphasis": false
-        }
-      ],
-      "position": "lower_left",
-      "emphasisWordIndex": null,
-      "startMs": 24140,
-      "endMs": 24660,
-      "anchor": {
-        "x": 0.12,
-        "y": 0.8,
-        "align": "left"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "inhuman,",
-          "startMs": 24660,
-          "endMs": 25360,
-          "isEmphasis": true
-        }
-      ],
-      "position": "lower_left",
-      "emphasisWordIndex": 0,
-      "startMs": 24660,
-      "endMs": 25360,
-      "anchor": {
-        "x": 0.12,
-        "y": 0.8,
-        "align": "left"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "a",
-          "startMs": 25600,
-          "endMs": 25680,
-          "isEmphasis": false
-        },
-        {
-          "word": "little",
-          "startMs": 25680,
-          "endMs": 25820,
-          "isEmphasis": false
-        },
-        {
-          "word": "too",
-          "startMs": 25820,
-          "endMs": 26020,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center",
-      "emphasisWordIndex": null,
-      "startMs": 25600,
-      "endMs": 26020,
+      "startMs": 23720,
+      "endMs": 24200,
       "anchor": {
         "x": 0.5,
-        "y": 0.785,
+        "y": 0.846,
         "align": "center"
       }
     },
     {
       "words": [
         {
-          "word": "intense,",
-          "startMs": 26020,
-          "endMs": 26480,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center",
-      "emphasisWordIndex": null,
-      "startMs": 26020,
-      "endMs": 26480,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.785,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "a",
-          "startMs": 26720,
-          "endMs": 26780,
+          "word": "as",
+          "startMs": 24200,
+          "endMs": 24420,
           "isEmphasis": false
         },
         {
-          "word": "little",
-          "startMs": 26780,
-          "endMs": 26960,
-          "isEmphasis": false
-        },
-        {
-          "word": "uncomfortable",
-          "startMs": 26960,
-          "endMs": 27500,
+          "word": "Temple.",
+          "startMs": 24420,
+          "endMs": 24720,
           "isEmphasis": false
         }
       ],
       "position": "center_low",
       "emphasisWordIndex": null,
-      "startMs": 26720,
-      "endMs": 27500,
+      "startMs": 24200,
+      "endMs": 24720,
       "anchor": {
         "x": 0.5,
-        "y": 0.818,
+        "y": 0.846,
         "align": "center"
       }
     },
     {
       "words": [
         {
-          "word": "to",
-          "startMs": 27840,
-          "endMs": 28060,
-          "isEmphasis": false
-        },
-        {
-          "word": "be",
-          "startMs": 28060,
-          "endMs": 28180,
-          "isEmphasis": false
-        },
-        {
-          "word": "around,",
-          "startMs": 28180,
-          "endMs": 28380,
-          "isEmphasis": false
-        }
-      ],
-      "position": "lower_left",
-      "emphasisWordIndex": null,
-      "startMs": 27840,
-      "endMs": 28380,
-      "anchor": {
-        "x": 0.12,
-        "y": 0.8,
-        "align": "left"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "they're",
-          "startMs": 28580,
-          "endMs": 28620,
-          "isEmphasis": false
-        },
-        {
-          "word": "too",
-          "startMs": 28620,
-          "endMs": 28740,
-          "isEmphasis": false
-        },
-        {
-          "word": "small.",
-          "startMs": 28740,
-          "endMs": 29040,
-          "isEmphasis": false
-        }
-      ],
-      "position": "lower_left",
-      "emphasisWordIndex": null,
-      "startMs": 28580,
-      "endMs": 29040,
-      "anchor": {
-        "x": 0.12,
-        "y": 0.8,
-        "align": "left"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "Because",
-          "startMs": 29040,
-          "endMs": 29380,
-          "isEmphasis": false
-        },
-        {
-          "word": "ambition",
-          "startMs": 29380,
-          "endMs": 30120,
+          "word": "That",
+          "startMs": 24900,
+          "endMs": 25100,
           "isEmphasis": false
         },
         {
           "word": "is",
-          "startMs": 30120,
-          "endMs": 30720,
-          "isEmphasis": false
-        }
-      ],
-      "position": "lower_left",
-      "emphasisWordIndex": null,
-      "startMs": 29040,
-      "endMs": 30720,
-      "anchor": {
-        "x": 0.12,
-        "y": 0.8,
-        "align": "left"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "supposed",
-          "startMs": 30720,
-          "endMs": 31260,
-          "isEmphasis": false
-        },
-        {
-          "word": "to",
-          "startMs": 31260,
-          "endMs": 31620,
-          "isEmphasis": false
-        },
-        {
-          "word": "feel",
-          "startMs": 31620,
-          "endMs": 32000,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center",
-      "emphasisWordIndex": null,
-      "startMs": 30720,
-      "endMs": 32000,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.785,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "uncomfortable.",
-          "startMs": 32000,
-          "endMs": 32720,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center",
-      "emphasisWordIndex": null,
-      "startMs": 32000,
-      "endMs": 32720,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.785,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "It's",
-          "startMs": 33220,
-          "endMs": 33620,
-          "isEmphasis": false
-        },
-        {
-          "word": "supposed",
-          "startMs": 33620,
-          "endMs": 33880,
-          "isEmphasis": false
-        },
-        {
-          "word": "to",
-          "startMs": 33880,
-          "endMs": 34140,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center_low",
-      "emphasisWordIndex": null,
-      "startMs": 33220,
-      "endMs": 34140,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "ask",
-          "startMs": 34140,
-          "endMs": 34420,
-          "isEmphasis": false
-        },
-        {
-          "word": "too",
-          "startMs": 34420,
-          "endMs": 34760,
-          "isEmphasis": false
-        },
-        {
-          "word": "much",
-          "startMs": 34760,
-          "endMs": 35140,
-          "isEmphasis": true
-        }
-      ],
-      "position": "center_low",
-      "emphasisWordIndex": 2,
-      "startMs": 34140,
-      "endMs": 35140,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "of",
-          "startMs": 35140,
-          "endMs": 35260,
-          "isEmphasis": false
-        },
-        {
-          "word": "you.",
-          "startMs": 35260,
-          "endMs": 35480,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center_low",
-      "emphasisWordIndex": null,
-      "startMs": 35140,
-      "endMs": 35480,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "It's",
-          "startMs": 35560,
-          "endMs": 35740,
-          "isEmphasis": false
-        },
-        {
-          "word": "supposed",
-          "startMs": 35740,
-          "endMs": 35920,
-          "isEmphasis": false
-        },
-        {
-          "word": "to",
-          "startMs": 35920,
-          "endMs": 36140,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center_low",
-      "emphasisWordIndex": null,
-      "startMs": 35560,
-      "endMs": 36140,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "scare",
-          "startMs": 36140,
-          "endMs": 36420,
+          "startMs": 25100,
+          "endMs": 25200,
           "isEmphasis": false
         },
         {
           "word": "the",
-          "startMs": 36420,
-          "endMs": 36600,
-          "isEmphasis": false
-        },
-        {
-          "word": "people",
-          "startMs": 36600,
-          "endMs": 36900,
+          "startMs": 25200,
+          "endMs": 25320,
           "isEmphasis": false
         }
       ],
       "position": "lower_left",
       "emphasisWordIndex": null,
-      "startMs": 36140,
-      "endMs": 36900,
+      "startMs": 24900,
+      "endMs": 25320,
       "anchor": {
         "x": 0.12,
-        "y": 0.8,
+        "y": 0.846,
         "align": "left"
       }
     },
     {
       "words": [
         {
-          "word": "who",
-          "startMs": 36900,
-          "endMs": 37060,
-          "isEmphasis": true
-        },
-        {
-          "word": "want",
-          "startMs": 37060,
-          "endMs": 37280,
+          "word": "name",
+          "startMs": 25320,
+          "endMs": 25460,
           "isEmphasis": false
         },
         {
-          "word": "you",
-          "startMs": 37280,
-          "endMs": 37440,
+          "word": "and",
+          "startMs": 25460,
+          "endMs": 25780,
           "isEmphasis": false
         }
       ],
       "position": "lower_left",
-      "emphasisWordIndex": 0,
-      "startMs": 36900,
-      "endMs": 37440,
+      "emphasisWordIndex": null,
+      "startMs": 25320,
+      "endMs": 25780,
       "anchor": {
         "x": 0.12,
-        "y": 0.8,
+        "y": 0.846,
+        "align": "left"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "continuously",
+          "startMs": 25780,
+          "endMs": 26500,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_left",
+      "emphasisWordIndex": null,
+      "startMs": 25780,
+      "endMs": 26500,
+      "anchor": {
+        "x": 0.12,
+        "y": 0.846,
+        "align": "left"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "tracks",
+          "startMs": 26500,
+          "endMs": 26940,
+          "isEmphasis": false
+        },
+        {
+          "word": "blood",
+          "startMs": 26940,
+          "endMs": 27280,
+          "isEmphasis": true
+        }
+      ],
+      "position": "lower_left",
+      "emphasisWordIndex": 1,
+      "startMs": 26500,
+      "endMs": 27280,
+      "anchor": {
+        "x": 0.12,
+        "y": 0.846,
+        "align": "left"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "flow",
+          "startMs": 27280,
+          "endMs": 27600,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_left",
+      "emphasisWordIndex": null,
+      "startMs": 27280,
+      "endMs": 27600,
+      "anchor": {
+        "x": 0.12,
+        "y": 0.846,
         "align": "left"
       }
     },
@@ -1870,379 +1603,1027 @@
       "words": [
         {
           "word": "to",
-          "startMs": 37440,
-          "endMs": 37500,
+          "startMs": 27600,
+          "endMs": 27760,
           "isEmphasis": false
         },
         {
-          "word": "stay",
-          "startMs": 37500,
-          "endMs": 37740,
+          "word": "the",
+          "startMs": 27760,
+          "endMs": 27880,
           "isEmphasis": false
         },
         {
-          "word": "normal.",
-          "startMs": 37740,
-          "endMs": 38140,
-          "isEmphasis": true
-        }
-      ],
-      "position": "center",
-      "emphasisWordIndex": 2,
-      "startMs": 37440,
-      "endMs": 38140,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.785,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "If",
-          "startMs": 38340,
-          "endMs": 38460,
-          "isEmphasis": false
-        },
-        {
-          "word": "your",
-          "startMs": 38460,
-          "endMs": 38540,
-          "isEmphasis": false
-        },
-        {
-          "word": "dream",
-          "startMs": 38540,
-          "endMs": 38840,
-          "isEmphasis": true
-        }
-      ],
-      "position": "center_low",
-      "emphasisWordIndex": 2,
-      "startMs": 38340,
-      "endMs": 38840,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "doesn't",
-          "startMs": 38840,
-          "endMs": 39140,
-          "isEmphasis": false
-        },
-        {
-          "word": "make",
-          "startMs": 39140,
-          "endMs": 39340,
-          "isEmphasis": true
-        },
-        {
-          "word": "you",
-          "startMs": 39340,
-          "endMs": 39500,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center_low",
-      "emphasisWordIndex": 1,
-      "startMs": 38840,
-      "endMs": 39500,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "a",
-          "startMs": 39500,
-          "endMs": 39620,
-          "isEmphasis": false
-        },
-        {
-          "word": "little",
-          "startMs": 39620,
-          "endMs": 39820,
-          "isEmphasis": false
-        },
-        {
-          "word": "insane,",
-          "startMs": 39820,
-          "endMs": 40460,
+          "word": "brain.",
+          "startMs": 27880,
+          "endMs": 28100,
           "isEmphasis": false
         }
       ],
       "position": "lower_left",
       "emphasisWordIndex": null,
-      "startMs": 39500,
-      "endMs": 40460,
+      "startMs": 27600,
+      "endMs": 28100,
       "anchor": {
         "x": 0.12,
-        "y": 0.8,
+        "y": 0.846,
         "align": "left"
       }
     },
     {
       "words": [
         {
-          "word": "you're",
-          "startMs": 40760,
-          "endMs": 40940,
+          "word": "A",
+          "startMs": 28100,
+          "endMs": 28480,
           "isEmphasis": false
         },
         {
-          "word": "thinking",
-          "startMs": 40940,
-          "endMs": 41300,
+          "word": "few",
+          "startMs": 28480,
+          "endMs": 28640,
           "isEmphasis": false
         },
         {
-          "word": "inside",
-          "startMs": 41300,
-          "endMs": 41960,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center",
-      "emphasisWordIndex": null,
-      "startMs": 40760,
-      "endMs": 41960,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.785,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "your",
-          "startMs": 41960,
-          "endMs": 42200,
-          "isEmphasis": false
-        },
-        {
-          "word": "comfort",
-          "startMs": 42200,
-          "endMs": 42560,
-          "isEmphasis": false
-        },
-        {
-          "word": "zone.",
-          "startMs": 42560,
-          "endMs": 42800,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center",
-      "emphasisWordIndex": null,
-      "startMs": 41960,
-      "endMs": 42800,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.785,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "The",
-          "startMs": 43040,
-          "endMs": 43120,
-          "isEmphasis": false
-        },
-        {
-          "word": "world",
-          "startMs": 43120,
-          "endMs": 43540,
+          "word": "months",
+          "startMs": 28640,
+          "endMs": 28860,
           "isEmphasis": true
-        },
-        {
-          "word": "calls",
-          "startMs": 43540,
-          "endMs": 43820,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center_low",
-      "emphasisWordIndex": 1,
-      "startMs": 43040,
-      "endMs": 43820,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "everyone",
-          "startMs": 43820,
-          "endMs": 44700,
-          "isEmphasis": false
-        },
-        {
-          "word": "who",
-          "startMs": 44700,
-          "endMs": 44980,
-          "isEmphasis": true
-        },
-        {
-          "word": "refuses",
-          "startMs": 44980,
-          "endMs": 45440,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center_low",
-      "emphasisWordIndex": 1,
-      "startMs": 43820,
-      "endMs": 45440,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "to",
-          "startMs": 45440,
-          "endMs": 45700,
-          "isEmphasis": false
-        },
-        {
-          "word": "settle,",
-          "startMs": 45700,
-          "endMs": 46120,
-          "isEmphasis": false
-        }
-      ],
-      "position": "center_low",
-      "emphasisWordIndex": null,
-      "startMs": 45440,
-      "endMs": 46120,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.818,
-        "align": "center"
-      }
-    },
-    {
-      "words": [
-        {
-          "word": "obsessed.",
-          "startMs": 46580,
-          "endMs": 47020,
-          "isEmphasis": false
         }
       ],
       "position": "lower_left",
-      "emphasisWordIndex": null,
-      "startMs": 46580,
-      "endMs": 47020,
+      "emphasisWordIndex": 2,
+      "startMs": 28100,
+      "endMs": 28860,
       "anchor": {
         "x": 0.12,
-        "y": 0.8,
+        "y": 0.846,
         "align": "left"
       }
     },
     {
       "words": [
         {
-          "word": "Take",
-          "startMs": 47500,
-          "endMs": 47600,
-          "isEmphasis": true
-        },
-        {
-          "word": "pride",
-          "startMs": 47600,
-          "endMs": 47980,
-          "isEmphasis": false
-        },
-        {
-          "word": "in",
-          "startMs": 47980,
-          "endMs": 48220,
+          "word": "ago,",
+          "startMs": 28860,
+          "endMs": 29140,
           "isEmphasis": false
         }
       ],
-      "position": "center",
+      "position": "lower_right",
+      "emphasisWordIndex": null,
+      "startMs": 28860,
+      "endMs": 29140,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "Depender",
+          "startMs": 29300,
+          "endMs": 29620,
+          "isEmphasis": true
+        }
+      ],
+      "position": "lower_right",
       "emphasisWordIndex": 0,
-      "startMs": 47500,
-      "endMs": 48220,
+      "startMs": 29300,
+      "endMs": 29620,
       "anchor": {
-        "x": 0.5,
-        "y": 0.785,
-        "align": "center"
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
       }
     },
     {
       "words": [
         {
-          "word": "being",
-          "startMs": 48220,
-          "endMs": 48380,
+          "word": "Shail",
+          "startMs": 29620,
+          "endMs": 30080,
+          "isEmphasis": true
+        },
+        {
+          "word": "and",
+          "startMs": 30080,
+          "endMs": 30540,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": 0,
+      "startMs": 29620,
+      "endMs": 30540,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "interesting",
+          "startMs": 30540,
+          "endMs": 30980,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": null,
+      "startMs": 30540,
+      "endMs": 30980,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "idea",
+          "startMs": 30980,
+          "endMs": 31320,
+          "isEmphasis": false
+        },
+        {
+          "word": "he",
+          "startMs": 31320,
+          "endMs": 31520,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": null,
+      "startMs": 30980,
+      "endMs": 31520,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "is",
+          "startMs": 31520,
+          "endMs": 31640,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": null,
+      "startMs": 31520,
+      "endMs": 31640,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "researching.",
+          "startMs": 31640,
+          "endMs": 32000,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": null,
+      "startMs": 31640,
+      "endMs": 32000,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "In",
+          "startMs": 33700,
+          "endMs": 34220,
+          "isEmphasis": false
+        },
+        {
+          "word": "very",
+          "startMs": 34220,
+          "endMs": 34420,
+          "isEmphasis": false
+        },
+        {
+          "word": "simple",
+          "startMs": 34420,
+          "endMs": 34760,
+          "isEmphasis": true
+        }
+      ],
+      "position": "lower_left",
+      "emphasisWordIndex": 2,
+      "startMs": 33700,
+      "endMs": 34760,
+      "anchor": {
+        "x": 0.12,
+        "y": 0.846,
+        "align": "left"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "terms,",
+          "startMs": 34760,
+          "endMs": 35320,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": null,
+      "startMs": 34760,
+      "endMs": 35320,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "he",
+          "startMs": 37160,
+          "endMs": 37320,
+          "isEmphasis": false
+        },
+        {
+          "word": "believes",
+          "startMs": 37320,
+          "endMs": 37640,
+          "isEmphasis": true
+        }
+      ],
+      "position": "lower_left",
+      "emphasisWordIndex": 1,
+      "startMs": 37160,
+      "endMs": 37640,
+      "anchor": {
+        "x": 0.12,
+        "y": 0.846,
+        "align": "left"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "gravity",
+          "startMs": 37640,
+          "endMs": 38020,
+          "isEmphasis": true
+        }
+      ],
+      "position": "lower_left",
+      "emphasisWordIndex": 0,
+      "startMs": 37640,
+      "endMs": 38020,
+      "anchor": {
+        "x": 0.12,
+        "y": 0.846,
+        "align": "left"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "might",
+          "startMs": 38020,
+          "endMs": 38380,
+          "isEmphasis": false
+        },
+        {
+          "word": "be,",
+          "startMs": 38380,
+          "endMs": 38600,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_left",
+      "emphasisWordIndex": null,
+      "startMs": 38020,
+      "endMs": 38600,
+      "anchor": {
+        "x": 0.12,
+        "y": 0.846,
+        "align": "left"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "he",
+          "startMs": 38720,
+          "endMs": 39360,
+          "isEmphasis": false
+        },
+        {
+          "word": "believes",
+          "startMs": 39360,
+          "endMs": 39680,
+          "isEmphasis": true
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": 1,
+      "startMs": 38720,
+      "endMs": 39680,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "gravity",
+          "startMs": 39680,
+          "endMs": 40040,
+          "isEmphasis": true
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": 0,
+      "startMs": 39680,
+      "endMs": 40040,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "might",
+          "startMs": 40040,
+          "endMs": 40340,
+          "isEmphasis": false
+        },
+        {
+          "word": "be",
+          "startMs": 40340,
+          "endMs": 40500,
           "isEmphasis": false
         },
         {
           "word": "one",
-          "startMs": 48380,
-          "endMs": 48600,
-          "isEmphasis": false
-        },
-        {
-          "word": "of",
-          "startMs": 48600,
-          "endMs": 48700,
+          "startMs": 40500,
+          "endMs": 40700,
           "isEmphasis": false
         }
       ],
-      "position": "center",
+      "position": "lower_right",
       "emphasisWordIndex": null,
-      "startMs": 48220,
-      "endMs": 48700,
+      "startMs": 40040,
+      "endMs": 40700,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "of",
+          "startMs": 40700,
+          "endMs": 40780,
+          "isEmphasis": false
+        },
+        {
+          "word": "the",
+          "startMs": 40780,
+          "endMs": 40920,
+          "isEmphasis": false
+        }
+      ],
+      "position": "center_low",
+      "emphasisWordIndex": null,
+      "startMs": 40700,
+      "endMs": 40920,
       "anchor": {
         "x": 0.5,
-        "y": 0.785,
+        "y": 0.846,
         "align": "center"
       }
     },
     {
       "words": [
         {
-          "word": "them.",
-          "startMs": 48700,
-          "endMs": 48860,
+          "word": "reasons",
+          "startMs": 40920,
+          "endMs": 41200,
+          "isEmphasis": true
+        }
+      ],
+      "position": "center_low",
+      "emphasisWordIndex": 0,
+      "startMs": 40920,
+      "endMs": 41200,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.846,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "we",
+          "startMs": 41200,
+          "endMs": 41600,
+          "isEmphasis": false
+        },
+        {
+          "word": "age",
+          "startMs": 41600,
+          "endMs": 41940,
           "isEmphasis": false
         }
       ],
-      "position": "center",
+      "position": "center_low",
       "emphasisWordIndex": null,
-      "startMs": 48700,
-      "endMs": 48860,
+      "startMs": 41200,
+      "endMs": 41940,
       "anchor": {
         "x": 0.5,
-        "y": 0.785,
+        "y": 0.846,
         "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "because",
+          "startMs": 41940,
+          "endMs": 42560,
+          "isEmphasis": true
+        }
+      ],
+      "position": "center_low",
+      "emphasisWordIndex": 0,
+      "startMs": 41940,
+      "endMs": 42560,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.846,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "as",
+          "startMs": 42560,
+          "endMs": 42820,
+          "isEmphasis": false
+        },
+        {
+          "word": "humans",
+          "startMs": 42820,
+          "endMs": 43120,
+          "isEmphasis": true
+        }
+      ],
+      "position": "center_low",
+      "emphasisWordIndex": 1,
+      "startMs": 42560,
+      "endMs": 43120,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.846,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "stand",
+          "startMs": 43120,
+          "endMs": 43400,
+          "isEmphasis": true
+        }
+      ],
+      "position": "center_low",
+      "emphasisWordIndex": 0,
+      "startMs": 43120,
+      "endMs": 43400,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.846,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "straight,",
+          "startMs": 43400,
+          "endMs": 43840,
+          "isEmphasis": false
+        }
+      ],
+      "position": "center_low",
+      "emphasisWordIndex": null,
+      "startMs": 43400,
+      "endMs": 43840,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.846,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "he",
+          "startMs": 44700,
+          "endMs": 45860,
+          "isEmphasis": false
+        },
+        {
+          "word": "believes",
+          "startMs": 45860,
+          "endMs": 46240,
+          "isEmphasis": true
+        }
+      ],
+      "position": "lower_left",
+      "emphasisWordIndex": 1,
+      "startMs": 44700,
+      "endMs": 46240,
+      "anchor": {
+        "x": 0.12,
+        "y": 0.846,
+        "align": "left"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "gravity",
+          "startMs": 46240,
+          "endMs": 46660,
+          "isEmphasis": true
+        }
+      ],
+      "position": "lower_left",
+      "emphasisWordIndex": 0,
+      "startMs": 46240,
+      "endMs": 46660,
+      "anchor": {
+        "x": 0.12,
+        "y": 0.846,
+        "align": "left"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "might",
+          "startMs": 46660,
+          "endMs": 47000,
+          "isEmphasis": false
+        },
+        {
+          "word": "be",
+          "startMs": 47000,
+          "endMs": 47240,
+          "isEmphasis": false
+        },
+        {
+          "word": "one",
+          "startMs": 47240,
+          "endMs": 47440,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_left",
+      "emphasisWordIndex": null,
+      "startMs": 46660,
+      "endMs": 47440,
+      "anchor": {
+        "x": 0.12,
+        "y": 0.846,
+        "align": "left"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "of",
+          "startMs": 47440,
+          "endMs": 47540,
+          "isEmphasis": false
+        },
+        {
+          "word": "the",
+          "startMs": 47540,
+          "endMs": 47680,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": null,
+      "startMs": 47440,
+      "endMs": 47680,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "reasons",
+          "startMs": 47680,
+          "endMs": 47920,
+          "isEmphasis": true
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": 0,
+      "startMs": 47680,
+      "endMs": 47920,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "we",
+          "startMs": 47920,
+          "endMs": 48240,
+          "isEmphasis": false
+        },
+        {
+          "word": "age",
+          "startMs": 48240,
+          "endMs": 48520,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": null,
+      "startMs": 47920,
+      "endMs": 48520,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "because",
+          "startMs": 48520,
+          "endMs": 49100,
+          "isEmphasis": true
+        }
+      ],
+      "position": "center_low",
+      "emphasisWordIndex": 0,
+      "startMs": 48520,
+      "endMs": 49100,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.846,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "humans",
+          "startMs": 49100,
+          "endMs": 49540,
+          "isEmphasis": true
+        },
+        {
+          "word": "stand",
+          "startMs": 49540,
+          "endMs": 49900,
+          "isEmphasis": false
+        }
+      ],
+      "position": "center_low",
+      "emphasisWordIndex": 0,
+      "startMs": 49100,
+      "endMs": 49900,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.846,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "upright.",
+          "startMs": 49900,
+          "endMs": 50300,
+          "isEmphasis": true
+        }
+      ],
+      "position": "lower_left",
+      "emphasisWordIndex": 0,
+      "startMs": 49900,
+      "endMs": 50300,
+      "anchor": {
+        "x": 0.12,
+        "y": 0.846,
+        "align": "left"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "Gravity",
+          "startMs": 50760,
+          "endMs": 50940,
+          "isEmphasis": true
+        },
+        {
+          "word": "slows,",
+          "startMs": 50940,
+          "endMs": 51360,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": 0,
+      "startMs": 50760,
+      "endMs": 51360,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "gravity",
+          "startMs": 52060,
+          "endMs": 53480,
+          "isEmphasis": false
+        }
+      ],
+      "position": "center_low",
+      "emphasisWordIndex": null,
+      "startMs": 52060,
+      "endMs": 53480,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.846,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "slowly",
+          "startMs": 53480,
+          "endMs": 53900,
+          "isEmphasis": false
+        },
+        {
+          "word": "makes",
+          "startMs": 53900,
+          "endMs": 54200,
+          "isEmphasis": true
+        }
+      ],
+      "position": "center_low",
+      "emphasisWordIndex": 1,
+      "startMs": 53480,
+      "endMs": 54200,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.846,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "it",
+          "startMs": 54200,
+          "endMs": 54420,
+          "isEmphasis": false
+        },
+        {
+          "word": "harder",
+          "startMs": 54420,
+          "endMs": 54740,
+          "isEmphasis": true
+        },
+        {
+          "word": "for",
+          "startMs": 54740,
+          "endMs": 55020,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_left",
+      "emphasisWordIndex": 1,
+      "startMs": 54200,
+      "endMs": 55020,
+      "anchor": {
+        "x": 0.12,
+        "y": 0.846,
+        "align": "left"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "blood",
+          "startMs": 55020,
+          "endMs": 55200,
+          "isEmphasis": true
+        },
+        {
+          "word": "to",
+          "startMs": 55200,
+          "endMs": 55420,
+          "isEmphasis": false
+        },
+        {
+          "word": "flow",
+          "startMs": 55420,
+          "endMs": 55620,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_left",
+      "emphasisWordIndex": 0,
+      "startMs": 55020,
+      "endMs": 55620,
+      "anchor": {
+        "x": 0.12,
+        "y": 0.846,
+        "align": "left"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "optimally",
+          "startMs": 55620,
+          "endMs": 56180,
+          "isEmphasis": false
+        },
+        {
+          "word": "to",
+          "startMs": 56180,
+          "endMs": 56380,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": null,
+      "startMs": 55620,
+      "endMs": 56380,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "the",
+          "startMs": 56380,
+          "endMs": 56480,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": null,
+      "startMs": 56380,
+      "endMs": 56480,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "brain",
+          "startMs": 56480,
+          "endMs": 56700,
+          "isEmphasis": true
+        },
+        {
+          "word": "or",
+          "startMs": 56700,
+          "endMs": 57260,
+          "isEmphasis": false
+        },
+        {
+          "word": "what",
+          "startMs": 57260,
+          "endMs": 57820,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": 0,
+      "startMs": 56480,
+      "endMs": 57820,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "the",
+          "startMs": 57820,
+          "endMs": 58540,
+          "isEmphasis": false
+        },
+        {
+          "word": "fuck",
+          "startMs": 58540,
+          "endMs": 58780,
+          "isEmphasis": false
+        },
+        {
+          "word": "you",
+          "startMs": 58780,
+          "endMs": 59040,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": null,
+      "startMs": 57820,
+      "endMs": 59040,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "are",
+          "startMs": 59040,
+          "endMs": 59160,
+          "isEmphasis": false
+        },
+        {
+          "word": "doing.",
+          "startMs": 59160,
+          "endMs": 59280,
+          "isEmphasis": false
+        }
+      ],
+      "position": "lower_right",
+      "emphasisWordIndex": null,
+      "startMs": 59040,
+      "endMs": 59280,
+      "anchor": {
+        "x": 0.88,
+        "y": 0.846,
+        "align": "right"
       }
     }
   ],
   "banner": {
-    "text": "THE POWER OF OBSESSION",
-    "emphasisWordIndex": 3,
+    "text": "GRAVITY IS AGEING YOU",
+    "emphasisWordIndex": 2,
     "anchor": {
       "x": 0.5,
       "y": 0.1,
@@ -2280,112 +2661,155 @@
       "upper_right",
       "upper_left",
       "upper_right",
-      "upper_left"
+      "upper_left",
+      "upper_right",
+      "upper_left",
+      "upper_right"
     ]
   },
   "beatGrid": {
     "method": "beat_track",
-    "tempoBpm": 112.347,
+    "tempoBpm": 143.555,
     "beatTimesMs": [
-      650,
-      1184,
+      441,
+      882,
+      1300,
       1672,
-      2206,
-      2740,
-      3204,
+      2067,
+      2485,
+      2879,
+      3251,
       3646,
-      4180,
-      4760,
-      5248,
-      5735,
-      6223,
-      6711,
-      7175,
-      7686,
-      8150,
-      8638,
-      9172,
-      9683,
-      10170,
-      10635,
-      11122,
-      11703,
-      12283,
-      12864,
-      13398,
-      13955,
-      14512,
-      15000,
-      15534,
-      15999,
-      16509,
-      17090,
-      17717,
-      18251,
-      18762,
-      19319,
-      19876,
-      20387,
-      20875,
+      4040,
+      4458,
+      4807,
+      5201,
+      5596,
+      5991,
+      6385,
+      6803,
+      7221,
+      7639,
+      8081,
+      8522,
+      8963,
+      9404,
+      9868,
+      10286,
+      10751,
+      11192,
+      11564,
+      11958,
+      12376,
+      12794,
+      13235,
+      13584,
+      14002,
+      14373,
+      14745,
+      15116,
+      15488,
+      15882,
+      16324,
+      16765,
+      17206,
+      17647,
+      18042,
+      18437,
+      18855,
+      19273,
+      19691,
+      20062,
+      20503,
+      20921,
       21386,
-      21920,
-      22430,
-      23011,
-      23615,
-      24126,
-      24660,
-      25147,
-      25635,
-      26169,
-      26749,
-      27237,
-      27818,
-      28328,
-      28793,
-      29304,
-      29907,
-      30465,
-      30975,
-      31440,
-      31927,
-      32438,
-      32903,
-      33437,
-      33994,
-      34505,
-      35039,
-      35619,
-      36130,
-      36734,
-      37291,
-      37825,
-      38383,
-      38917,
-      39451,
-      39985,
-      40519,
-      41076,
-      41587,
-      42167,
-      42725,
-      43236,
-      43746,
-      44234,
-      44745,
+      21873,
+      22361,
+      22802,
+      23243,
+      23684,
+      24102,
+      24520,
+      24915,
+      25287,
+      25704,
+      26099,
+      26494,
+      26889,
+      27307,
+      27771,
+      28189,
+      28607,
+      29025,
+      29489,
+      29954,
+      30488,
+      30999,
+      31393,
+      31811,
+      32229,
+      32624,
+      33019,
+      33414,
+      33808,
+      34203,
+      34621,
+      34992,
+      35410,
+      35828,
+      36246,
+      36664,
+      37082,
+      37500,
+      37895,
+      38336,
+      38731,
+      39149,
+      39544,
+      39938,
+      40333,
+      40774,
+      41192,
+      41610,
+      42028,
+      42446,
+      42910,
+      43328,
+      43700,
+      44095,
+      44489,
+      44884,
       45279,
-      45836,
-      46417,
-      46997,
-      47554,
-      48065,
-      48599,
-      49133,
-      49667,
-      50202,
-      50736,
-      51246
+      45674,
+      46068,
+      46440,
+      46811,
+      47229,
+      47647,
+      48089,
+      48506,
+      48924,
+      49366,
+      49853,
+      50271,
+      50759,
+      51200,
+      51641,
+      52082,
+      52500,
+      52918,
+      53336,
+      53754,
+      54172,
+      54567,
+      54985,
+      55380,
+      55798,
+      56216,
+      56610,
+      57028
     ],
-    "gridQuality": 2.2934
+    "gridQuality": 2.4342
   },
   "music": null,
   "grade": {
@@ -2410,8 +2834,8 @@
     "sizes": {
       "banner": 66.96,
       "karaoke": 81,
-      "emphasis": 109.08000000000001,
-      "handle": 30.240000000000002
+      "emphasis": 109.08,
+      "handle": 30.24
     },
     "tracking": {
       "banner": 0,

@@ -1,5 +1,5 @@
-import { BANNER_ANCHOR, CONTENT_REGION_RATIO, TYPE_SCALE, g9Violations, textBoxBounds } from "../captions/layout.js";
-import { lineCount, textWidthPx } from "../captions/measure.js";
+import { BANNER_ANCHOR, CONTENT_REGION_RATIO, TYPE_SCALE, anchorFor, g9Violations, textBoxBounds } from "../captions/layout.js";
+import { lineCount, textWidthPx, makeSingleLineFitPredicate } from "../captions/measure.js";
 import { fontStack } from "../fonts/index.js";
 import type { MetricToken } from "../fonts/metrics.generated.js";
 import type { TemplateStyle } from "../plan.js";
@@ -172,4 +172,39 @@ export function worstCaseHookChars(template: Template, width: number): number {
   // widest glyph fit across the box.
   const perChar = textWidthPx("W", size, token, template.typography.bannerTrackingEm);
   return Math.floor((right - left) / perChar);
+}
+
+/**
+ * §12.43 — the `fits` predicate for this template at this width.
+ *
+ * Built here rather than at each call site because there are two plan builders
+ * (`domain/studio/plan-builder.ts` and `scripts/studio/build-template-plan.ts`)
+ * and a predicate that disagreed between them would put different captions in
+ * the committed evidence than in the product — the drift §12.32 warns about,
+ * in the one place it would be least visible.
+ *
+ * The box is the NARROWEST of the template's own rotation positions, so a
+ * chunk that fits is placeable wherever the rotation happens to send it. All
+ * three bar positions are currently the same 0.76·W, but taking the minimum
+ * means adding a narrower position cannot silently start wrapping captions.
+ */
+export function captionFitPredicate(
+  template: Template,
+  width: number,
+): (words: { word: string }[]) => boolean {
+  const boxWidthPx = Math.min(
+    ...template.captionPositions.map((p) => {
+      const { left, right } = textBoxBounds(anchorFor(p), width);
+      return right - left;
+    }),
+  );
+  return makeSingleLineFitPredicate({
+    karaokePx: TYPE_SCALE.karaoke * width,
+    emphasisPx: TYPE_SCALE.emphasis * width,
+    token: METRIC_TOKEN[template.typography.karaoke]!,
+    trackingEm: template.typography.karaokeTrackingEm,
+    // The composition lays the chunk out as a flex row with this gap.
+    wordGapPx: width * 0.02,
+    boxWidthPx,
+  });
 }
