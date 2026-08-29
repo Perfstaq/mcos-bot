@@ -1,17 +1,30 @@
 #!/usr/bin/env bash
 #
-# Release Milestone 1 to production.
+# Release main to production.
 #
-#   bash infra/ship-m1.sh
+#   bash infra/ship.sh
 #
-# PR #20 is already merged; main carries M1 as commit 87165c3. This script no
-# longer touches git branches — an earlier version did, and it aborted partway
-# because an unrelated modified file blocked its checkout, which is exactly the
-# failure mode you do not want between "pushed the image" and "deployed it".
+# Was infra/ship-m1.sh; the mechanics are unchanged, the pinned commit is not.
+# This script no longer touches git branches — an earlier version did, and it
+# aborted partway because an unrelated modified file blocked its checkout,
+# which is exactly the failure mode you do not want between "pushed the image"
+# and "deployed it".
 #
-# It builds from a dedicated worktree of main so that whatever you have checked
-# out in the main working copy is irrelevant to what ships. That matters right
-# now: studio-main carries Milestone 2, which is NOT what this deploys.
+# It builds from a dedicated worktree of origin/main so that whatever you have
+# checked out in the main working copy is irrelevant to what ships.
+#
+# TAG is pinned by hand, and deliberately so. The preflight below compares it
+# against origin/main AND against the image_tag in production.auto.tfvars, and
+# both comparisons only mean something because a human wrote the value down
+# once and the machine checked it twice. Deriving TAG from origin/main would
+# turn the first check into a tautology.
+#
+# NOTE — this ships the lean image (./Dockerfile: api + worker + migrate).
+# Dockerfile.media, which carries the Python analyzer venv, scripts/dist and
+# packages/render/scripts, is NOT built, pushed or run by anything here, and
+# no ECS service runs apps/api/dist/worker-media.js. Until that exists,
+# media.analyze and render.qc jobs enqueue in production and are never
+# consumed. See docs/studio/M3_READINESS.md.
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -26,7 +39,7 @@ cd "$(dirname "$0")/.."
 # the worst place in this sequence to stop.
 eval "$(aws configure export-credentials --profile mcos --format env)"
 
-TAG="87165c3"                 # main's tip = Milestone 1
+TAG="aeeda6d"                 # main's tip = Milestone 2 (PR #21)
 REGISTRY="138067046920.dkr.ecr.ap-southeast-2.amazonaws.com"
 REPO="mcos-production"
 WORKTREE="../mcos-deploy"
