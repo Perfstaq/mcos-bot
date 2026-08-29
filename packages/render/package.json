@@ -1,0 +1,42 @@
+{
+  "name": "@mcos/render",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Content Studio render engine \u2014 the Remotion bundle root. Compositions are typed React components taking a RenderPlan as props; nothing in here computes its own timing (03_RENDER_PIPELINE \u00a74). Per ADR-5, this is the ONLY package allowed to import `remotion` \u2014 see the containment guard at apps/api/tests/render-containment.test.ts.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./plan": "./dist/plan.js",
+    "./edl": "./dist/edl.js",
+    "./rng": "./dist/rng.js",
+    "./planner": "./dist/planner/index.js",
+    "./motion": "./dist/motion/index.js",
+    "./captions": "./dist/captions/index.js",
+    "./fonts": "./dist/fonts/index.js",
+    "./templates": "./dist/templates/index.js",
+    "./templates/resolve": "./dist/templates/resolve.js",
+    "./gates/types": "./dist/gates/types.js",
+    "./gates/g1a": "./dist/gates/g1a.js",
+    "./compositions/Reel": "./dist/compositions/Reel.js",
+    "./gates/plan-gates": "./dist/gates/plan-gates.js",
+    "./baseline/plan": "./dist/baseline/plan.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@remotion/cli": "^4.0.0",
+    "@types/react": "^18.3.17",
+    "@types/react-dom": "^18.3.5",
+    "typescript": "^5.7.2"
+  }
+}

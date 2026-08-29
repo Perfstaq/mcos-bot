@@ -8,3 +8,13 @@ node_modules
 perfstaq-logos/*.zip
 *.log
 coverage
+
+# Content Studio media sidecar — Python venv, never shipped in an image.
+# Dockerfile.media builds its own /opt/analyzer-venv from
+# services/analyzer/requirements.txt; a locally-built .venv here is
+# useless in the container (its interpreter is a symlink to a host pyenv
+# path that doesn't exist there) and was 701MB of dead weight until this
+# line existed.
+**/.venv
+**/__pycache__
+**/*.pyc

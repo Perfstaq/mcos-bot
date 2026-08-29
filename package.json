@@ -5,7 +5,8 @@
   "description": "MCOS \u2014 Marketing Context Operating System. Milestone 1: ingestion \u2192 review gate \u2192 versioned brief.",
   "workspaces": [
     "apps/api",
-    "apps/web"
+    "apps/web",
+    "packages/render"
   ],
   "engines": {
     "node": ">=20"
@@ -15,10 +16,14 @@
     "dev:api": "npm run dev -w @mcos/api",
     "dev:worker": "npm run dev:worker -w @mcos/api",
     "dev:web": "npm run dev -w @mcos/web",
-    "build": "npm run build -w @mcos/api && npm run build -w @mcos/web",
+    "build": "npm run build -w @mcos/render && npm run build -w @mcos/api && npm run build -w @mcos/web && npm run build:scripts",
+    "build:scripts": "tsc -p scripts/tsconfig.build.json",
+    "pretest": "npm run build -w @mcos/render && npm run build:scripts",
     "test": "npm run test -w @mcos/api",
-    "typecheck": "npm run typecheck --workspaces --if-present && npm run typecheck:e2e",
+    "pretypecheck": "npm run build -w @mcos/render && npm run build:scripts",
+    "typecheck": "npm run typecheck --workspaces --if-present && npm run typecheck:e2e && npm run typecheck:scripts",
     "typecheck:e2e": "tsc -p e2e/tsconfig.json --noEmit",
+    "typecheck:scripts": "tsc -p scripts/tsconfig.json --noEmit",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:migrate": "npm run db:migrate -w @mcos/api",
@@ -27,9 +32,11 @@
     "setup": "npm install && npm run db:up && npm run db:migrate && npm run db:seed:demo",
     "db:seed:demo": "npm run db:seed -w @mcos/api -- --demo",
     "seed:golden": "npm run seed:golden -w @mcos/api",
+    "seed:templates": "tsx scripts/studio/seed-templates.ts",
     "demo:reset": "npm run demo:reset -w @mcos/api",
     "eval:extraction": "npm run eval:extraction -w @mcos/api --",
     "test:e2e:install": "playwright install --with-deps chromium",
+    "pretest:e2e": "npm run build -w @mcos/render && npm run build:scripts",
     "test:e2e": "playwright test --config e2e/playwright.config.ts"
   },
   "devDependencies": {

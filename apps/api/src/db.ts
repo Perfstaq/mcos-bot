@@ -34,6 +34,11 @@ const UNSCOPED = new Set([
   // be in several, and their recording preference follows them. No tenant_id
   // column exists, so injecting one would make every query throw.
   "UserPreference",
+  // Content Studio: a global template catalog, not tenant memory (invariant 1
+  // does not apply to it — templates are seeded product config, not
+  // gate-approved claims). No tenant_id column; per-tenant custom templates
+  // later are an additive nullable column, not a reason to scope this now.
+  "MotionTemplate",
 ]);
 
 const WHERE_OPS = new Set([

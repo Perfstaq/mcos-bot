@@ -1,0 +1,1602 @@
+{
+  "planVersion": "1",
+  "seed": 42,
+  "fps": 30,
+  "width": 1080,
+  "height": 1920,
+  "durationInFrames": 1788,
+  "framing": "letterbox",
+  "footage": {
+    "assetId": "talking-head-v1-1080",
+    "r2Key": "studio/talking-head-v1-1080.mp4"
+  },
+  "cuts": [
+    {
+      "id": "b0",
+      "sourceInMs": 0,
+      "sourceOutMs": 2500,
+      "outputStartMs": 0,
+      "outputEndMs": 2500,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b1",
+      "sourceInMs": 2500,
+      "sourceOutMs": 5000,
+      "outputStartMs": 2500,
+      "outputEndMs": 5000,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b2",
+      "sourceInMs": 5000,
+      "sourceOutMs": 7500,
+      "outputStartMs": 5000,
+      "outputEndMs": 7500,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b3",
+      "sourceInMs": 7500,
+      "sourceOutMs": 10000,
+      "outputStartMs": 7500,
+      "outputEndMs": 10000,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b4",
+      "sourceInMs": 10000,
+      "sourceOutMs": 12500,
+      "outputStartMs": 10000,
+      "outputEndMs": 12500,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b5",
+      "sourceInMs": 12500,
+      "sourceOutMs": 15000,
+      "outputStartMs": 12500,
+      "outputEndMs": 15000,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b6",
+      "sourceInMs": 15000,
+      "sourceOutMs": 17500,
+      "outputStartMs": 15000,
+      "outputEndMs": 17500,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b7",
+      "sourceInMs": 17500,
+      "sourceOutMs": 20000,
+      "outputStartMs": 17500,
+      "outputEndMs": 20000,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b8",
+      "sourceInMs": 20000,
+      "sourceOutMs": 22500,
+      "outputStartMs": 20000,
+      "outputEndMs": 22500,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b9",
+      "sourceInMs": 22500,
+      "sourceOutMs": 25000,
+      "outputStartMs": 22500,
+      "outputEndMs": 25000,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b10",
+      "sourceInMs": 25000,
+      "sourceOutMs": 27500,
+      "outputStartMs": 25000,
+      "outputEndMs": 27500,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b11",
+      "sourceInMs": 27500,
+      "sourceOutMs": 30000,
+      "outputStartMs": 27500,
+      "outputEndMs": 30000,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b12",
+      "sourceInMs": 30000,
+      "sourceOutMs": 32500,
+      "outputStartMs": 30000,
+      "outputEndMs": 32500,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b13",
+      "sourceInMs": 32500,
+      "sourceOutMs": 35000,
+      "outputStartMs": 32500,
+      "outputEndMs": 35000,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b14",
+      "sourceInMs": 35000,
+      "sourceOutMs": 37500,
+      "outputStartMs": 35000,
+      "outputEndMs": 37500,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b15",
+      "sourceInMs": 37500,
+      "sourceOutMs": 40000,
+      "outputStartMs": 37500,
+      "outputEndMs": 40000,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b16",
+      "sourceInMs": 40000,
+      "sourceOutMs": 42500,
+      "outputStartMs": 40000,
+      "outputEndMs": 42500,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b17",
+      "sourceInMs": 42500,
+      "sourceOutMs": 45000,
+      "outputStartMs": 42500,
+      "outputEndMs": 45000,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b18",
+      "sourceInMs": 45000,
+      "sourceOutMs": 47500,
+      "outputStartMs": 45000,
+      "outputEndMs": 47500,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b19",
+      "sourceInMs": 47500,
+      "sourceOutMs": 50000,
+      "outputStartMs": 47500,
+      "outputEndMs": 50000,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b20",
+      "sourceInMs": 50000,
+      "sourceOutMs": 52500,
+      "outputStartMs": 50000,
+      "outputEndMs": 52500,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b21",
+      "sourceInMs": 52500,
+      "sourceOutMs": 55000,
+      "outputStartMs": 52500,
+      "outputEndMs": 55000,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b22",
+      "sourceInMs": 55000,
+      "sourceOutMs": 57500,
+      "outputStartMs": 55000,
+      "outputEndMs": 57500,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 75,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    },
+    {
+      "id": "b23",
+      "sourceInMs": 57500,
+      "sourceOutMs": 59605,
+      "outputStartMs": 57500,
+      "outputEndMs": 59605,
+      "motion": {
+        "motion": "push",
+        "fromScale": 1,
+        "toScale": 1,
+        "spring": "drift",
+        "durationInFrames": 63,
+        "originX": 0.5,
+        "originY": 0.5
+      }
+    }
+  ],
+  "captions": [
+    {
+      "words": [
+        {
+          "word": "If",
+          "startMs": 20,
+          "endMs": 520
+        },
+        {
+          "word": "you",
+          "startMs": 520,
+          "endMs": 620
+        },
+        {
+          "word": "are",
+          "startMs": 620,
+          "endMs": 720
+        },
+        {
+          "word": "wondering",
+          "startMs": 720,
+          "endMs": 1040
+        },
+        {
+          "word": "what",
+          "startMs": 1040,
+          "endMs": 1320
+        },
+        {
+          "word": "that",
+          "startMs": 1320,
+          "endMs": 1500
+        },
+        {
+          "word": "small",
+          "startMs": 1500,
+          "endMs": 1720
+        },
+        {
+          "word": "device",
+          "startMs": 1720,
+          "endMs": 2100
+        },
+        {
+          "word": "was",
+          "startMs": 2100,
+          "endMs": 2340
+        },
+        {
+          "word": "on",
+          "startMs": 2340,
+          "endMs": 2640
+        },
+        {
+          "word": "Depender",
+          "startMs": 2640,
+          "endMs": 2940
+        },
+        {
+          "word": "Goel's",
+          "startMs": 2940,
+          "endMs": 3420
+        },
+        {
+          "word": "forehead",
+          "startMs": 3420,
+          "endMs": 3640
+        },
+        {
+          "word": "in",
+          "startMs": 3640,
+          "endMs": 4060
+        }
+      ],
+      "position": "bottom_center",
+      "emphasisWordIndex": null,
+      "startMs": 20,
+      "endMs": 4060,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.85,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "the",
+          "startMs": 4060,
+          "endMs": 4160
+        },
+        {
+          "word": "latest",
+          "startMs": 4160,
+          "endMs": 4460
+        },
+        {
+          "word": "interview",
+          "startMs": 4460,
+          "endMs": 4860
+        },
+        {
+          "word": "with",
+          "startMs": 4860,
+          "endMs": 5140
+        },
+        {
+          "word": "Raj",
+          "startMs": 5140,
+          "endMs": 5260
+        },
+        {
+          "word": "Samani,",
+          "startMs": 5260,
+          "endMs": 5700
+        },
+        {
+          "word": "let",
+          "startMs": 6020,
+          "endMs": 6220
+        },
+        {
+          "word": "me",
+          "startMs": 6220,
+          "endMs": 6380
+        },
+        {
+          "word": "explain",
+          "startMs": 6380,
+          "endMs": 6660
+        },
+        {
+          "word": "it",
+          "startMs": 6660,
+          "endMs": 6800
+        },
+        {
+          "word": "to",
+          "startMs": 6800,
+          "endMs": 6900
+        },
+        {
+          "word": "people",
+          "startMs": 6900,
+          "endMs": 7180
+        },
+        {
+          "word": "who",
+          "startMs": 7180,
+          "endMs": 7440
+        },
+        {
+          "word": "do",
+          "startMs": 7440,
+          "endMs": 7600
+        }
+      ],
+      "position": "bottom_center",
+      "emphasisWordIndex": null,
+      "startMs": 4060,
+      "endMs": 7600,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.85,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "not",
+          "startMs": 7600,
+          "endMs": 7740
+        },
+        {
+          "word": "know.",
+          "startMs": 7740,
+          "endMs": 8000
+        }
+      ],
+      "position": "bottom_center",
+      "emphasisWordIndex": null,
+      "startMs": 7600,
+      "endMs": 8000,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.85,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "This",
+          "startMs": 8580,
+          "endMs": 9040
+        },
+        {
+          "word": "device",
+          "startMs": 9040,
+          "endMs": 9320
+        },
+        {
+          "word": "is",
+          "startMs": 9320,
+          "endMs": 9540
+        },
+        {
+          "word": "called",
+          "startMs": 9540,
+          "endMs": 9700
+        },
+        {
+          "word": "Temple",
+          "startMs": 9700,
+          "endMs": 10020
+        },
+        {
+          "word": "and",
+          "startMs": 10020,
+          "endMs": 10300
+        },
+        {
+          "word": "it",
+          "startMs": 10300,
+          "endMs": 10480
+        },
+        {
+          "word": "is",
+          "startMs": 10480,
+          "endMs": 10480
+        },
+        {
+          "word": "founded",
+          "startMs": 10480,
+          "endMs": 10740
+        },
+        {
+          "word": "by",
+          "startMs": 10740,
+          "endMs": 10960
+        },
+        {
+          "word": "Depender",
+          "startMs": 10960,
+          "endMs": 11280
+        },
+        {
+          "word": "Goel",
+          "startMs": 11280,
+          "endMs": 11580
+        },
+        {
+          "word": "himself.",
+          "startMs": 11580,
+          "endMs": 11960
+        }
+      ],
+      "position": "bottom_center",
+      "emphasisWordIndex": null,
+      "startMs": 8580,
+      "endMs": 11960,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.85,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "Temple",
+          "startMs": 12760,
+          "endMs": 12920
+        },
+        {
+          "word": "is",
+          "startMs": 12920,
+          "endMs": 13160
+        },
+        {
+          "word": "an",
+          "startMs": 13160,
+          "endMs": 13300
+        },
+        {
+          "word": "experimental",
+          "startMs": 13300,
+          "endMs": 13780
+        },
+        {
+          "word": "smart",
+          "startMs": 13780,
+          "endMs": 14440
+        },
+        {
+          "word": "variable",
+          "startMs": 14440,
+          "endMs": 15060
+        },
+        {
+          "word": "that",
+          "startMs": 15060,
+          "endMs": 15520
+        },
+        {
+          "word": "sits",
+          "startMs": 15520,
+          "endMs": 15700
+        },
+        {
+          "word": "on,",
+          "startMs": 15700,
+          "endMs": 15980
+        },
+        {
+          "word": "temple",
+          "startMs": 16340,
+          "endMs": 17760
+        },
+        {
+          "word": "is",
+          "startMs": 17760,
+          "endMs": 17960
+        },
+        {
+          "word": "a",
+          "startMs": 17960,
+          "endMs": 18060
+        },
+        {
+          "word": "smart,",
+          "startMs": 18060,
+          "endMs": 18380
+        },
+        {
+          "word": "temple",
+          "startMs": 18780,
+          "endMs": 19660
+        }
+      ],
+      "position": "bottom_center",
+      "emphasisWordIndex": null,
+      "startMs": 12760,
+      "endMs": 19660,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.85,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "is",
+          "startMs": 19660,
+          "endMs": 19920
+        },
+        {
+          "word": "an",
+          "startMs": 19920,
+          "endMs": 20200
+        },
+        {
+          "word": "experimental",
+          "startMs": 20200,
+          "endMs": 20660
+        },
+        {
+          "word": "smart",
+          "startMs": 20660,
+          "endMs": 21340
+        },
+        {
+          "word": "variable",
+          "startMs": 21340,
+          "endMs": 21840
+        },
+        {
+          "word": "that",
+          "startMs": 21840,
+          "endMs": 22400
+        },
+        {
+          "word": "sits",
+          "startMs": 22400,
+          "endMs": 22580
+        },
+        {
+          "word": "near",
+          "startMs": 22580,
+          "endMs": 22840
+        },
+        {
+          "word": "your",
+          "startMs": 22840,
+          "endMs": 22980
+        },
+        {
+          "word": "forehead",
+          "startMs": 22980,
+          "endMs": 23300
+        },
+        {
+          "word": "which",
+          "startMs": 23300,
+          "endMs": 23720
+        },
+        {
+          "word": "is",
+          "startMs": 23720,
+          "endMs": 23820
+        },
+        {
+          "word": "also",
+          "startMs": 23820,
+          "endMs": 24060
+        },
+        {
+          "word": "known",
+          "startMs": 24060,
+          "endMs": 24200
+        }
+      ],
+      "position": "bottom_center",
+      "emphasisWordIndex": null,
+      "startMs": 19660,
+      "endMs": 24200,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.85,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "as",
+          "startMs": 24200,
+          "endMs": 24420
+        },
+        {
+          "word": "Temple.",
+          "startMs": 24420,
+          "endMs": 24720
+        }
+      ],
+      "position": "bottom_center",
+      "emphasisWordIndex": null,
+      "startMs": 24200,
+      "endMs": 24720,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.85,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "That",
+          "startMs": 24900,
+          "endMs": 25100
+        },
+        {
+          "word": "is",
+          "startMs": 25100,
+          "endMs": 25200
+        },
+        {
+          "word": "the",
+          "startMs": 25200,
+          "endMs": 25320
+        },
+        {
+          "word": "name",
+          "startMs": 25320,
+          "endMs": 25460
+        },
+        {
+          "word": "and",
+          "startMs": 25460,
+          "endMs": 25780
+        },
+        {
+          "word": "continuously",
+          "startMs": 25780,
+          "endMs": 26500
+        },
+        {
+          "word": "tracks",
+          "startMs": 26500,
+          "endMs": 26940
+        },
+        {
+          "word": "blood",
+          "startMs": 26940,
+          "endMs": 27280
+        },
+        {
+          "word": "flow",
+          "startMs": 27280,
+          "endMs": 27600
+        },
+        {
+          "word": "to",
+          "startMs": 27600,
+          "endMs": 27760
+        },
+        {
+          "word": "the",
+          "startMs": 27760,
+          "endMs": 27880
+        },
+        {
+          "word": "brain.",
+          "startMs": 27880,
+          "endMs": 28100
+        }
+      ],
+      "position": "bottom_center",
+      "emphasisWordIndex": null,
+      "startMs": 24900,
+      "endMs": 28100,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.85,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "A",
+          "startMs": 28100,
+          "endMs": 28480
+        },
+        {
+          "word": "few",
+          "startMs": 28480,
+          "endMs": 28640
+        },
+        {
+          "word": "months",
+          "startMs": 28640,
+          "endMs": 28860
+        },
+        {
+          "word": "ago,",
+          "startMs": 28860,
+          "endMs": 29140
+        },
+        {
+          "word": "Depender",
+          "startMs": 29300,
+          "endMs": 29620
+        },
+        {
+          "word": "Shail",
+          "startMs": 29620,
+          "endMs": 30080
+        },
+        {
+          "word": "and",
+          "startMs": 30080,
+          "endMs": 30540
+        },
+        {
+          "word": "interesting",
+          "startMs": 30540,
+          "endMs": 30980
+        },
+        {
+          "word": "idea",
+          "startMs": 30980,
+          "endMs": 31320
+        },
+        {
+          "word": "he",
+          "startMs": 31320,
+          "endMs": 31520
+        },
+        {
+          "word": "is",
+          "startMs": 31520,
+          "endMs": 31640
+        },
+        {
+          "word": "researching.",
+          "startMs": 31640,
+          "endMs": 32000
+        }
+      ],
+      "position": "bottom_center",
+      "emphasisWordIndex": null,
+      "startMs": 28100,
+      "endMs": 32000,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.85,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "In",
+          "startMs": 33700,
+          "endMs": 34220
+        },
+        {
+          "word": "very",
+          "startMs": 34220,
+          "endMs": 34420
+        },
+        {
+          "word": "simple",
+          "startMs": 34420,
+          "endMs": 34760
+        },
+        {
+          "word": "terms,",
+          "startMs": 34760,
+          "endMs": 35320
+        },
+        {
+          "word": "he",
+          "startMs": 37160,
+          "endMs": 37320
+        },
+        {
+          "word": "believes",
+          "startMs": 37320,
+          "endMs": 37640
+        },
+        {
+          "word": "gravity",
+          "startMs": 37640,
+          "endMs": 38020
+        },
+        {
+          "word": "might",
+          "startMs": 38020,
+          "endMs": 38380
+        },
+        {
+          "word": "be,",
+          "startMs": 38380,
+          "endMs": 38600
+        },
+        {
+          "word": "he",
+          "startMs": 38720,
+          "endMs": 39360
+        },
+        {
+          "word": "believes",
+          "startMs": 39360,
+          "endMs": 39680
+        },
+        {
+          "word": "gravity",
+          "startMs": 39680,
+          "endMs": 40040
+        },
+        {
+          "word": "might",
+          "startMs": 40040,
+          "endMs": 40340
+        },
+        {
+          "word": "be",
+          "startMs": 40340,
+          "endMs": 40500
+        }
+      ],
+      "position": "bottom_center",
+      "emphasisWordIndex": null,
+      "startMs": 33700,
+      "endMs": 40500,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.85,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "one",
+          "startMs": 40500,
+          "endMs": 40700
+        },
+        {
+          "word": "of",
+          "startMs": 40700,
+          "endMs": 40780
+        },
+        {
+          "word": "the",
+          "startMs": 40780,
+          "endMs": 40920
+        },
+        {
+          "word": "reasons",
+          "startMs": 40920,
+          "endMs": 41200
+        },
+        {
+          "word": "we",
+          "startMs": 41200,
+          "endMs": 41600
+        },
+        {
+          "word": "age",
+          "startMs": 41600,
+          "endMs": 41940
+        },
+        {
+          "word": "because",
+          "startMs": 41940,
+          "endMs": 42560
+        },
+        {
+          "word": "as",
+          "startMs": 42560,
+          "endMs": 42820
+        },
+        {
+          "word": "humans",
+          "startMs": 42820,
+          "endMs": 43120
+        },
+        {
+          "word": "stand",
+          "startMs": 43120,
+          "endMs": 43400
+        },
+        {
+          "word": "straight,",
+          "startMs": 43400,
+          "endMs": 43840
+        },
+        {
+          "word": "he",
+          "startMs": 44700,
+          "endMs": 45860
+        },
+        {
+          "word": "believes",
+          "startMs": 45860,
+          "endMs": 46240
+        },
+        {
+          "word": "gravity",
+          "startMs": 46240,
+          "endMs": 46660
+        }
+      ],
+      "position": "bottom_center",
+      "emphasisWordIndex": null,
+      "startMs": 40500,
+      "endMs": 46660,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.85,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "might",
+          "startMs": 46660,
+          "endMs": 47000
+        },
+        {
+          "word": "be",
+          "startMs": 47000,
+          "endMs": 47240
+        },
+        {
+          "word": "one",
+          "startMs": 47240,
+          "endMs": 47440
+        },
+        {
+          "word": "of",
+          "startMs": 47440,
+          "endMs": 47540
+        },
+        {
+          "word": "the",
+          "startMs": 47540,
+          "endMs": 47680
+        },
+        {
+          "word": "reasons",
+          "startMs": 47680,
+          "endMs": 47920
+        },
+        {
+          "word": "we",
+          "startMs": 47920,
+          "endMs": 48240
+        },
+        {
+          "word": "age",
+          "startMs": 48240,
+          "endMs": 48520
+        },
+        {
+          "word": "because",
+          "startMs": 48520,
+          "endMs": 49100
+        },
+        {
+          "word": "humans",
+          "startMs": 49100,
+          "endMs": 49540
+        },
+        {
+          "word": "stand",
+          "startMs": 49540,
+          "endMs": 49900
+        },
+        {
+          "word": "upright.",
+          "startMs": 49900,
+          "endMs": 50300
+        }
+      ],
+      "position": "bottom_center",
+      "emphasisWordIndex": null,
+      "startMs": 46660,
+      "endMs": 50300,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.85,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "Gravity",
+          "startMs": 50760,
+          "endMs": 50940
+        },
+        {
+          "word": "slows,",
+          "startMs": 50940,
+          "endMs": 51360
+        },
+        {
+          "word": "gravity",
+          "startMs": 52060,
+          "endMs": 53480
+        },
+        {
+          "word": "slowly",
+          "startMs": 53480,
+          "endMs": 53900
+        },
+        {
+          "word": "makes",
+          "startMs": 53900,
+          "endMs": 54200
+        },
+        {
+          "word": "it",
+          "startMs": 54200,
+          "endMs": 54420
+        },
+        {
+          "word": "harder",
+          "startMs": 54420,
+          "endMs": 54740
+        },
+        {
+          "word": "for",
+          "startMs": 54740,
+          "endMs": 55020
+        },
+        {
+          "word": "blood",
+          "startMs": 55020,
+          "endMs": 55200
+        },
+        {
+          "word": "to",
+          "startMs": 55200,
+          "endMs": 55420
+        },
+        {
+          "word": "flow",
+          "startMs": 55420,
+          "endMs": 55620
+        },
+        {
+          "word": "optimally",
+          "startMs": 55620,
+          "endMs": 56180
+        },
+        {
+          "word": "to",
+          "startMs": 56180,
+          "endMs": 56380
+        },
+        {
+          "word": "the",
+          "startMs": 56380,
+          "endMs": 56480
+        }
+      ],
+      "position": "bottom_center",
+      "emphasisWordIndex": null,
+      "startMs": 50760,
+      "endMs": 56480,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.85,
+        "align": "center"
+      }
+    },
+    {
+      "words": [
+        {
+          "word": "brain",
+          "startMs": 56480,
+          "endMs": 56700
+        },
+        {
+          "word": "or",
+          "startMs": 56700,
+          "endMs": 57260
+        },
+        {
+          "word": "what",
+          "startMs": 57260,
+          "endMs": 57820
+        },
+        {
+          "word": "the",
+          "startMs": 57820,
+          "endMs": 58540
+        },
+        {
+          "word": "fuck",
+          "startMs": 58540,
+          "endMs": 58780
+        },
+        {
+          "word": "you",
+          "startMs": 58780,
+          "endMs": 59040
+        },
+        {
+          "word": "are",
+          "startMs": 59040,
+          "endMs": 59160
+        },
+        {
+          "word": "doing.",
+          "startMs": 59160,
+          "endMs": 59280
+        }
+      ],
+      "position": "bottom_center",
+      "emphasisWordIndex": null,
+      "startMs": 56480,
+      "endMs": 59280,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.85,
+        "align": "center"
+      }
+    }
+  ],
+  "banner": {
+    "text": "GRAVITY IS AGEING YOU",
+    "emphasisWordIndex": 2,
+    "anchor": {
+      "x": 0.5,
+      "y": 0.1,
+      "align": "center"
+    }
+  },
+  "handle": {
+    "text": "@PERFSTAQ",
+    "opacity": 0.52,
+    "cornerByShot": [
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right",
+      "upper_right"
+    ]
+  },
+  "beatGrid": {
+    "method": "beat_track",
+    "tempoBpm": 143.555,
+    "beatTimesMs": [
+      441,
+      882,
+      1300,
+      1672,
+      2067,
+      2485,
+      2879,
+      3251,
+      3646,
+      4040,
+      4458,
+      4807,
+      5201,
+      5596,
+      5991,
+      6385,
+      6803,
+      7221,
+      7639,
+      8081,
+      8522,
+      8963,
+      9404,
+      9868,
+      10286,
+      10751,
+      11192,
+      11564,
+      11958,
+      12376,
+      12794,
+      13235,
+      13584,
+      14002,
+      14373,
+      14745,
+      15116,
+      15488,
+      15882,
+      16324,
+      16765,
+      17206,
+      17647,
+      18042,
+      18437,
+      18855,
+      19273,
+      19691,
+      20062,
+      20503,
+      20921,
+      21386,
+      21873,
+      22361,
+      22802,
+      23243,
+      23684,
+      24102,
+      24520,
+      24915,
+      25287,
+      25704,
+      26099,
+      26494,
+      26889,
+      27307,
+      27771,
+      28189,
+      28607,
+      29025,
+      29489,
+      29954,
+      30488,
+      30999,
+      31393,
+      31811,
+      32229,
+      32624,
+      33019,
+      33414,
+      33808,
+      34203,
+      34621,
+      34992,
+      35410,
+      35828,
+      36246,
+      36664,
+      37082,
+      37500,
+      37895,
+      38336,
+      38731,
+      39149,
+      39544,
+      39938,
+      40333,
+      40774,
+      41192,
+      41610,
+      42028,
+      42446,
+      42910,
+      43328,
+      43700,
+      44095,
+      44489,
+      44884,
+      45279,
+      45674,
+      46068,
+      46440,
+      46811,
+      47229,
+      47647,
+      48089,
+      48506,
+      48924,
+      49366,
+      49853,
+      50271,
+      50759,
+      51200,
+      51641,
+      52082,
+      52500,
+      52918,
+      53336,
+      53754,
+      54172,
+      54567,
+      54985,
+      55380,
+      55798,
+      56216,
+      56610,
+      57028
+    ],
+    "gridQuality": 2.4342
+  },
+  "music": null,
+  "grade": {
+    "contrast": 1,
+    "saturation": 1,
+    "warmTint": 0,
+    "vignette": 0
+  },
+  "templateStyle": {
+    "templateId": "staccato_condensed",
+    "templateVersion": 1,
+    "fonts": {
+      "banner": "\"Bebas Neue\", \"Anton\", \"Arial Narrow\", Impact, sans-serif",
+      "karaoke": "\"Bebas Neue\", \"Anton\", \"Arial Narrow\", Impact, sans-serif",
+      "handle": "\"Inter\", \"Helvetica Neue\", Helvetica, Arial, sans-serif"
+    },
+    "fontTokens": {
+      "banner": "display_condensed",
+      "karaoke": "display_condensed",
+      "handle": "body_sans"
+    },
+    "sizes": {
+      "banner": 66.96,
+      "karaoke": 48.6,
+      "emphasis": 48.6,
+      "handle": 30.240000000000002
+    },
+    "tracking": {
+      "banner": 0.02,
+      "karaoke": 0.03,
+      "handle": 0.1
+    },
+    "bannerLines": 1,
+    "punchScale": 0,
+    "content": {
+      "regionRatio": 0.625,
+      "cropX": 0.5,
+      "cropY": 0.5
+    }
+  },
+  "scrim": "never",
+  "captionMode": "block"
+}

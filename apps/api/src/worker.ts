@@ -1,16 +1,21 @@
 import { Worker, type Job } from "bullmq";
 import {
   CALENDAR_SWEEP_PATTERN,
+  MEDIA_PURGE_SWEEP_PATTERN,
   QUEUE,
   calendarSyncQueue,
   closeQueues,
   connection,
+  mediaPurgeReferencesQueue,
   type CalendarSyncJob,
   type SuggestActionsJob,
   type DigestJob,
   type ExtractJob,
   type IngestRecordingJob,
   type IngestTranscriptJob,
+  type MediaPurgeReferencesJob,
+  type PlanBuildJob,
+  type RenderSubmitJob,
   type WebhookJob,
 } from "./queue.js";
 import { processWebhook } from "./jobs/webhook.js";
@@ -20,6 +25,9 @@ import { failExtraction, runExtraction } from "./jobs/extract.js";
 import { syncActiveConnections, syncCalendarConnection } from "./jobs/calendar-sync.js";
 import { runActionItemSuggestions } from "./jobs/suggest-action-items.js";
 import { runDigest } from "./jobs/digest.js";
+import { failPlanBuild, runPlanBuild } from "./jobs/plan-build.js";
+import { failRenderSubmit, runRenderSubmit } from "./jobs/render-submit.js";
+import { sweepPurgeReferences } from "./jobs/media-purge.js";
 import { disconnect } from "./db.js";
 import { logger } from "./logger.js";
 import { env } from "./env.js";
@@ -81,6 +89,39 @@ const workers = [
     connection,
     concurrency: 2,
   }),
+
+  // Content Studio (ARCHITECTURE §12.12). Both live on THIS worker, not
+  // worker-media.ts: `plan.build` is pure TypeScript and `render.submit` makes
+  // renderer/API calls — neither needs ffmpeg, faster-whisper or librosa, and
+  // registering them on the media image would put ML dependencies on their
+  // deploy path for no reason (queue.ts's own note says so).
+  //
+  // Concurrency and lockDuration come from 03_RENDER_PIPELINE §3's table:
+  // plan.build 4 @ 60s, render.submit 4 @ 20m. BullMQ has no first-class
+  // per-job timeout, so `lockDuration` is what reclaims a stalled job rather
+  // than holding the slot forever.
+  new Worker<PlanBuildJob>(QUEUE.planBuild, (job) => runPlanBuild(job.data), {
+    connection,
+    concurrency: 4,
+    lockDuration: 60 * 1000,
+  }),
+
+  new Worker<RenderSubmitJob>(QUEUE.renderSubmit, (job) => runRenderSubmit(job.data), {
+    connection,
+    concurrency: 4,
+    lockDuration: 20 * 60 * 1000,
+  }),
+
+  // Reference-reel retention (ARCHITECTURE §12.36). Pure R2-delete + Prisma
+  // work like plan.build/render.submit above — no ffmpeg/faster-whisper/
+  // librosa — so this lives on THIS worker, not worker-media.ts, same
+  // reasoning as those two. Concurrency 1: it is one sweep a day, not a
+  // stream of per-resource jobs, and there is nothing to gain from running
+  // two sweeps at once.
+  new Worker<MediaPurgeReferencesJob>(QUEUE.mediaPurgeReferences, () => sweepPurgeReferences(), {
+    connection,
+    concurrency: 1,
+  }),
 ];
 
 for (const worker of workers) {
@@ -112,6 +153,15 @@ for (const worker of workers) {
         case QUEUE.extract:
           await failExtraction(job.data as ExtractJob, error);
           break;
+        case QUEUE.planBuild:
+          // 03 §7's `plan_infeasible(reason)`: structured and logged with the
+          // plan id. See failPlanBuild's own comment for the gap this leaves —
+          // there is no durable per-plan status row for a UI to read yet.
+          await failPlanBuild(job.data as PlanBuildJob, error);
+          break;
+        case QUEUE.renderSubmit:
+          await failRenderSubmit(job.data as RenderSubmitJob, error);
+          break;
       }
     } catch (markError) {
       log.error({ err: (markError as Error).message }, "could not record failure on meeting");
@@ -120,14 +170,20 @@ for (const worker of workers) {
 }
 
 /**
- * The repeatable sweep. `jobId` is fixed so restarting a worker replaces the
- * schedule rather than adding a second one — without it, every deploy would
- * leave another sweep running forever.
+ * The repeatable sweeps. `jobId` is fixed on each so restarting a worker
+ * replaces the schedule rather than adding a second one — without it, every
+ * deploy would leave another sweep running forever.
  */
 await calendarSyncQueue.add(
   "sweep",
   {},
   { repeat: { pattern: CALENDAR_SWEEP_PATTERN }, jobId: "calendar-sweep" },
+);
+
+await mediaPurgeReferencesQueue.add(
+  "sweep",
+  {},
+  { repeat: { pattern: MEDIA_PURGE_SWEEP_PATTERN }, jobId: "media-purge-references-sweep" },
 );
 
 log.info(
@@ -136,6 +192,7 @@ log.info(
     region: env.RECALL_REGION,
     model: env.OPENAI_MODEL,
     calendarSweep: CALENDAR_SWEEP_PATTERN,
+    mediaPurgeSweep: MEDIA_PURGE_SWEEP_PATTERN,
   },
   "worker started",
 );

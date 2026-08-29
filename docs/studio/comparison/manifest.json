@@ -1,0 +1,221 @@
+{
+  "description": "W4.3 side-by-side comparison: the real pipeline against the W4.2 naive baseline, same ContentBrief, same footage, same typography. Per ARCHITECTURE §12.10 the MP4s (both arms, the grid and the source) are NOT committed; their sha256 is recorded here alongside the commit they were rendered from. The qc JSONs, the baseline plans and the stacked PNG frames are committed.",
+  "generatedAt": "2026-08-28T13:03:51.846Z",
+  "renderedFromCommit": "166ba67f385198fb7ec30ab76abfd5ed0b1f928a",
+  "renderedFromCommitSubject": "docs(studio): generate the comparison README from the artifacts, not by hand",
+  "treeDirty": false,
+  "inputs": {
+    "footage": {
+      "path": "/Users/sathvik/aix/studio-assets/talking-head-v1-1080.mp4",
+      "sha256": "dd17a3609eca17ea613babf9c32f4892cc213e0edc20bf26fb38c719185af7b6",
+      "copiedTo": "source-talking-head-v1-1080.mp4"
+    },
+    "durationSec": 59.605,
+    "hook": "GRAVITY IS AGEING YOU",
+    "emphasisWord": "AGEING",
+    "contentBriefId": "cca7adf4-2404-455c-90ae-e907587f6284",
+    "frameTimesMs": [
+      880,
+      7470,
+      30000
+    ]
+  },
+  "grid": {
+    "layout": "PerfStaq left, baseline right — 1080x1920 each, 2160x1920 out",
+    "colourKey": "this ffmpeg build has no drawtext (no libfreetype), so each half carries a 96px top band instead of a label: 0xFF7A1A (accent) = PerfStaq, 0x3A3A3E (grey) = baseline"
+  },
+  "templates": {
+    "statement_serif": {
+      "frames": [
+        {
+          "file": "frames/statement_serif-00880ms.png",
+          "timeMs": 880,
+          "sha256": "4dc18b9576e6b9d5222ca7125cc7c96ba2fc9d9ed896ca67df608ede6c8e0b0d",
+          "bytes": 717987
+        },
+        {
+          "file": "frames/statement_serif-07470ms.png",
+          "timeMs": 7470,
+          "sha256": "02ff2f0b8d0c888336b507e0c4f986b5e5838036de498c5c9055d801c4e5bcab",
+          "bytes": 693179
+        },
+        {
+          "file": "frames/statement_serif-30000ms.png",
+          "timeMs": 30000,
+          "sha256": "244aa6f181a60e52aa681e975fb4527db2e5a3c66f75b6e309ea7ab74ee8e825",
+          "bytes": 709513
+        }
+      ],
+      "gateTable": "| gate | PerfStaq | baseline | target |\n|---|---|---|---|\n| G1a Beat lock — musical intent | 100% (26/26) · PASS | 87% (20/23) · PASS | ≥85% within 150ms of the embedded grid, AND (for beat_track grids) grid_quality present and ≥ 80% of the reference's 2.2003 (guards a degraded/absent grid gaming the gate) |\n| G1b Beat lock — render fidelity | n/a · – | n/a · – | ≥90% of the plan's cut times have a detected cut within ±2 frames (66ms) — scored only for plans that remove footage |\n| G2 Cut density | 26.1 · PASS | 23.2 · **FAIL** | 25-40 cuts/minute |\n| G3 Shot length (median) | 1.68 · PASS | 2.5 · **FAIL** | 1.0-2.0s |\n| G4 Min shot length | 0.65 · PASS | 2.11 · PASS | ≥0.6s |\n| G5 Caption density | 3 · PASS | 14 · **FAIL** | ≤3 words visible simultaneously |\n| G6 Caption position variance | 3 · PASS | 1 · **FAIL** | ≥3 distinct positions |\n| G7 Micro-motion | 0/27 static · PASS | 24/24 static · **FAIL** | 100% of shots have scale delta >1% |\n| G8 Emphasis | 89 chunks, 0 bad · PASS | 14 chunks, 0 bad · PASS | ≤1 emphasis word per chunk (schema-enforced) and it must index a real word |\n| G9 Safe margins | 0 violation(s) · PASS | 11 violation(s) · **FAIL** | 0 text blocks within 12% of the left/right/bottom edge; banner top exempt to 8% (ARCHITECTURE §12.7); 0 karaoke blocks whose top is above the face floor at 0.717 (ARCHITECTURE §12.19) |\n| G10 Word integrity | 0 violation(s) · PASS | 42 violation(s) · **FAIL** | 0 cuts landing mid-word (source in/out points) |\n| G11 Loudness | -13.9 · PASS | -13.9 · PASS | -14 ±1 LUFS integrated |\n| G12 Output spec | 1080x1920 h264+aac · PASS | 1080x1920 h264+aac · PASS | 1080x1920, 30fps, h264+aac |\n| G13 Reproducibility | recorded · – | recorded · – | same plan+footage ⇒ identical checksum |\n| G14 Provenance | linked · PASS | linked · PASS | render links to claim_ids + framework_id |\n\n**Verdict:** PerfStaq PASS (12 hard gates scored, 1 excluded) · baseline FAIL (12 hard gates scored, 1 excluded)",
+      "perfstaq": {
+        "mp4": {
+          "file": "statement_serif-perfstaq.mp4",
+          "sha256": "feb7f65b6464b6a6147a1990d568f00a0e086f192af0c69d7d5b7fc2771b169a",
+          "bytes": 68783255,
+          "committed": false
+        },
+        "qc": {
+          "file": "qc-statement_serif-perfstaq.json",
+          "sha256": "a3e6e7847cb830023389fb52d3775da17c80e71bd2671272765c19bc79836575"
+        },
+        "overallPass": true
+      },
+      "baseline": {
+        "mp4": {
+          "file": "statement_serif-baseline.mp4",
+          "sha256": "ae6844e2743c76e7f8b6d6c96954e5e2f3027e516f9d390245b545ee20c47e13",
+          "bytes": 65518865,
+          "committed": false
+        },
+        "qc": {
+          "file": "qc-statement_serif-baseline.json",
+          "sha256": "9741461e6116c675df0404cf1102be7c88877941672a3ebe08df93b9ae5aff1d"
+        },
+        "overallPass": false
+      },
+      "grid": {
+        "file": "statement_serif-grid.mp4",
+        "sha256": "e4a44ad66fc435d4e70a10c5eae2854267f032ca1f68951bae5e4cf1675a6ae9",
+        "bytes": 51253040,
+        "committed": false
+      },
+      "baselinePlan": {
+        "file": "plan-statement_serif-baseline.json",
+        "sha256": "343618a68f5bc688b9bf7cf721330345636c229112edb2419cb950063cef6ad2"
+      },
+      "perfstaqPlan": {
+        "file": "docs/studio/evidence/statement_serif/plan.json",
+        "sha256": "38cf875f7b49ab57c99473bb24fe1bfabd372b4f9a6d297430f2363227af04c8",
+        "note": "the plan the real chain committed in W4.1 — fed to --plan, not rebuilt here"
+      }
+    },
+    "staccato_condensed": {
+      "frames": [
+        {
+          "file": "frames/staccato_condensed-00880ms.png",
+          "timeMs": 880,
+          "sha256": "44369fbbc47073a9659d557e912535fd288d258201748fd02499b3e81b4d3e22",
+          "bytes": 692718
+        },
+        {
+          "file": "frames/staccato_condensed-07470ms.png",
+          "timeMs": 7470,
+          "sha256": "a38dfe3d3442d9c54e029abe24524c27c9b49a9fc3f731119eea8421a59a2aba",
+          "bytes": 682944
+        },
+        {
+          "file": "frames/staccato_condensed-30000ms.png",
+          "timeMs": 30000,
+          "sha256": "0aaee955143bde17746981436348bfcda548a17cc5795605338b2edb02093a54",
+          "bytes": 705336
+        }
+      ],
+      "gateTable": "| gate | PerfStaq | baseline | target |\n|---|---|---|---|\n| G1a Beat lock — musical intent | 100% (28/28) · PASS | 87% (20/23) · PASS | ≥85% within 150ms of the embedded grid, AND (for beat_track grids) grid_quality present and ≥ 80% of the reference's 2.2003 (guards a degraded/absent grid gaming the gate) |\n| G1b Beat lock — render fidelity | n/a · – | n/a · – | ≥90% of the plan's cut times have a detected cut within ±2 frames (66ms) — scored only for plans that remove footage |\n| G2 Cut density | 28.2 · PASS | 23.2 · **FAIL** | 25-40 cuts/minute |\n| G3 Shot length (median) | 1.62 · PASS | 2.5 · **FAIL** | 1.0-2.0s |\n| G4 Min shot length | 0.8 · PASS | 2.11 · PASS | ≥0.6s |\n| G5 Caption density | 3 · PASS | 14 · **FAIL** | ≤3 words visible simultaneously |\n| G6 Caption position variance | 3 · PASS | 1 · **FAIL** | ≥3 distinct positions |\n| G7 Micro-motion | 0/29 static · PASS | 24/24 static · **FAIL** | 100% of shots have scale delta >1% |\n| G8 Emphasis | 62 chunks, 0 bad · PASS | 14 chunks, 0 bad · PASS | ≤1 emphasis word per chunk (schema-enforced) and it must index a real word |\n| G9 Safe margins | 0 violation(s) · PASS | 3 violation(s) · **FAIL** | 0 text blocks within 12% of the left/right/bottom edge; banner top exempt to 8% (ARCHITECTURE §12.7); 0 karaoke blocks whose top is above the face floor at 0.717 (ARCHITECTURE §12.19) |\n| G10 Word integrity | 0 violation(s) · PASS | 42 violation(s) · **FAIL** | 0 cuts landing mid-word (source in/out points) |\n| G11 Loudness | -13.9 · PASS | -13.9 · PASS | -14 ±1 LUFS integrated |\n| G12 Output spec | 1080x1920 h264+aac · PASS | 1080x1920 h264+aac · PASS | 1080x1920, 30fps, h264+aac |\n| G13 Reproducibility | recorded · – | recorded · – | same plan+footage ⇒ identical checksum |\n| G14 Provenance | linked · PASS | linked · PASS | render links to claim_ids + framework_id |\n\n**Verdict:** PerfStaq PASS (12 hard gates scored, 1 excluded) · baseline FAIL (12 hard gates scored, 1 excluded)",
+      "perfstaq": {
+        "mp4": {
+          "file": "staccato_condensed-perfstaq.mp4",
+          "sha256": "75a24509fb2454265928dbe60227c1652e3210022c1df1d47f2edc49d0a758bc",
+          "bytes": 68275149,
+          "committed": false
+        },
+        "qc": {
+          "file": "qc-staccato_condensed-perfstaq.json",
+          "sha256": "9c230a5966d9f3e4267ce610ea9ce97da7edaf9044d3d67721e14ff03fbd8bf1"
+        },
+        "overallPass": true
+      },
+      "baseline": {
+        "mp4": {
+          "file": "staccato_condensed-baseline.mp4",
+          "sha256": "37e65b2e359fcd79bdb98ebdeb9cdc218709ccd744a3351aca890a5b414bd258",
+          "bytes": 64967554,
+          "committed": false
+        },
+        "qc": {
+          "file": "qc-staccato_condensed-baseline.json",
+          "sha256": "da4896e233f0db0ac376b07ebcfce1a78ca739eb982078d961d3e00f914ff7b6"
+        },
+        "overallPass": false
+      },
+      "grid": {
+        "file": "staccato_condensed-grid.mp4",
+        "sha256": "327aedba9c07af627eba1cf1b7203627e953afe604e1323e91dadd2d25921109",
+        "bytes": 51012823,
+        "committed": false
+      },
+      "baselinePlan": {
+        "file": "plan-staccato_condensed-baseline.json",
+        "sha256": "f7d5cf9f6222209c98e85bf93710d268187acdf7371200afc79b7df9335e9e45"
+      },
+      "perfstaqPlan": {
+        "file": "docs/studio/evidence/staccato_condensed/plan.json",
+        "sha256": "ec2b4ebd181fcf12c901cd97a3e205a2e99c82eb688430a8e875fe8f490760e4",
+        "note": "the plan the real chain committed in W4.1 — fed to --plan, not rebuilt here"
+      }
+    },
+    "editorial_sans": {
+      "frames": [
+        {
+          "file": "frames/editorial_sans-00880ms.png",
+          "timeMs": 880,
+          "sha256": "7f83ac34b724eb39c1e0384b2a793db5800fdbb76ea8938217c594753a1227e1",
+          "bytes": 710489
+        },
+        {
+          "file": "frames/editorial_sans-07470ms.png",
+          "timeMs": 7470,
+          "sha256": "f6932a8bb4e9358e263565acb2f294453ed77e662fe7a283924db31d49d2cf32",
+          "bytes": 688521
+        },
+        {
+          "file": "frames/editorial_sans-30000ms.png",
+          "timeMs": 30000,
+          "sha256": "c7d38470a91af50f8396f834f50b1477f49e11f4734487bd281f8330108a1d58",
+          "bytes": 711463
+        }
+      ],
+      "gateTable": "| gate | PerfStaq | baseline | target |\n|---|---|---|---|\n| G1a Beat lock — musical intent | 100% (30/30) · PASS | 87% (20/23) · PASS | ≥85% within 150ms of the embedded grid, AND (for beat_track grids) grid_quality present and ≥ 80% of the reference's 2.2003 (guards a degraded/absent grid gaming the gate) |\n| G1b Beat lock — render fidelity | n/a · – | n/a · – | ≥90% of the plan's cut times have a detected cut within ±2 frames (66ms) — scored only for plans that remove footage |\n| G2 Cut density | 30.2 · PASS | 23.2 · **FAIL** | 25-40 cuts/minute |\n| G3 Shot length (median) | 1.38 · PASS | 2.5 · **FAIL** | 1.0-2.0s |\n| G4 Min shot length | 0.81 · PASS | 2.11 · PASS | ≥0.6s |\n| G5 Caption density | 3 · PASS | 14 · **FAIL** | ≤3 words visible simultaneously |\n| G6 Caption position variance | 3 · PASS | 1 · **FAIL** | ≥3 distinct positions |\n| G7 Micro-motion | 0/31 static · PASS | 24/24 static · **FAIL** | 100% of shots have scale delta >1% |\n| G8 Emphasis | 89 chunks, 0 bad · PASS | 14 chunks, 0 bad · PASS | ≤1 emphasis word per chunk (schema-enforced) and it must index a real word |\n| G9 Safe margins | 0 violation(s) · PASS | 11 violation(s) · **FAIL** | 0 text blocks within 12% of the left/right/bottom edge; banner top exempt to 8% (ARCHITECTURE §12.7); 0 karaoke blocks whose top is above the face floor at 0.717 (ARCHITECTURE §12.19) |\n| G10 Word integrity | 0 violation(s) · PASS | 42 violation(s) · **FAIL** | 0 cuts landing mid-word (source in/out points) |\n| G11 Loudness | -14 · PASS | -13.9 · PASS | -14 ±1 LUFS integrated |\n| G12 Output spec | 1080x1920 h264+aac · PASS | 1080x1920 h264+aac · PASS | 1080x1920, 30fps, h264+aac |\n| G13 Reproducibility | recorded · – | recorded · – | same plan+footage ⇒ identical checksum |\n| G14 Provenance | linked · PASS | linked · PASS | render links to claim_ids + framework_id |\n\n**Verdict:** PerfStaq PASS (12 hard gates scored, 1 excluded) · baseline FAIL (12 hard gates scored, 1 excluded)",
+      "perfstaq": {
+        "mp4": {
+          "file": "editorial_sans-perfstaq.mp4",
+          "sha256": "4b7aa6411ebb8e2b2f248fba15464be42052d1e0c810770c137fabc82721b8d3",
+          "bytes": 67967940,
+          "committed": false
+        },
+        "qc": {
+          "file": "qc-editorial_sans-perfstaq.json",
+          "sha256": "e294fbceeeb5c5572893450387aa567ad9b97c7724aa753bdd388017456fc7f5"
+        },
+        "overallPass": true
+      },
+      "baseline": {
+        "mp4": {
+          "file": "editorial_sans-baseline.mp4",
+          "sha256": "17456dd0159717d243736dbb11a194b642d35ac3e4d2cb0d14482b59df28363b",
+          "bytes": 65529465,
+          "committed": false
+        },
+        "qc": {
+          "file": "qc-editorial_sans-baseline.json",
+          "sha256": "da6eb7d9286baf3e23ef61d6fd795efb91951d5a79b3908319de3d3839f7cf2b"
+        },
+        "overallPass": false
+      },
+      "grid": {
+        "file": "editorial_sans-grid.mp4",
+        "sha256": "f91651d29aff4cee51dde96753e4b4143c76ff5788d941b23da88fcc2807fb58",
+        "bytes": 51026576,
+        "committed": false
+      },
+      "baselinePlan": {
+        "file": "plan-editorial_sans-baseline.json",
+        "sha256": "b140dcd90807a5fc06c914b0102378ec567b8eb2626c22005c3d9f73930fa32d"
+      },
+      "perfstaqPlan": {
+        "file": "docs/studio/evidence/editorial_sans/plan.json",
+        "sha256": "0a39573c95a44be97a00d9c70db019a28f6eb248bb209f1f47bc8a96fe98504b",
+        "note": "the plan the real chain committed in W4.1 — fed to --plan, not rebuilt here"
+      }
+    }
+  }
+}

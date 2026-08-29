@@ -235,3 +235,134 @@ export const CLAIM_TYPE_LABEL: Record<ClaimType, string> = {
   competitor_mention: "Competitor mention",
   proof_point: "Proof point",
 };
+
+/* --------------------------------------------------------- Content Studio */
+/* ContentBrief — the handoff from the brief into the Studio
+ * (05_BRIEF_INTEGRATION.md; ARCHITECTURE.md §6/§11). A parallel surface to
+ * the claim review queue above, not a card type folded into it — see
+ * ContentReviewQueue.tsx. */
+
+export type ContentArchetype =
+  | "objection_killer" | "contrarian" | "pain_ladder" | "transformation" | "myth_bust"
+  | "bts" | "listicle" | "client_story" | "category_ed" | "founder_pov";
+
+export type ContentChannel = "reels" | "shorts" | "tiktok" | "linkedin";
+export type ContentMixSlot = "brand" | "activation";
+export type ExpectedMetric = "sends_per_reach" | "saves" | "watch_time" | "profile_visits";
+export type ContentBriefStatus = "proposed" | "approved" | "rejected" | "superseded";
+export type EvidenceTier = "A" | "B" | "C";
+
+export type BeatRole = "hook" | "agitate" | "resolve" | "proof" | "cta";
+export type Beat = { role: BeatRole; script: string; target_ms: number; fills_from: ClaimType[] };
+
+/** Frozen at generation time — ARCHITECTURE.md §11.1 R3 — so an approved
+ *  brief's WHY line and source chips never drift from what a reviewer saw. */
+export type ClaimSnapshot = {
+  claim_id: string;
+  type: ClaimType;
+  text: string;
+  verbatim_quote: string;
+  speaker: string;
+  timestamp_ms: number;
+};
+
+export type ContentBrief = {
+  id: string;
+  status: ContentBriefStatus;
+  brief_version_id: string;
+  archetype: ContentArchetype;
+  channel: ContentChannel;
+  content_mix_slot: ContentMixSlot;
+  hook_text: string;
+  emphasis_word: string;
+  beats: Beat[];
+  claim_ids: string[];
+  claim_snapshots: ClaimSnapshot[];
+  framework: { id: string; name: string; evidence_tier: EvidenceTier; when_to_use: string | null };
+  expected_metric: ExpectedMetric;
+  edited_from: string | null;
+  generated_by_model: string;
+  generation_note: string | null;
+  created_at: string;
+  decided_at: string | null;
+};
+
+export type ContentBriefRefusal = { archetype: ContentArchetype; reason: string };
+
+/* ------------------------------------------- plan builds (ARCHITECTURE §12.25) */
+
+export type PlanAttemptStatus = "queued" | "built" | "infeasible" | "failed";
+
+/**
+ * The status of one plan build, keyed on the plan id `POST /content/plans`
+ * returns. `03 §7` requires every failure state to be surfaced and retryable;
+ * before this existed a failed build wrote nothing anywhere and the user saw
+ * nothing, forever (ARCHITECTURE §12.25).
+ *
+ * `failure_code` is the stable half a UI switches on, `failure_message` the
+ * half a human reads, `failure_detail` the measurement it was rejected on.
+ * `retryable` is computed server-side rather than inferred from `status` here,
+ * so the rule lives in one place.
+ */
+export type PlanAttempt = {
+  id: string;
+  status: PlanAttemptStatus;
+  retryable: boolean;
+  content_brief_id: string;
+  template_id: string;
+  footage_asset_id: string;
+  failure_code: string | null;
+  failure_message: string | null;
+  failure_detail: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string | null;
+  plan: { id: string; seed: number; plan_version: string; created_by: string; created_at: string } | null;
+};
+
+/** Human labels for the `PlanInfeasibleCode`s `plan-builder.ts` can emit, plus
+ *  the catch-all. A code with no entry falls back to the code itself — better
+ *  a raw string than a blank where a reason should be. */
+export const PLAN_FAILURE_LABEL: Record<string, string> = {
+  analysis_missing: "Footage not analysed",
+  analysis_incomplete: "Analysis incomplete",
+  banner_wrap: "Hook too long for the banner",
+  footage_too_short: "Footage too short",
+  g1a_below_gate: "Cuts did not lock to the beat",
+  invalid_grid_configuration: "Invalid grid configuration",
+  no_locked_cut_path: "No legal cut list",
+  unknown_template: "Template not recognised",
+  plan_build_error: "Plan build error",
+};
+
+export type ContentGateAction = "approve" | "reject" | "edit_approve" | "undo";
+
+export type ContentGateResult = {
+  brief: { id: string; status: ContentBriefStatus; hook_text: string; archetype: string; edited_from: string | null; decided_at: string | null };
+  decision_id: string;
+  result_brief: ContentGateResult["brief"] | null;
+};
+
+export const CONTENT_ARCHETYPE_ORDER: ContentArchetype[] = [
+  "objection_killer", "contrarian", "pain_ladder", "transformation", "myth_bust",
+  "bts", "listicle", "client_story", "category_ed", "founder_pov",
+];
+
+export const CONTENT_ARCHETYPE_LABEL: Record<ContentArchetype, string> = {
+  objection_killer: "Objection killer",
+  contrarian: "Contrarian",
+  pain_ladder: "Pain ladder",
+  transformation: "Transformation",
+  myth_bust: "Myth bust",
+  bts: "Behind the scenes",
+  listicle: "Listicle",
+  client_story: "Client story",
+  category_ed: "Category education",
+  founder_pov: "Founder POV",
+};
+
+export const EXPECTED_METRIC_LABEL: Record<ExpectedMetric, string> = {
+  sends_per_reach: "Sends / reach",
+  saves: "Saves",
+  watch_time: "Watch time",
+  profile_visits: "Profile visits",
+};

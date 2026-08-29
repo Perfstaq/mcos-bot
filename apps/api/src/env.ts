@@ -63,6 +63,15 @@ const schema = z.object({
   // judgement, so it defaults to the cheapest one. Still its own knob, and
   // still OpenAI: this milestone does not switch providers.
   DIGEST_MODEL: z.string().default("gpt-5.6-luna"),
+  // ContentBrief generation (05_BRIEF_INTEGRATION.md §2; ARCHITECTURE.md §11.2
+  // R5). The spec named an Anthropic model here ("06 §1"); CLAUDE.md's "do
+  // not switch LLM provider this milestone" wins, so this is an OpenAI model
+  // id like every other knob in this file, not a claude-* one. Generation is
+  // judgement-heavy and low-volume (choosing a framework, writing a hook), so
+  // it defaults to the flagship tier; the fallback is one tier down, in its
+  // own env var so it can be swapped in ops without touching the primary.
+  CONTENT_BRIEF_MODEL: z.string().default("gpt-5.6-sol"),
+  CONTENT_BRIEF_FALLBACK: z.string().default("gpt-5.6-terra"),
 
   // --- Authentication ------------------------------------------------------
   // Better Auth requires >=32 chars. Rotating it invalidates every session and
@@ -95,6 +104,54 @@ const schema = z.object({
 
   DEFAULT_TENANT_SLUG: z.string().default("freshworks-demo"),
   DEFAULT_REVIEWER_EMAIL: z.string().default("demo@freshworks.example"),
+
+  // --- Content Studio media sidecar (additive) ------------------------------
+  // Unset in dev: jobs/media-analyze.ts and scripts/qc-render.ts fall back to
+  // the repo-relative services/analyzer/.venv. Dockerfile.media sets both to
+  // the baked-in venv (ARCHITECTURE.md §5/ADR-3).
+  ANALYZER_PYTHON: optional(z.string()),
+  ANALYZER_SCRIPT: optional(z.string()),
+  // Compiled scripts/qc-render.ts (tsc -p scripts/tsconfig.build.json — run
+  // with `node`, never `tsx`; tsx is stripped from the production image by
+  // `npm prune --omit=dev`, see Dockerfile.media/render-qc.ts). Unset in
+  // dev: jobs/render-qc.ts falls back to the repo-relative scripts/dist.
+  QC_RENDER_SCRIPT: optional(z.string()),
+  // faster-whisper model size for the `words` stage — in an env var, not
+  // hardcoded (CLAUDE.md convention, same as OPENAI_MODEL above), because
+  // MediaAnalysis.analyzerVersion's calibration provenance depends on
+  // knowing exactly which model produced a given row's word timings.
+  WHISPER_MODEL_SIZE: z.string().default("base"),
+
+  // --- Content Studio render backend (ADR-7, additive) ----------------------
+  // "Remotion Lambda for product renders; local renderer for dev/CI." The
+  // backend is chosen EXPLICITLY and never inferred, because the failure mode
+  // ADR-7 must not have is a production render quietly falling back to a
+  // 10-30 minute local CPU encode (or a dev box quietly billing Lambda). An
+  // unset value means "no renderer configured" and `render.submit` fails with
+  // that reason rather than picking one — see jobs/render-submit.ts.
+  RENDER_BACKEND: optional(z.enum(["lambda", "local"])),
+  // Local backend: packages/render's renderer entrypoint. Unset in dev falls
+  // back to the repo-relative packages/render/scripts/render-plan.mjs. Only
+  // packages/render may know how to invoke Remotion (ADR-5 containment,
+  // enforced by tests/render-containment.test.ts), so this job shells out to
+  // it exactly the way render-qc.ts shells to the compiled qc script.
+  RENDER_LOCAL_SCRIPT: optional(z.string()),
+  // Lambda backend (ADR-7). All four are required together; any missing one
+  // makes `RENDER_BACKEND=lambda` an explicit, named failure.
+  REMOTION_LAMBDA_FUNCTION_NAME: optional(z.string()),
+  REMOTION_LAMBDA_SERVE_URL: optional(z.string()),
+  REMOTION_LAMBDA_REGION: optional(z.string()),
+  REMOTION_LAMBDA_BUCKET: optional(z.string()),
+
+  // --- Content Studio: reference-reel retention (04 §5, ARCHITECTURE §12.36) -
+  // How long a `reference` MediaAsset's R2 bytes survive after fingerprinting
+  // before `media.purge-references` deletes them. In an env var, not
+  // hardcoded (CLAUDE.md convention, same as every other tunable in this
+  // file) — the number is a policy decision, not a constant. 30 is the
+  // ceiling `04_STYLE_TRANSFER.md §5` already names for a consented tenant;
+  // see §12.36 for why it is the uniform default rather than an immediate
+  // delete (no consent flag exists yet to gate a shorter one).
+  RETENTION_DAYS: z.coerce.number().int().positive().default(30),
 });
 
 export type Env = z.infer<typeof schema>;

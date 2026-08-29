@@ -14,6 +14,7 @@ import { meetingRoutes } from "./routes/meetings.js";
 import { webhookRoutes } from "./routes/webhooks.js";
 import { reviewRoutes } from "./routes/review.js";
 import { briefRoutes } from "./routes/brief.js";
+import { contentRoutes } from "./routes/content.js";
 import { authInfoRoutes } from "./routes/auth-info.js";
 import { workspaceRoutes } from "./routes/workspace.js";
 import { sharingRoutes } from "./routes/sharing.js";
@@ -116,6 +117,10 @@ export async function buildServer() {
       await api.register(webhookRoutes);
       await api.register(reviewRoutes);
       await api.register(briefRoutes);
+
+      // Content Studio — brief integration (additive; 05_BRIEF_INTEGRATION.md
+      // §4). New surface under /content; review.ts and brief.ts are untouched.
+      await api.register(contentRoutes);
 
       // Identity and access.
       await api.register(authInfoRoutes);

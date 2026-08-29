@@ -3,6 +3,7 @@ import { PerfstaqLogo } from "./PerfstaqLogo.js";
 import {
   IconBrief,
   IconCheck,
+  IconClapper,
   IconLibrary,
   IconMeetings,
   IconReview,
@@ -50,6 +51,11 @@ export function Sidebar({
         <NavLink to="/brief" className={({ isActive }) => `rail-link${isActive ? " active" : ""}`}>
           <IconBrief />
           <span className="grow">Brief</span>
+        </NavLink>
+
+        <NavLink to="/content" className={({ isActive }) => `rail-link${isActive ? " active" : ""}`}>
+          <IconClapper />
+          <span className="grow">Content briefs</span>
         </NavLink>
       </div>
 

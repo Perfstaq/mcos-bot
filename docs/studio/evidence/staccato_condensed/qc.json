@@ -1,0 +1,197 @@
+{
+  "analyzerVersion": "qc-render@0.1.0",
+  "mp4": "/Users/sathvik/aix/st-w4/docs/studio/evidence/staccato_condensed/staccato_condensed.mp4",
+  "gates": [
+    {
+      "id": "G1a",
+      "name": "Beat lock — musical intent",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": {
+        "ratio": 1,
+        "withinCount": 28,
+        "totalCuts": 28,
+        "gridQuality": 2.4342,
+        "gridQualityOk": true
+      },
+      "target": "≥85% within 150ms of the embedded grid, AND (for beat_track grids) grid_quality present and ≥ 80% of the reference's 2.2003 (guards a degraded/absent grid gaming the gate)"
+    },
+    {
+      "id": "G1b",
+      "name": "Beat lock — render fidelity",
+      "hard": true,
+      "computable": false,
+      "pass": null,
+      "notApplicable": {
+        "code": "continuous_playback_no_discontinuities",
+        "see": "ARCHITECTURE §12.3, §12.13"
+      },
+      "measured": {
+        "removesFootage": false,
+        "planCuts": 28,
+        "detectedCuts": 0,
+        "windowMs": 66
+      },
+      "target": "≥90% of the plan's cut times have a detected cut within ±2 frames (66ms) — scored only for plans that remove footage",
+      "note": "not applicable: this plan is a continuous playthrough (every shot's source span continues where the last ended), so the render contains no content discontinuities for a scene detector to find. Real jump cuts need the footage-removal stage of 03 §6, which under ARCHITECTURE §12.13 requires a licensed music bed — no audio asset exists in this repo yet. Excluded from the pass/fail rollup, NOT passed. This gate resumes scoring automatically for any plan whose cuts actually remove footage."
+    },
+    {
+      "id": "G2",
+      "name": "Cut density",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": 28.2,
+      "target": "25-40 cuts/minute"
+    },
+    {
+      "id": "G3",
+      "name": "Shot length (median)",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": 1.62,
+      "target": "1.0-2.0s"
+    },
+    {
+      "id": "G4",
+      "name": "Min shot length",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": 0.8,
+      "target": "≥0.6s"
+    },
+    {
+      "id": "G5",
+      "name": "Caption density",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": 3,
+      "target": "≤3 words visible simultaneously"
+    },
+    {
+      "id": "G6",
+      "name": "Caption position variance",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": 3,
+      "target": "≥3 distinct positions"
+    },
+    {
+      "id": "G8",
+      "name": "Emphasis",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": {
+        "chunks": 62,
+        "outOfRangeEmphasis": 0
+      },
+      "target": "≤1 emphasis word per chunk (schema-enforced) and it must index a real word"
+    },
+    {
+      "id": "G10",
+      "name": "Word integrity",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": {
+        "violations": 0,
+        "cutsChecked": 29
+      },
+      "target": "0 cuts landing mid-word (source in/out points)"
+    },
+    {
+      "id": "G11",
+      "name": "Loudness",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": -13.9,
+      "target": "-14 ±1 LUFS integrated"
+    },
+    {
+      "id": "G12",
+      "name": "Output spec",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": {
+        "width": 1080,
+        "height": 1920,
+        "fps": 30,
+        "vcodec": "h264",
+        "acodec": "aac"
+      },
+      "target": "1080x1920, 30fps, h264+aac"
+    },
+    {
+      "id": "G13",
+      "name": "Reproducibility",
+      "hard": false,
+      "computable": true,
+      "pass": null,
+      "measured": {
+        "checksum": "sha256:75a24509fb2454265928dbe60227c1652e3210022c1df1d47f2edc49d0a758bc"
+      },
+      "target": "same plan+footage ⇒ identical checksum",
+      "note": "no --prev-checksum given — recorded for a future comparison, not scored this run"
+    },
+    {
+      "id": "G14",
+      "name": "Provenance",
+      "hard": false,
+      "computable": true,
+      "pass": true,
+      "measured": {
+        "contentBriefId": "cca7adf4-2404-455c-90ae-e907587f6284"
+      },
+      "target": "render links to claim_ids + framework_id",
+      "note": "thin placeholder: only checks contentBriefId is non-empty — claim_ids/framework_id live on Agent B's ContentBrief model, not yet built"
+    },
+    {
+      "id": "G7",
+      "name": "Micro-motion",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": {
+        "shots": 29,
+        "staticShots": 0,
+        "minDelta": 0.051,
+        "maxDelta": 0.0788,
+        "threshold": 0.01
+      },
+      "target": "100% of shots have scale delta >1%"
+    },
+    {
+      "id": "G9",
+      "name": "Safe margins",
+      "hard": true,
+      "computable": true,
+      "pass": true,
+      "measured": {
+        "violations": 0,
+        "bannerTopExemptionRatio": 0.08,
+        "faceFloorRatio": 0.717,
+        "bannerLines": 1,
+        "examples": []
+      },
+      "target": "0 text blocks within 12% of the left/right/bottom edge; banner top exempt to 8% (ARCHITECTURE §12.7); 0 karaoke blocks whose top is above the face floor at 0.717 (ARCHITECTURE §12.19)"
+    }
+  ],
+  "overallPass": true,
+  "excludedGates": [
+    {
+      "id": "G1b",
+      "code": "continuous_playback_no_discontinuities",
+      "see": "ARCHITECTURE §12.3, §12.13"
+    }
+  ],
+  "scoredGateCount": 12,
+  "fingerprintAcceptanceFloor": 0.8009999999999999
+}
