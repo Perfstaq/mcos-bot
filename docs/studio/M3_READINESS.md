@@ -157,6 +157,7 @@ the surface that *starts* a build does not exist (§1). Today a user can only re
 | **The deployed image tag lives in an untracked file.** `infra/terraform/production.auto.tfvars` is gitignored (`infra/terraform/.gitignore:8`). | `git check-ignore` | Nothing in the repo records what production runs, and no second machine can reproduce a deploy. |
 | **There is no way to ask production what build it is running.** No version/build endpoint; `/healthz` returns `{ok,db,redis}` only. | [`observability.ts:476`](../../apps/api/src/observability.ts:476) | "image tag matches main's tip" is only checkable with AWS credentials. |
 | **The e2e ring is not a required status check.** Required contexts are `Typecheck, test, build` and `Docker image builds`. | `repos/…/branches/main/protection` | The ring was red on every studio-main push and would not have blocked the merge. Fixed as a failure ([`package.json` `pretest:e2e`](../../package.json)); not fixed as a policy. |
+| **The Studio queues have no backlog alarm.** `queueDepths()` publishes waiting/active/delayed/failed for *every* queue ([`observability.ts:166`](../../apps/api/src/observability.ts:166)), but `alarms.tf:19-24` builds `queue_backlog` alarms for four queues only — `webhook`, `ingestrecording`, `ingesttranscript`, `extract`. `media.analyze`, `plan.build`, `render.submit` and `render.qc` are excluded. | `infra/terraform/alarms.tf:19` | The alarm's own comment calls queue depth *"the number that shows the pipeline has stopped without anything having failed"* — which is precisely the state the two unconsumed Studio queues are in. **Nothing would page.** |
 | **The Lighthouse 84 figure has no artifact.** It appears once, in prose, in `M2_CLOSEOUT.md:143`. | grep across repo | Unverifiable as written. |
 
 ---
@@ -452,6 +453,7 @@ not by how interesting the work is. Effort is a rough engineering-days estimate.
 | 18 | **A build-identity endpoint.** `/healthz` cannot answer "which commit is this?"; verifying a deploy needs AWS credentials. | 0.5 d | No |
 | 19 | **Make `E2E ring` a required status check.** It was red on every studio-main push and would not have blocked the merge. | 0.1 d | No |
 | 20 | **Fix the evidence manifest's regeneration command.** It documents `render-evidence.ts --footage …`, which uses the *script's* second plan builder; §12.45 records the committed plans as coming through the real chain (`--plan`). Following the manifest would silently swap builders — the §12.34/§12.45/§12.49 shape again, in the harness. | 0.5 d | No |
+| 22 | **Alarm the Studio queues.** `queue_backlog` covers four M1 queues; `media.analyze`, `plan.build`, `render.submit` and `render.qc` publish depth and alarm on nothing. Today those queues are silently unconsumed and nothing pages. | 0.5 d | No — that is the problem |
 | 21 | **Split the web bundle.** 1,344.70 kB single chunk (CI build log); the M1 Lighthouse-84 carry-over, which has no artifact in the repo to check against. | 2 d | Marginally — first paint |
 
 ### The one-line answer
