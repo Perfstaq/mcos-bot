@@ -16,7 +16,7 @@
 # compiling LLVM from source — multi-hour and failure-prone. This is the one
 # deliberate deviation from the existing image's base.
 
-FROM node:20-bookworm-slim AS build
+FROM node:26-bookworm-slim AS build
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -64,7 +64,7 @@ RUN python3 -m venv /opt/analyzer-venv \
     && /opt/analyzer-venv/bin/pip install --no-cache-dir --upgrade pip \
     && /opt/analyzer-venv/bin/pip install --no-cache-dir -r services/analyzer/requirements.txt
 
-FROM node:20-bookworm-slim AS runtime
+FROM node:26-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 

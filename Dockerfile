@@ -3,7 +3,7 @@
 #   node apps/api/dist/worker.js   → BullMQ workers
 # That is the whole deployment topology: one service + N worker replicas.
 
-FROM node:20-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -21,7 +21,7 @@ RUN npm run build
 # Drop dev dependencies but keep the generated Prisma client.
 RUN npm prune --omit=dev
 
-FROM node:20-alpine AS runtime
+FROM node:26-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 
